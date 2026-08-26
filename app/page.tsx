@@ -8,37 +8,94 @@ const cases = [
   ["01", "PintService", "Atendimento e operação", "Uma central conectando atendimento, veículos, tarefas e IA com controle humano."],
   ["02", "Valtec", "Demanda que precisava virar serviço", "Aquisição local, formulário, métricas e organização comercial em um fluxo só."],
   ["03", "Plumareli", "Crescer sem perder o acompanhamento", "Jornada das famílias, progresso e operação educacional organizados em sistema."],
-  ["04", "Wanelle", "Uma operação que precisava conversar", "Pedidos, agenda, estoque e financeiro conectados ao trabalho real."],
 ];
 
 export default function Home() {
   useEffect(() => {
     const root = document.documentElement;
-    const pointer = (event: PointerEvent) => {
-      root.style.setProperty("--mx", String(event.clientX / innerWidth - 0.5));
-      root.style.setProperty("--my", String(event.clientY / innerHeight - 0.5));
+    const rootStory = document.querySelector<HTMLElement>(".root-story");
+    let frame = 0;
+
+    const updatePointer = (event: PointerEvent) => {
+      root.style.setProperty("--mouse-x", `${event.clientX}px`);
+      root.style.setProperty("--mouse-y", `${event.clientY}px`);
+      root.style.setProperty("--mx", String(event.clientX / window.innerWidth - 0.5));
+      root.style.setProperty("--my", String(event.clientY / window.innerHeight - 0.5));
+      root.dataset.pointer = "active";
     };
-    const scroll = () => {
-      const max = document.documentElement.scrollHeight - innerHeight;
-      root.style.setProperty("--scroll", String(max > 0 ? scrollY / max : 0));
+
+    const updateScroll = () => {
+      frame = 0;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      root.style.setProperty("--scroll", String(max > 0 ? window.scrollY / max : 0));
+
+      if (!rootStory) return;
+
+      const rect = rootStory.getBoundingClientRect();
+      const travel = Math.max(rootStory.offsetHeight - window.innerHeight, 1);
+      const progress = Math.min(1, Math.max(0, -rect.top / travel));
+      const scene = progress < 0.3 ? "surface" : progress < 0.64 ? "layers" : "root";
+
+      rootStory.style.setProperty("--root-progress", String(progress));
+      if (rootStory.dataset.scene !== scene) rootStory.dataset.scene = scene;
     };
-    addEventListener("pointermove", pointer, { passive: true });
-    addEventListener("scroll", scroll, { passive: true });
-    scroll();
+
+    const scheduleScrollUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateScroll);
+    };
+
+    window.addEventListener("pointermove", updatePointer, { passive: true });
+    window.addEventListener("scroll", scheduleScrollUpdate, { passive: true });
+    window.addEventListener("resize", scheduleScrollUpdate, { passive: true });
+    updateScroll();
+
     return () => {
-      removeEventListener("pointermove", pointer);
-      removeEventListener("scroll", scroll);
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("pointermove", updatePointer);
+      window.removeEventListener("scroll", scheduleScrollUpdate);
+      window.removeEventListener("resize", scheduleScrollUpdate);
+      delete root.dataset.pointer;
     };
   }, []);
 
   return (
     <main>
+      <style>{`
+        .hero{
+          background:
+            radial-gradient(circle at 78% 20%,rgba(221,181,218,.12),transparent 25%),
+            radial-gradient(circle at 72% 74%,rgba(239,59,127,.08),transparent 28%),
+            linear-gradient(145deg,#01301e 0%,#0c4635 58%,#01301e 100%)!important;
+        }
+        .hero::before{
+          content:"";position:absolute;inset:0;pointer-events:none;
+          background:linear-gradient(90deg,rgba(1,48,30,.08),rgba(1,48,30,.02) 55%,rgba(255,255,255,.015));
+        }
+        .walk-photo{width:min(100%,600px)!important}
+        .walk-photo img{width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;filter:none!important}
+        .editorial-photo{width:min(100%,720px)!important}
+        .editorial-photo img{width:100%!important;height:auto!important;object-fit:contain!important;filter:none!important}
+        .diag-flower{
+          position:absolute!important;z-index:4!important;left:50%!important;top:50%!important;
+          width:clamp(7.5rem,13vw,12rem)!important;height:auto!important;display:block!important;
+          transform:translate(-50%,-50%)!important;transform-origin:center!important;
+          animation:none!important;background:transparent!important;
+          filter:drop-shadow(0 0 42px rgba(239,59,127,.18));
+        }
+        footer .footer-logo{height:38px!important;max-width:150px!important}
+        @media(max-width:620px){
+          .diag-flower{width:clamp(7rem,30vw,10rem)!important}
+        }
+      `}</style>
+
+      <div className="cursor-glow" aria-hidden="true" />
       <div className="progress" aria-hidden="true" />
+
       <header className="topbar">
         <a href="#top" aria-label="Blinko, início" className="logo-wrap">
           <img src="/brand/logo-claro.webp" alt="Blinko" />
         </a>
-        <nav>
+        <nav aria-label="Navegação principal">
           <a href="#como">Como funciona</a>
           <a href="#analise">Análise</a>
           <a href="#cases">Cases</a>
@@ -47,11 +104,6 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <video className="hero-video" autoPlay muted loop playsInline poster="/media/hero-poster.webp" aria-hidden="true">
-          <source src="/media/hero.mp4" type="video/mp4" />
-        </video>
-        <div className="hero-wash" />
-        <div className="hero-grid" />
         <div className="hero-content">
           <p className="eyebrow">DIAGNÓSTICO · ESTRATÉGIA · EXECUÇÃO · EVOLUÇÃO</p>
           <h1>O problema <em>raramente</em> está onde parece.</h1>
@@ -61,7 +113,6 @@ export default function Home() {
             <a className="text-link" href="#como">investigar ↓</a>
           </div>
         </div>
-        <img className="hero-stamp" src="/brand/flor-centro.webp" alt="" aria-hidden="true" />
         <span className="side-note">ROLE PARA ENTRAR NA EMPRESA</span>
       </section>
 
@@ -78,11 +129,16 @@ export default function Home() {
         <span className="giant-word">ENTRAR</span>
       </section>
 
-      <section className="root-story">
+      <section className="root-story" aria-label="Da superfície até a raiz">
         <div className="root-sticky">
-          <div className="botanical" aria-hidden="true">
-            <i className="leaf one" /><i className="leaf two" /><i className="stem" />
-            <i className="root r1" /><i className="root r2" /><i className="root r3" /><i className="root r4" />
+          <div className="root-organic" aria-hidden="true">
+            <div className="root-orbit root-orbit-a" />
+            <div className="root-orbit root-orbit-b" />
+            <div className="root-shape root-shape-a" />
+            <div className="root-shape root-shape-b" />
+            <div className="root-shape root-shape-c" />
+            <div className="root-core"><span>RAIZ</span><small>o ponto que sustenta o resto</small></div>
+            <span className="root-caption">sintoma → contexto → causa</span>
           </div>
           <div className="root-scenes">
             <article className="scene s1"><span>SUPERFÍCIE</span><h3>“Precisamos postar mais.”</h3><p>Talvez. Mas isso é a causa ou só o lugar onde o problema aparece?</p></article>
@@ -102,7 +158,6 @@ export default function Home() {
             {[["01","Entender"],["02","Diagnosticar"],["03","Priorizar"],["04","Implantar"],["05","Acompanhar"]].map(([n,t]) => <div key={n}><span>{n}</span><strong>{t}</strong></div>)}
           </div>
         </div>
-        <img className="floating-stamp" src="/brand/flor-centro.webp" alt="" aria-hidden="true" />
       </section>
 
       <section className="pillars" id="analise">
@@ -124,7 +179,7 @@ export default function Home() {
       </section>
 
       <section className="diagnostic" id="diagnostico">
-        <div className="diag-orbit" aria-hidden="true"><i/><i/><b>*</b></div>
+        <div className="diag-orbit" aria-hidden="true"><i/><i/><img className="diag-flower" src="/brand/flor-centro.webp" alt="" /></div>
         <div className="diag-copy">
           <span className="section-id inverse">05 / COMECE PELO PONTO CERTO</span>
           <h2>Descubra onde sua empresa pode estar perdendo evolução.</h2>
@@ -134,7 +189,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer><img src="/brand/logo-claro.webp" alt="Blinko" /><p>Inovação aplicada ao problema real da empresa.</p><a href="#top">Voltar ao topo ↑</a></footer>
+      <footer><img className="footer-logo" src="/brand/logo-claro.webp" alt="Blinko" /><p>Inovação aplicada ao problema real da empresa.</p><a href="#top">Voltar ao topo ↑</a></footer>
     </main>
   );
 }
