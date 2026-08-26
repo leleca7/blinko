@@ -79,11 +79,6 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <video className="hero-video" autoPlay muted loop playsInline poster="/media/hero-poster.webp" aria-hidden="true">
-          <source src="/media/hero.mp4" type="video/mp4" />
-        </video>
-        <div className="hero-wash" />
-        <div className="hero-grid" />
         <div className="hero-content">
           <p className="eyebrow">DIAGNÓSTICO · ESTRATÉGIA · EXECUÇÃO · EVOLUÇÃO</p>
           <h1>O problema <em>raramente</em> está onde parece.</h1>
@@ -93,7 +88,6 @@ export default function Home() {
             <a className="text-link" href="#como">investigar ↓</a>
           </div>
         </div>
-        <img className="hero-stamp" src="/brand/flor-centro.webp" alt="" aria-hidden="true" />
         <span className="side-note">ROLE PARA ENTRAR NA EMPRESA</span>
       </section>
 
@@ -155,7 +149,6 @@ export default function Home() {
             {[["01","Entender"],["02","Diagnosticar"],["03","Priorizar"],["04","Implantar"],["05","Acompanhar"]].map(([n,t]) => <div key={n}><span>{n}</span><strong>{t}</strong></div>)}
           </div>
         </div>
-        <img className="floating-stamp" src="/brand/flor-centro.webp" alt="" aria-hidden="true" />
       </section>
 
       <section className="pillars" id="analise">
@@ -177,7 +170,7 @@ export default function Home() {
       </section>
 
       <section className="diagnostic" id="diagnostico">
-        <div className="diag-orbit" aria-hidden="true"><i/><i/><b>*</b></div>
+        <div className="diag-orbit" aria-hidden="true"><i/><i/><b className="diag-flower">*</b></div>
         <div className="diag-copy">
           <span className="section-id inverse">05 / COMECE PELO PONTO CERTO</span>
           <h2>Descubra onde sua empresa pode estar perdendo evolução.</h2>
@@ -187,7 +180,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer><img src="/brand/logo-claro.webp" alt="Blinko" /><p>Inovação aplicada ao problema real da empresa.</p><a href="#top">Voltar ao topo ↑</a></footer>
+      <footer><img className="footer-logo" src="/brand/logo-claro.webp" alt="Blinko" /><p>Inovação aplicada ao problema real da empresa.</p><a href="#top">Voltar ao topo ↑</a></footer>
     </main>
   );
 }
