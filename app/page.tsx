@@ -8,7 +8,6 @@ const cases = [
   ["01", "PintService", "Atendimento e operação", "Uma central conectando atendimento, veículos, tarefas e IA com controle humano."],
   ["02", "Valtec", "Demanda que precisava virar serviço", "Aquisição local, formulário, métricas e organização comercial em um fluxo só."],
   ["03", "Plumareli", "Crescer sem perder o acompanhamento", "Jornada das famílias, progresso e operação educacional organizados em sistema."],
-  ["04", "Wanelle", "Uma operação que precisava conversar", "Pedidos, agenda, estoque e financeiro conectados ao trabalho real."],
 ];
 
 export default function Home() {
@@ -62,34 +61,31 @@ export default function Home() {
   return (
     <main>
       <style>{`
-        .topbar{
-          top:0!important;left:0!important;right:0!important;
-          min-height:64px;padding:8px 16px!important;border:0!important;
-          border-bottom:1px solid rgba(255,255,255,.18)!important;
-          border-radius:0 0 22px 22px!important;
-          background:linear-gradient(90deg,rgba(1,48,30,.88),rgba(15,70,52,.72) 52%,rgba(1,48,30,.84))!important;
-          -webkit-backdrop-filter:blur(18px) saturate(135%)!important;
-          backdrop-filter:blur(18px) saturate(135%)!important;
-          box-shadow:0 10px 32px rgba(1,48,30,.18)!important;
+        .hero{
+          background:
+            radial-gradient(circle at 78% 20%,rgba(221,181,218,.12),transparent 25%),
+            radial-gradient(circle at 72% 74%,rgba(239,59,127,.08),transparent 28%),
+            linear-gradient(145deg,#01301e 0%,#0c4635 58%,#01301e 100%)!important;
         }
-        .logo-wrap{width:118px!important;height:42px!important;overflow:visible!important}
-        .logo-wrap img{height:34px!important;width:auto!important;max-width:116px!important;object-fit:contain!important;margin:0!important}
-        .hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;transform:scale(1.015);filter:saturate(.88) contrast(1.03) brightness(.88)}
-        .hero-wash{position:absolute;inset:0;background:linear-gradient(90deg,rgba(1,48,30,.82) 0%,rgba(1,48,30,.60) 40%,rgba(1,48,30,.24) 72%,rgba(1,48,30,.12) 100%),linear-gradient(180deg,rgba(1,48,30,.06),rgba(1,48,30,.08) 58%,rgba(1,48,30,.58));pointer-events:none}
+        .hero::before{
+          content:"";position:absolute;inset:0;pointer-events:none;
+          background:linear-gradient(90deg,rgba(1,48,30,.08),rgba(1,48,30,.02) 55%,rgba(255,255,255,.015));
+        }
         .walk-photo{width:min(100%,600px)!important}
         .walk-photo img{width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;filter:none!important}
         .editorial-photo{width:min(100%,720px)!important}
         .editorial-photo img{width:100%!important;height:auto!important;object-fit:contain!important;filter:none!important}
-        .diag-flower{position:absolute!important;z-index:4!important;left:50%!important;top:50%!important;width:clamp(8rem,14vw,13rem)!important;height:auto!important;display:block!important;transform:translate(-50%,-50%)!important;transform-origin:center!important;animation:diagPulse 4s ease-in-out infinite!important;filter:drop-shadow(0 0 42px rgba(239,59,127,.18))}
-        footer .footer-logo{height:38px!important;max-width:150px!important}
-        @keyframes diagPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.055)}}
-        @media(max-width:620px){
-          .topbar{border-radius:0 0 18px 18px!important;padding:7px 12px!important}
-          .logo-wrap{width:105px!important;height:38px!important}
-          .logo-wrap img{height:29px!important;max-width:103px!important}
-          .hero-video{object-position:58% center}
+        .diag-flower{
+          position:absolute!important;z-index:4!important;left:50%!important;top:50%!important;
+          width:clamp(7.5rem,13vw,12rem)!important;height:auto!important;display:block!important;
+          transform:translate(-50%,-50%)!important;transform-origin:center!important;
+          animation:none!important;background:transparent!important;
+          filter:drop-shadow(0 0 42px rgba(239,59,127,.18));
         }
-        @media(prefers-reduced-motion:reduce){.hero-video{display:none!important}.diag-flower{animation:none!important}}
+        footer .footer-logo{height:38px!important;max-width:150px!important}
+        @media(max-width:620px){
+          .diag-flower{width:clamp(7rem,30vw,10rem)!important}
+        }
       `}</style>
 
       <div className="cursor-glow" aria-hidden="true" />
@@ -108,10 +104,6 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <video className="hero-video" autoPlay muted loop playsInline poster="/media/hero-poster.webp" aria-hidden="true">
-          <source src="/media/hero.mp4" type="video/mp4" />
-        </video>
-        <div className="hero-wash" aria-hidden="true" />
         <div className="hero-content">
           <p className="eyebrow">DIAGNÓSTICO · ESTRATÉGIA · EXECUÇÃO · EVOLUÇÃO</p>
           <h1>O problema <em>raramente</em> está onde parece.</h1>
