@@ -38,9 +38,7 @@ export default function Home() {
       const scene = progress < 0.3 ? "surface" : progress < 0.64 ? "layers" : "root";
 
       rootStory.style.setProperty("--root-progress", String(progress));
-      if (rootStory.dataset.scene !== scene) {
-        rootStory.dataset.scene = scene;
-      }
+      if (rootStory.dataset.scene !== scene) rootStory.dataset.scene = scene;
     };
 
     const scheduleScrollUpdate = () => {
@@ -63,6 +61,37 @@ export default function Home() {
 
   return (
     <main>
+      <style>{`
+        .topbar{
+          top:0!important;left:0!important;right:0!important;
+          min-height:64px;padding:8px 16px!important;border:0!important;
+          border-bottom:1px solid rgba(255,255,255,.18)!important;
+          border-radius:0 0 22px 22px!important;
+          background:linear-gradient(90deg,rgba(1,48,30,.88),rgba(15,70,52,.72) 52%,rgba(1,48,30,.84))!important;
+          -webkit-backdrop-filter:blur(18px) saturate(135%)!important;
+          backdrop-filter:blur(18px) saturate(135%)!important;
+          box-shadow:0 10px 32px rgba(1,48,30,.18)!important;
+        }
+        .logo-wrap{width:118px!important;height:42px!important;overflow:visible!important}
+        .logo-wrap img{height:34px!important;width:auto!important;max-width:116px!important;object-fit:contain!important;margin:0!important}
+        .hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;transform:scale(1.015);filter:saturate(.88) contrast(1.03) brightness(.88)}
+        .hero-wash{position:absolute;inset:0;background:linear-gradient(90deg,rgba(1,48,30,.82) 0%,rgba(1,48,30,.60) 40%,rgba(1,48,30,.24) 72%,rgba(1,48,30,.12) 100%),linear-gradient(180deg,rgba(1,48,30,.06),rgba(1,48,30,.08) 58%,rgba(1,48,30,.58));pointer-events:none}
+        .walk-photo{width:min(100%,600px)!important}
+        .walk-photo img{width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;filter:none!important}
+        .editorial-photo{width:min(100%,720px)!important}
+        .editorial-photo img{width:100%!important;height:auto!important;object-fit:contain!important;filter:none!important}
+        .diag-flower{position:absolute!important;z-index:4!important;left:50%!important;top:50%!important;width:clamp(8rem,14vw,13rem)!important;height:auto!important;display:block!important;transform:translate(-50%,-50%)!important;transform-origin:center!important;animation:diagPulse 4s ease-in-out infinite!important;filter:drop-shadow(0 0 42px rgba(239,59,127,.18))}
+        footer .footer-logo{height:38px!important;max-width:150px!important}
+        @keyframes diagPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.055)}}
+        @media(max-width:620px){
+          .topbar{border-radius:0 0 18px 18px!important;padding:7px 12px!important}
+          .logo-wrap{width:105px!important;height:38px!important}
+          .logo-wrap img{height:29px!important;max-width:103px!important}
+          .hero-video{object-position:58% center}
+        }
+        @media(prefers-reduced-motion:reduce){.hero-video{display:none!important}.diag-flower{animation:none!important}}
+      `}</style>
+
       <div className="cursor-glow" aria-hidden="true" />
       <div className="progress" aria-hidden="true" />
 
@@ -79,6 +108,10 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
+        <video className="hero-video" autoPlay muted loop playsInline poster="/media/hero-poster.webp" aria-hidden="true">
+          <source src="/media/hero.mp4" type="video/mp4" />
+        </video>
+        <div className="hero-wash" aria-hidden="true" />
         <div className="hero-content">
           <p className="eyebrow">DIAGNÓSTICO · ESTRATÉGIA · EXECUÇÃO · EVOLUÇÃO</p>
           <h1>O problema <em>raramente</em> está onde parece.</h1>
@@ -112,29 +145,13 @@ export default function Home() {
             <div className="root-shape root-shape-a" />
             <div className="root-shape root-shape-b" />
             <div className="root-shape root-shape-c" />
-            <div className="root-core">
-              <span>RAIZ</span>
-              <small>o ponto que sustenta o resto</small>
-            </div>
+            <div className="root-core"><span>RAIZ</span><small>o ponto que sustenta o resto</small></div>
             <span className="root-caption">sintoma → contexto → causa</span>
           </div>
-
           <div className="root-scenes">
-            <article className="scene s1">
-              <span>SUPERFÍCIE</span>
-              <h3>“Precisamos postar mais.”</h3>
-              <p>Talvez. Mas isso é a causa ou só o lugar onde o problema aparece?</p>
-            </article>
-            <article className="scene s2">
-              <span>CAMADAS</span>
-              <h3>Comunicação. Atendimento. Operação.</h3>
-              <p>A leitura muda quando as áreas deixam de ser vistas isoladamente.</p>
-            </article>
-            <article className="scene s3">
-              <span>RAIZ</span>
-              <h3>Primeiro corrigimos o que sustenta tudo.</h3>
-              <p>Depois avançamos para as pontas com muito mais precisão.</p>
-            </article>
+            <article className="scene s1"><span>SUPERFÍCIE</span><h3>“Precisamos postar mais.”</h3><p>Talvez. Mas isso é a causa ou só o lugar onde o problema aparece?</p></article>
+            <article className="scene s2"><span>CAMADAS</span><h3>Comunicação. Atendimento. Operação.</h3><p>A leitura muda quando as áreas deixam de ser vistas isoladamente.</p></article>
+            <article className="scene s3"><span>RAIZ</span><h3>Primeiro corrigimos o que sustenta tudo.</h3><p>Depois avançamos para as pontas com muito mais precisão.</p></article>
           </div>
         </div>
       </section>
@@ -170,7 +187,7 @@ export default function Home() {
       </section>
 
       <section className="diagnostic" id="diagnostico">
-        <div className="diag-orbit" aria-hidden="true"><i/><i/><b className="diag-flower">*</b></div>
+        <div className="diag-orbit" aria-hidden="true"><i/><i/><img className="diag-flower" src="/brand/flor-centro.webp" alt="" /></div>
         <div className="diag-copy">
           <span className="section-id inverse">05 / COMECE PELO PONTO CERTO</span>
           <h2>Descubra onde sua empresa pode estar perdendo evolução.</h2>
