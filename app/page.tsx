@@ -2,280 +2,139 @@
 
 import { useEffect } from "react";
 
-const pillars = [
-  "Marca",
-  "Digital",
-  "Financeiro",
-  "Operação",
-  "Atendimento",
-  "Gestão",
-  "Equipe",
-];
+const pillars = ["Marca", "Digital", "Financeiro", "Operação", "Atendimento", "Gestão", "Equipe"];
 
 const cases = [
-  {
-    name: "PintService",
-    problem: "Atendimento e operação fragmentados.",
-    answer: "Central de atendimento, fluxo de veículos, tarefas, IA e controle humano.",
-    index: "01",
-  },
-  {
-    name: "Valtec",
-    problem: "Demanda precisava virar serviço de verdade.",
-    answer: "Aquisição local, formulário, operação comercial, métricas e gestão de serviços.",
-    index: "02",
-  },
-  {
-    name: "Plumareli",
-    problem: "Crescimento exigia estrutura para famílias e operação educacional.",
-    answer: "Jornada, acompanhamento, evidências, progresso e experiência da família.",
-    index: "03",
-  },
-  {
-    name: "Wanelle",
-    problem: "Pedidos, agenda, estoque e financeiro precisavam conversar.",
-    answer: "Sistema de gestão conectado ao fluxo real da operação.",
-    index: "04",
-  },
+  ["01", "PintService", "Atendimento e operação", "Uma central conectando atendimento, veículos, tarefas e IA com controle humano."],
+  ["02", "Valtec", "Demanda que precisava virar serviço", "Aquisição local, formulário, métricas e organização comercial em um fluxo só."],
+  ["03", "Plumareli", "Crescer sem perder o acompanhamento", "Jornada das famílias, progresso e operação educacional organizados em sistema."],
+  ["04", "Wanelle", "Uma operação que precisava conversar", "Pedidos, agenda, estoque e financeiro conectados ao trabalho real."],
 ];
 
 export default function Home() {
   useEffect(() => {
     const root = document.documentElement;
-
-    const onPointerMove = (event: PointerEvent) => {
-      root.style.setProperty("--mouse-x", `${event.clientX}px`);
-      root.style.setProperty("--mouse-y", `${event.clientY}px`);
-      root.style.setProperty("--mx", String(event.clientX / window.innerWidth - 0.5));
-      root.style.setProperty("--my", String(event.clientY / window.innerHeight - 0.5));
+    const pointer = (event: PointerEvent) => {
+      root.style.setProperty("--mx", String(event.clientX / innerWidth - 0.5));
+      root.style.setProperty("--my", String(event.clientY / innerHeight - 0.5));
     };
-
-    const onScroll = () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = max > 0 ? window.scrollY / max : 0;
-      root.style.setProperty("--scroll-progress", String(progress));
+    const scroll = () => {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      root.style.setProperty("--scroll", String(max > 0 ? scrollY / max : 0));
     };
-
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-
+    addEventListener("pointermove", pointer, { passive: true });
+    addEventListener("scroll", scroll, { passive: true });
+    scroll();
     return () => {
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("scroll", onScroll);
+      removeEventListener("pointermove", pointer);
+      removeEventListener("scroll", scroll);
     };
   }, []);
 
   return (
     <main>
-      <div className="cursor-glow" aria-hidden="true" />
-      <div className="scroll-progress" aria-hidden="true" />
-
-      <header className="site-header">
-        <a className="brand" href="#top" aria-label="Blinko, início">
-          blinko<span>*</span>
+      <div className="progress" aria-hidden="true" />
+      <header className="topbar">
+        <a href="#top" aria-label="Blinko, início" className="logo-wrap">
+          <img src="/brand/logo-claro.webp" alt="Blinko" />
         </a>
-        <nav aria-label="Navegação principal">
-          <a href="#como-funciona">Como funciona</a>
-          <a href="#analise">O que analisamos</a>
+        <nav>
+          <a href="#como">Como funciona</a>
+          <a href="#analise">Análise</a>
           <a href="#cases">Cases</a>
-          <a href="#diagnostico" className="nav-cta">
-            Diagnóstico
-          </a>
+          <a className="nav-cta" href="#diagnostico">Diagnóstico</a>
         </nav>
       </header>
 
       <section className="hero" id="top">
-        <div className="hero-noise" aria-hidden="true" />
-        <p className="eyebrow">SISTEMA OPERACIONAL DE MODERNIZAÇÃO</p>
-
-        <div className="hero-copy">
-          <h1>
-            O problema
-            <span>raramente está</span>
-            onde parece.
-          </h1>
-          <p>
-            A Blinko entra na empresa, encontra a raiz do que está travando o negócio
-            e implanta a solução certa — da estratégia à tecnologia.
-          </p>
-          <div className="hero-actions">
-            <a className="button button-primary" href="#diagnostico">
-              Fazer diagnóstico gratuito
-            </a>
-            <a className="button button-ghost" href="#como-funciona">
-              Ver como funciona
-            </a>
+        <video className="hero-video" autoPlay muted loop playsInline poster="/media/hero-poster.webp" aria-hidden="true">
+          <source src="/media/hero.mp4" type="video/mp4" />
+        </video>
+        <div className="hero-wash" />
+        <div className="hero-grid" />
+        <div className="hero-content">
+          <p className="eyebrow">DIAGNÓSTICO · ESTRATÉGIA · EXECUÇÃO · EVOLUÇÃO</p>
+          <h1>O problema <em>raramente</em> está onde parece.</h1>
+          <p className="hero-lede">A Blinko entra na empresa, encontra a raiz do que está travando o negócio e implanta a solução certa — da estratégia à tecnologia.</p>
+          <div className="actions">
+            <a className="button light" href="#diagnostico">Fazer diagnóstico</a>
+            <a className="text-link" href="#como">investigar ↓</a>
           </div>
         </div>
-
-        <div className="hero-orbit" aria-hidden="true">
-          <div className="orbit orbit-one" />
-          <div className="orbit orbit-two" />
-          <div className="root-core">
-            <span>RAIZ</span>
-          </div>
-          <span className="orbit-label label-a">ATENDIMENTO</span>
-          <span className="orbit-label label-b">OPERAÇÃO</span>
-          <span className="orbit-label label-c">GESTÃO</span>
-          <span className="orbit-label label-d">DIGITAL</span>
-        </div>
-
-        <div className="hero-scroll-cue" aria-hidden="true">
-          <span>role para investigar</span>
-          <i />
-        </div>
+        <img className="hero-stamp" src="/brand/flor-centro.webp" alt="" aria-hidden="true" />
+        <span className="side-note">ROLE PARA ENTRAR NA EMPRESA</span>
       </section>
 
-      <section className="manifesto section-paper" id="como-funciona">
-        <div className="section-number">01</div>
-        <div className="manifesto-grid">
-          <p className="kicker">VOCÊ NÃO PRECISA SABER QUAL SERVIÇO CONTRATAR.</p>
-          <h2>
-            Sua empresa mostra a folha.
-            <br />
-            <em>A Blinko procura a raiz.</em>
-          </h2>
-          <p className="manifesto-text">
-            Às vezes parece que o problema é Instagram. Às vezes parece que é site.
-            Às vezes parece que falta automação. Antes de construir qualquer coisa,
-            nós entendemos o que realmente está acontecendo.
-          </p>
+      <section className="enter" id="como">
+        <div className="enter-copy">
+          <span className="section-id">01 / ANTES DE PROPOR, ENTRAMOS.</span>
+          <h2>Você mostra o que está acontecendo. <em>A Blinko procura o que está causando.</em></h2>
+          <p>Não começamos escolhendo um serviço. Começamos entendendo a empresa, o contexto e a ordem certa de mexer nas coisas.</p>
         </div>
+        <figure className="walk-photo">
+          <img src="/photos/caminhando.webp" alt="Profissional caminhando em direção a um espaço Blinko" />
+          <figcaption>entrar · observar · perguntar · conectar</figcaption>
+        </figure>
+        <span className="giant-word">ENTRAR</span>
       </section>
 
-      <section className="root-story" aria-label="Da superfície até a raiz">
+      <section className="root-story">
         <div className="root-sticky">
-          <div className="root-visual" aria-hidden="true">
-            <div className="leaf leaf-1" />
-            <div className="leaf leaf-2" />
-            <div className="stem" />
-            <div className="root-line root-line-a" />
-            <div className="root-line root-line-b" />
-            <div className="root-line root-line-c" />
-            <div className="root-line root-line-d" />
+          <div className="botanical" aria-hidden="true">
+            <i className="leaf one" /><i className="leaf two" /><i className="stem" />
+            <i className="root r1" /><i className="root r2" /><i className="root r3" /><i className="root r4" />
           </div>
-
-          <div className="root-copy">
-            <div className="story-step step-1">
-              <span>SUPERFÍCIE</span>
-              <h3>“Precisamos postar mais.”</h3>
-              <p>Talvez. Mas isso é o sintoma ou a causa?</p>
-            </div>
-            <div className="story-step step-2">
-              <span>CAMADAS</span>
-              <h3>Comunicação, atendimento, operação.</h3>
-              <p>Cada camada muda a leitura do problema.</p>
-            </div>
-            <div className="story-step step-3">
-              <span>RAIZ</span>
-              <h3>Primeiro corrigimos o que sustenta tudo.</h3>
-              <p>Depois avançamos para as pontas com muito mais precisão.</p>
-            </div>
+          <div className="root-scenes">
+            <article className="scene s1"><span>SUPERFÍCIE</span><h3>“Precisamos postar mais.”</h3><p>Talvez. Mas isso é a causa ou só o lugar onde o problema aparece?</p></article>
+            <article className="scene s2"><span>CAMADAS</span><h3>Comunicação. Atendimento. Operação.</h3><p>A leitura muda quando as áreas deixam de ser vistas isoladamente.</p></article>
+            <article className="scene s3"><span>RAIZ</span><h3>Primeiro corrigimos o que sustenta tudo.</h3><p>Depois avançamos para as pontas com muito mais precisão.</p></article>
           </div>
         </div>
       </section>
 
-      <section className="method section-green">
-        <div className="section-number light">02</div>
-        <div className="method-intro">
-          <p className="kicker light-text">MÉTODO BLINKO</p>
-          <h2>Diagnosticar. Priorizar. Implantar. Acompanhar.</h2>
-          <p>
-            Não vendemos uma ferramenta antes de entender o negócio. A solução nasce
-            depois da leitura.
-          </p>
+      <section className="editorial">
+        <div className="editorial-photo"><img src="/photos/notebook-2.webp" alt="Profissional trabalhando em notebook em ambiente Blinko" /></div>
+        <div className="editorial-copy">
+          <span className="section-id">02 / MÉTODO BLINKO</span>
+          <p className="big-quote">“Você não precisa chegar sabendo qual serviço contratar.”</p>
+          <p className="body-copy">Diagnóstico antes de solução. Prioridade antes de volume. Especialistas e tecnologia trabalhando para que cada intervenção tenha motivo.</p>
+          <div className="method-mini">
+            {[["01","Entender"],["02","Diagnosticar"],["03","Priorizar"],["04","Implantar"],["05","Acompanhar"]].map(([n,t]) => <div key={n}><span>{n}</span><strong>{t}</strong></div>)}
+          </div>
         </div>
+        <img className="floating-stamp" src="/brand/flor-centro.webp" alt="" aria-hidden="true" />
+      </section>
 
-        <div className="method-track">
-          {[
-            ["01", "Entender", "Coletamos contexto, sinais, dados e objetivo."],
-            ["02", "Diagnosticar", "Encontramos gargalos, causas e oportunidades."],
-            ["03", "Priorizar", "Organizamos o que vem agora, depois e na evolução."],
-            ["04", "Implantar", "Executamos a solução certa com especialistas e tecnologia."],
-            ["05", "Acompanhar", "Medimos resultado e abrimos o próximo ciclo quando fizer sentido."],
-          ].map(([n, title, text]) => (
-            <article className="method-card" key={n}>
-              <span>{n}</span>
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </article>
-          ))}
+      <section className="pillars" id="analise">
+        <div className="pillars-head">
+          <span className="section-id">03 / UMA EMPRESA É UM SISTEMA VIVO</span>
+          <h2>Sete áreas. <em>Uma leitura conectada.</em></h2>
+          <p>A solução pode terminar em site, sistema, automação, processo, atendimento, marketing ou gestão. O diagnóstico vem antes do nome da ferramenta.</p>
+        </div>
+        <div className="pillar-list">
+          {pillars.map((p, i) => <div className="pillar" key={p}><span>{String(i + 1).padStart(2,"0")}</span><strong>{p}</strong><i /></div>)}
         </div>
       </section>
 
-      <section className="pillars section-paper" id="analise">
-        <div className="section-number">03</div>
-        <div className="pillars-heading">
-          <p className="kicker">A EMPRESA COMO UM SISTEMA VIVO</p>
-          <h2>Sete áreas. Uma leitura conectada.</h2>
-          <p>
-            A Blinko olha o negócio inteiro para não resolver uma parte e piorar outra.
-          </p>
-        </div>
-
-        <div className="pillars-list" aria-label="Sete pilares Blinko">
-          {pillars.map((pillar, index) => (
-            <div className="pillar-row" key={pillar}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <strong>{pillar}</strong>
-              <i aria-hidden="true" />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="cases section-lilac" id="cases">
-        <div className="section-number">04</div>
-        <div className="cases-heading">
-          <p className="kicker">PROBLEMAS DIFERENTES. SOLUÇÕES DIFERENTES.</p>
-          <h2>Não existe pacote pronto para uma empresa real.</h2>
-        </div>
-
-        <div className="case-grid">
-          {cases.map((item) => (
-            <article className="case-card" key={item.name}>
-              <span className="case-index">{item.index}</span>
-              <h3>{item.name}</h3>
-              <p className="case-problem">{item.problem}</p>
-              <div className="case-divider" />
-              <p>{item.answer}</p>
-            </article>
-          ))}
+      <section className="cases" id="cases">
+        <div className="cases-title"><span className="section-id">04 / PROBLEMAS REAIS</span><h2>Soluções diferentes porque empresas reais <em>não cabem em pacote pronto.</em></h2></div>
+        <div className="case-list">
+          {cases.map(([n,name,problem,answer]) => <article key={name}><span>{n}</span><h3>{name}</h3><p className="problem">{problem}</p><p>{answer}</p></article>)}
         </div>
       </section>
 
       <section className="diagnostic" id="diagnostico">
-        <div className="diagnostic-art" aria-hidden="true">
-          <div className="diag-ring ring-a" />
-          <div className="diag-ring ring-b" />
-          <div className="diag-dot dot-a" />
-          <div className="diag-dot dot-b" />
-          <div className="diag-dot dot-c" />
-        </div>
-
-        <div className="diagnostic-copy">
-          <p className="kicker light-text">COMECE PELO PONTO CERTO</p>
+        <div className="diag-orbit" aria-hidden="true"><i/><i/><b>*</b></div>
+        <div className="diag-copy">
+          <span className="section-id inverse">05 / COMECE PELO PONTO CERTO</span>
           <h2>Descubra onde sua empresa pode estar perdendo evolução.</h2>
-          <p>
-            Responda uma análise inicial. A Blinko organiza os sinais e identifica se
-            existe uma oportunidade real para aprofundar.
-          </p>
-          <a className="button button-pink" href="mailto:contato@blinko.com.br?subject=Diagnóstico%20Blinko">
-            Quero começar o diagnóstico
-          </a>
-          <small>O diagnóstico gratuito é uma triagem inicial, não substitui o Diagnóstico Blinko profundo.</small>
+          <p>Uma análise inicial para organizar sinais e entender se existe uma oportunidade real para aprofundar.</p>
+          <a className="button pink" href="mailto:contato@blinko.com.br?subject=Diagnóstico%20Blinko">Quero começar</a>
+          <small>O diagnóstico gratuito é uma triagem inicial. O Diagnóstico Blinko profundo é uma etapa separada.</small>
         </div>
       </section>
 
-      <footer>
-        <div className="footer-brand">blinko<span>*</span></div>
-        <p>Inovação aplicada ao problema real da empresa.</p>
-        <div className="footer-meta">
-          <span>© {new Date().getFullYear()} Blinko</span>
-          <a href="#top">Voltar ao topo</a>
-        </div>
-      </footer>
+      <footer><img src="/brand/logo-claro.webp" alt="Blinko" /><p>Inovação aplicada ao problema real da empresa.</p><a href="#top">Voltar ao topo ↑</a></footer>
     </main>
   );
 }
