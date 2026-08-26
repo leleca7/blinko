@@ -5,10 +5,9 @@ import { useEffect } from "react";
 const pillars = ["Marca", "Digital", "Financeiro", "Operação", "Atendimento", "Gestão", "Equipe"];
 
 const cases = [
-  ["01", "PintService", "Atendimento e operação", "Uma central conectando atendimento, veículos, tarefas e IA com controle humano."],
+  ["01", "Pint Services", "Atendimento e operação", "Uma central conectando atendimento, veículos, tarefas e IA com controle humano."],
   ["02", "Valtec", "Demanda que precisava virar serviço", "Aquisição local, formulário, métricas e organização comercial em um fluxo só."],
-  ["03", "Plumareli", "Crescer sem perder o acompanhamento", "Jornada das famílias, progresso e operação educacional organizados em sistema."],
-  ["04", "Wanelle", "Uma operação que precisava conversar", "Pedidos, agenda, estoque e financeiro conectados ao trabalho real."],
+  ["03", "Plumarelli", "Crescer sem perder o acompanhamento", "Jornada das famílias, progresso e operação educacional organizados em sistema."],
 ];
 
 export default function Home() {
@@ -66,7 +65,15 @@ export default function Home() {
       <div className="cursor-glow" aria-hidden="true" />
       <div className="progress" aria-hidden="true" />
 
-      <header className="topbar">
+      <header
+        className="topbar"
+        style={{
+          background: "rgba(1,48,30,.58)",
+          border: "1px solid rgba(255,255,255,.26)",
+          borderRadius: "999px",
+          boxShadow: "none",
+        }}
+      >
         <a href="#top" aria-label="Blinko, início" className="logo-wrap">
           <img src="/brand/logo-claro.webp" alt="Blinko" />
         </a>
@@ -170,7 +177,22 @@ export default function Home() {
       </section>
 
       <section className="diagnostic" id="diagnostico">
-        <div className="diag-orbit" aria-hidden="true"><i/><i/><b className="diag-flower">*</b></div>
+        <div className="diag-orbit" aria-hidden="true">
+          <i/><i/>
+          <img
+            className="diag-flower"
+            src="/brand/flor-centro.webp"
+            alt=""
+            style={{
+              width: "clamp(120px,16vw,220px)",
+              height: "auto",
+              top: "50%",
+              left: "50%",
+              objectFit: "contain",
+              background: "transparent",
+            }}
+          />
+        </div>
         <div className="diag-copy">
           <span className="section-id inverse">05 / COMECE PELO PONTO CERTO</span>
           <h2>Descubra onde sua empresa pode estar perdendo evolução.</h2>
