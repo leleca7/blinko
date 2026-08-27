@@ -37,6 +37,12 @@ function statusNotice(status?: string) {
   if (status === "reading_not_current") return "A versão informada não é mais a leitura inicial atual.";
   if (status === "reading_not_approvable") return "Esta leitura inicial não está em estado de aprovação.";
   if (status === "reading_approved") return "Leitura inicial aprovada. Ela continua interna e não foi enviada ao cliente.";
+  if (status === "contact_recorded") return "Contato registrado no histórico. Nenhuma mensagem foi enviada pelo Blinko OS.";
+  if (status === "contact_missing_review") return "Registre a revisão humana antes de avançar para o contato.";
+  if (status === "contact_invalid_date") return "A data da próxima ação não pôde ser interpretada.";
+  if (status === "meeting_scheduled") return "Reunião registrada no Blinko OS e adicionada à fila operacional. Nenhum convite externo foi enviado.";
+  if (status === "meeting_missing_review") return "Registre a revisão humana antes de agendar a reunião no OS.";
+  if (status === "meeting_invalid_date") return "Informe uma data e horário válidos para a reunião.";
   return null;
 }
 
@@ -211,6 +217,86 @@ export default async function PreDiagnosticReviewPage({ params, searchParams }: 
                 )}
               </div>
             ) : null}
+          </section>
+
+          <section className={styles.reviewCard} style={{ borderColor: "rgba(1,48,30,.24)", background: "rgba(1,48,30,.035)" }}>
+            <span className={styles.eyebrow}>CRM · ETAPA 4</span>
+            <h2 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 34, fontWeight: 500, marginBottom: 8 }}>
+              Contato e reunião
+            </h2>
+            <p style={{ opacity: .68, lineHeight: 1.55, maxWidth: 850 }}>
+              O Blinko OS registra a operação, mas não dispara WhatsApp, e-mail nem convite de calendário nesta etapa. O contato continua humano.
+            </p>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginTop: 18 }}>
+              <article style={{ padding: 16, border: "1px solid rgba(1,48,30,.12)", borderRadius: 16, background: "rgba(255,255,255,.48)" }}>
+                <small style={{ opacity: .58 }}>Contato</small>
+                <strong style={{ display: "block", marginTop: 6 }}>{workspace.lead.name}</strong>
+                <span style={{ display: "block", marginTop: 6, opacity: .68 }}>{workspace.lead.company_role || "Função não informada"}</span>
+              </article>
+              <article style={{ padding: 16, border: "1px solid rgba(1,48,30,.12)", borderRadius: 16, background: "rgba(255,255,255,.48)" }}>
+                <small style={{ opacity: .58 }}>WhatsApp</small>
+                <strong style={{ display: "block", marginTop: 6 }}>{workspace.lead.whatsapp || "Não informado"}</strong>
+              </article>
+              <article style={{ padding: 16, border: "1px solid rgba(1,48,30,.12)", borderRadius: 16, background: "rgba(255,255,255,.48)" }}>
+                <small style={{ opacity: .58 }}>E-mail</small>
+                <strong style={{ display: "block", marginTop: 6, overflowWrap: "anywhere" }}>{workspace.lead.email || "Não informado"}</strong>
+              </article>
+              <article style={{ padding: 16, border: "1px solid rgba(1,48,30,.12)", borderRadius: 16, background: "rgba(255,255,255,.48)" }}>
+                <small style={{ opacity: .58 }}>Estágio comercial</small>
+                <strong style={{ display: "block", marginTop: 6 }}>{workspace.lead.status}</strong>
+              </article>
+            </div>
+
+            {hasHumanReview ? (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 18, marginTop: 22 }}>
+                <form action={`/api/interno/pre-diagnosticos/${id}/contact`} method="post" className={styles.form} style={{ marginTop: 0, padding: 18, border: "1px solid rgba(1,48,30,.12)", borderRadius: 18, background: "rgba(255,255,255,.45)" }}>
+                  <strong>Registrar contato iniciado</strong>
+                  <label>
+                    Canal usado
+                    <select name="channel" defaultValue="whatsapp" style={{ border: "1px solid rgba(1,48,30,.18)", background: "rgba(255,255,255,.8)", color: "#08271b", borderRadius: 14, padding: 13, font: "inherit" }}>
+                      <option value="whatsapp">WhatsApp</option>
+                      <option value="email">E-mail</option>
+                      <option value="phone">Telefone</option>
+                      <option value="other">Outro</option>
+                    </select>
+                  </label>
+                  <label>
+                    Observação interna
+                    <textarea name="notes" maxLength={2000} rows={4} placeholder="Ex.: leitura enviada manualmente; aguardando retorno." style={{ border: "1px solid rgba(1,48,30,.18)", background: "rgba(255,255,255,.8)", color: "#08271b", borderRadius: 14, padding: 14, font: "inherit", resize: "vertical" }} />
+                  </label>
+                  <label>
+                    Próxima ação, se houver
+                    <input name="next_action_title" maxLength={180} placeholder="Ex.: confirmar disponibilidade para conversa" style={{ borderColor: "rgba(1,48,30,.18)", background: "rgba(255,255,255,.8)", color: "#08271b" }} />
+                  </label>
+                  <label>
+                    Quando
+                    <input name="next_action_at" type="datetime-local" style={{ borderColor: "rgba(1,48,30,.18)", background: "rgba(255,255,255,.8)", color: "#08271b" }} />
+                  </label>
+                  <button className={styles.button} type="submit">Registrar contato — não enviar</button>
+                </form>
+
+                <form action={`/api/interno/pre-diagnosticos/${id}/meeting`} method="post" className={styles.form} style={{ marginTop: 0, padding: 18, border: "1px solid rgba(1,48,30,.12)", borderRadius: 18, background: "rgba(255,255,255,.45)" }}>
+                  <strong>Registrar reunião</strong>
+                  <label>
+                    Data e horário
+                    <input name="scheduled_at" type="datetime-local" required style={{ borderColor: "rgba(1,48,30,.18)", background: "rgba(255,255,255,.8)", color: "#08271b" }} />
+                  </label>
+                  <label>
+                    Observação interna
+                    <textarea name="notes" maxLength={2000} rows={5} placeholder="Ex.: reunião de descoberta; validar operação e equipe." style={{ border: "1px solid rgba(1,48,30,.18)", background: "rgba(255,255,255,.8)", color: "#08271b", borderRadius: 14, padding: 14, font: "inherit", resize: "vertical" }} />
+                  </label>
+                  <div className={styles.notice}>
+                    O horário é registrado no fuso da Bahia. Esta ação não cria evento no Google Calendar e não convida o lead.
+                  </div>
+                  <button className={styles.button} type="submit">Registrar reunião no OS</button>
+                </form>
+              </div>
+            ) : (
+              <div className={styles.notice} style={{ marginTop: 18 }}>
+                Esta etapa abre depois da revisão humana. Nenhum contato deve ser registrado como feito antes dessa validação.
+              </div>
+            )}
           </section>
         </div>
       </div>

@@ -168,6 +168,185 @@ export async function markPreDiagnosticInitialReadingFailed(input: {
 }
 
 /**
+ * Registra que uma pessoa da Blinko iniciou contato. Não envia mensagem.
+ * Atualiza o estágio apenas para frente, encerra tarefas de revisão já cumpridas
+ * e pode criar uma próxima ação operacional.
+ */
+export async function recordLeadContact(input: {
+  preDiagnosticId: string;
+  leadId: string;
+  channel: "whatsapp" | "email" | "phone" | "other";
+  notes?: string;
+  actorLabel: string;
+  nextActionTitle?: string;
+  nextActionAtLocal?: string;
+}) {
+  const sql = getSql();
+  const rows = await sql`
+    with target as (
+      select l.id, l.status as old_status
+      from public.leads l
+      join public.pre_diagnostics pd on pd.lead_id = l.id
+      where l.id = ${input.leadId}::uuid
+        and pd.id = ${input.preDiagnosticId}::uuid
+      limit 1
+    ), updated as (
+      update public.leads l
+         set status = case when l.status in ('new','reviewing') then 'contacted' else l.status end,
+             updated_at = now()
+        from target t
+       where l.id = t.id
+      returning l.id, l.status as new_status
+    ), closed_actions as (
+      update public.crm_actions a
+         set status = 'done', completed_at = now()
+       where a.pre_diagnostic_id = ${input.preDiagnosticId}::uuid
+         and a.status in ('pending','in_progress')
+         and a.action_type in ('review_pre_diagnostic','review_initial_reading')
+      returning a.id
+    ), next_action as (
+      insert into public.crm_actions (
+        lead_id, pre_diagnostic_id, action_type, status, priority, title, payload, due_at
+      )
+      select
+        ${input.leadId}::uuid,
+        ${input.preDiagnosticId}::uuid,
+        'follow_up',
+        'pending',
+        'normal',
+        ${input.nextActionTitle ?? ""},
+        jsonb_build_object(
+          'created_by', ${input.actorLabel},
+          'source', 'blinko_os_internal',
+          'contact_channel', ${input.channel}
+        ),
+        case
+          when nullif(${input.nextActionAtLocal ?? ""}, '') is null then null
+          else (${input.nextActionAtLocal ?? ""}::timestamp at time zone 'America/Bahia')
+        end
+      where nullif(trim(${input.nextActionTitle ?? ""}), '') is not null
+      returning id
+    ), audit as (
+      insert into public.audit_events (
+        entity_type, entity_id, event_type, actor_type, actor_id, payload
+      )
+      select
+        'lead',
+        t.id,
+        'contact_recorded',
+        'human',
+        ${input.actorLabel},
+        jsonb_build_object(
+          'pre_diagnostic_id', ${input.preDiagnosticId}::uuid,
+          'channel', ${input.channel},
+          'notes', ${input.notes ?? ""},
+          'old_status', t.old_status,
+          'new_status', u.new_status,
+          'next_action_title', nullif(${input.nextActionTitle ?? ""}, ''),
+          'next_action_at_local', nullif(${input.nextActionAtLocal ?? ""}, '')
+        )
+      from target t
+      join updated u on u.id = t.id
+      returning id
+    )
+    select jsonb_build_object(
+      'ok', exists(select 1 from updated),
+      'new_status', (select new_status from updated limit 1),
+      'next_action_id', (select id from next_action limit 1)
+    ) as result
+  `;
+
+  return rows[0]?.result;
+}
+
+/**
+ * Agenda uma reunião no histórico/CRM. Não cria evento externo de calendário.
+ */
+export async function scheduleLeadMeeting(input: {
+  preDiagnosticId: string;
+  leadId: string;
+  scheduledAtLocal: string;
+  notes?: string;
+  actorLabel: string;
+}) {
+  const sql = getSql();
+  const rows = await sql`
+    with target as (
+      select l.id, l.status as old_status
+      from public.leads l
+      join public.pre_diagnostics pd on pd.lead_id = l.id
+      where l.id = ${input.leadId}::uuid
+        and pd.id = ${input.preDiagnosticId}::uuid
+      limit 1
+    ), updated as (
+      update public.leads l
+         set status = case when l.status in ('new','reviewing','contacted') then 'meeting' else l.status end,
+             updated_at = now()
+        from target t
+       where l.id = t.id
+      returning l.id, l.status as new_status
+    ), close_followups as (
+      update public.crm_actions a
+         set status = 'done', completed_at = now()
+       where a.pre_diagnostic_id = ${input.preDiagnosticId}::uuid
+         and a.status in ('pending','in_progress')
+         and a.action_type = 'follow_up'
+      returning a.id
+    ), meeting_action as (
+      insert into public.crm_actions (
+        lead_id, pre_diagnostic_id, action_type, status, priority, title, payload, due_at
+      )
+      select
+        ${input.leadId}::uuid,
+        ${input.preDiagnosticId}::uuid,
+        'meeting',
+        'pending',
+        'normal',
+        'Reunião com lead',
+        jsonb_build_object(
+          'created_by', ${input.actorLabel},
+          'source', 'blinko_os_internal',
+          'notes', ${input.notes ?? ""},
+          'scheduled_at_local', ${input.scheduledAtLocal},
+          'timezone', 'America/Bahia'
+        ),
+        (${input.scheduledAtLocal}::timestamp at time zone 'America/Bahia')
+      where exists(select 1 from updated)
+      returning id
+    ), audit as (
+      insert into public.audit_events (
+        entity_type, entity_id, event_type, actor_type, actor_id, payload
+      )
+      select
+        'lead',
+        t.id,
+        'meeting_scheduled',
+        'human',
+        ${input.actorLabel},
+        jsonb_build_object(
+          'pre_diagnostic_id', ${input.preDiagnosticId}::uuid,
+          'scheduled_at_local', ${input.scheduledAtLocal},
+          'timezone', 'America/Bahia',
+          'notes', ${input.notes ?? ""},
+          'old_status', t.old_status,
+          'new_status', u.new_status,
+          'crm_action_id', (select id from meeting_action limit 1)
+        )
+      from target t
+      join updated u on u.id = t.id
+      returning id
+    )
+    select jsonb_build_object(
+      'ok', exists(select 1 from updated),
+      'new_status', (select new_status from updated limit 1),
+      'meeting_action_id', (select id from meeting_action limit 1)
+    ) as result
+  `;
+
+  return rows[0]?.result;
+}
+
+/**
  * Leitura server-only da fila operacional "Hoje na Blinko".
  * Não expõe tabelas diretamente ao navegador e não substitui autenticação.
  */
@@ -227,6 +406,19 @@ export async function getBlinkoTodayQueue() {
           join public.leads l on l.id = a.lead_id
           left join public.pre_diagnostics pd on pd.id = a.pre_diagnostic_id
           where a.status in ('pending', 'in_progress')
+            and not (
+              a.action_type = 'review_pre_diagnostic'
+              and pd.human_review_status = 'reviewed'
+            )
+            and not (
+              a.action_type = 'review_initial_reading'
+              and exists (
+                select 1
+                from public.pre_diagnostic_initial_readings ir
+                where ir.pre_diagnostic_id = pd.id
+                  and ir.status in ('approved','sent')
+              )
+            )
           order by a.created_at asc
           limit 50
         ) queue_rows
@@ -256,10 +448,20 @@ export async function getPreDiagnosticReviewWorkspace(preDiagnosticId: string) {
         limit 1
       ),
       'open_actions', coalesce((
-        select jsonb_agg(to_jsonb(a) order by a.created_at asc)
+        select jsonb_agg(to_jsonb(a) order by a.due_at nulls last, a.created_at asc)
         from public.crm_actions a
         where a.pre_diagnostic_id = pd.id
           and a.status in ('pending', 'in_progress')
+          and not (a.action_type = 'review_pre_diagnostic' and pd.human_review_status = 'reviewed')
+          and not (
+            a.action_type = 'review_initial_reading'
+            and exists (
+              select 1
+              from public.pre_diagnostic_initial_readings ir
+              where ir.pre_diagnostic_id = pd.id
+                and ir.status in ('approved','sent')
+            )
+          )
       ), '[]'::jsonb)
     ) as result
     from public.pre_diagnostics pd
