@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import { BLINKO_LOGO_DARK_DATA_URI } from "../lib/blinko/brand-logo-data";
+import { BLINKO_FLOWER_DATA_URI } from "../lib/blinko/brand-flower-data";
 
 const pillars = ["Marca", "Digital", "Financeiro", "Operação", "Atendimento", "Gestão", "Equipe"];
 
@@ -68,7 +70,7 @@ export default function Home() {
 
       <header className="topbar">
         <a href="#top" aria-label="Blinko, início" className="logo-wrap">
-          <img src="/brand/logo-claro.webp" alt="Blinko" />
+          <img src={BLINKO_LOGO_DARK_DATA_URI} alt="Blinko" />
         </a>
         <nav aria-label="Navegação principal">
           <a href="#como">Como funciona</a>
@@ -98,7 +100,7 @@ export default function Home() {
           <p>Não começamos escolhendo um serviço. Começamos entendendo a empresa, o contexto e a ordem certa de mexer nas coisas.</p>
         </div>
         <figure className="walk-photo">
-          <img src="/photos/caminhando.webp" alt="Profissional caminhando em direção a um espaço Blinko" />
+          <img src="/photos/notebook-2.webp" alt="Profissional em ambiente Blinko" />
           <figcaption>entrar · observar · perguntar · conectar</figcaption>
         </figure>
         <span className="giant-word">ENTRAR</span>
@@ -172,7 +174,12 @@ export default function Home() {
       <section className="diagnostic" id="diagnostico">
         <div className="diag-orbit" aria-hidden="true">
           <i/><i/>
-          <img className="diag-flower" src="/brand/flor-centro.webp" alt="" />
+          <img
+            className="diag-flower"
+            src={BLINKO_FLOWER_DATA_URI}
+            alt=""
+            style={{ width: "clamp(88px, 11vw, 150px)", height: "auto", top: "50%" }}
+          />
         </div>
         <div className="diag-copy">
           <span className="section-id inverse">05 / COMECE PELO PONTO CERTO</span>
@@ -183,7 +190,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer><img className="footer-logo" src="/brand/logo-claro.webp" alt="Blinko" /><p>Inovação aplicada ao problema real da empresa.</p><a href="#top">Voltar ao topo ↑</a></footer>
+      <footer><img className="footer-logo" src={BLINKO_LOGO_DARK_DATA_URI} alt="Blinko" /><p>Inovação aplicada ao problema real da empresa.</p><a href="#top">Voltar ao topo ↑</a></footer>
     </main>
   );
 }
