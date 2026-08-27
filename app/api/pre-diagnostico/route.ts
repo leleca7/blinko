@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isSupabaseConfigured, supabaseRpc } from "../../../lib/blinko/supabase-server";
 
 type FormBody = {
   name?: unknown;
@@ -147,10 +148,7 @@ export async function POST(request: Request) {
       investment: investmentIntent,
     });
 
-    const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, "");
-    const secretKey = process.env.SUPABASE_SECRET_KEY;
-
-    if (!supabaseUrl || !secretKey) {
+    if (!isSupabaseConfigured()) {
       console.error("Blinko pre-diagnostic: Supabase environment is not configured.");
       return NextResponse.json({ ok: false, error: "service_not_configured" }, { status: 503 });
     }
@@ -181,25 +179,23 @@ export async function POST(request: Request) {
       source: "site_pre_diagnostic",
     };
 
-    const response = await fetch(`${supabaseUrl}/rest/v1/rpc/create_pre_diagnostic_submission`, {
-      method: "POST",
-      headers: {
-        apikey: secretKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ payload }),
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      const details = await response.text();
-      console.error("Blinko pre-diagnostic: Supabase RPC failed", response.status, details.slice(0, 500));
-      return NextResponse.json({ ok: false, error: "submission_failed" }, { status: 502 });
-    }
+    await supabaseRpc("create_pre_diagnostic_submission", { payload });
 
     // Não devolvemos score comercial nem IDs internos ao visitante.
     return NextResponse.json({ ok: true });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "unknown";
+
+    if (message === "supabase_not_configured") {
+      console.error("Blinko pre-diagnostic: Supabase environment is not configured.");
+      return NextResponse.json({ ok: false, error: "service_not_configured" }, { status: 503 });
+    }
+
+    if (message.startsWith("supabase_rpc_failed:")) {
+      console.error("Blinko pre-diagnostic: Supabase RPC failed", message.slice(0, 1200));
+      return NextResponse.json({ ok: false, error: "submission_failed" }, { status: 502 });
+    }
+
     console.error("Blinko pre-diagnostic: unexpected error", error);
     return NextResponse.json({ ok: false, error: "unexpected_error" }, { status: 500 });
   }
