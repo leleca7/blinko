@@ -11,7 +11,7 @@ const interventionExamples = [
     "01",
     "Captação + atendimento",
     "Quando o ponto validado está entre aquisição e resposta",
-    "Landing page, formulário, CRM e automação podem trabalhar juntos — se forem a intervenção certa.",
+    "Landing page, formulário, CRM e automação podem trabalhar juntos quando forem a intervenção certa.",
   ],
   [
     "02",
@@ -189,7 +189,7 @@ export default function Home() {
           <span className="section-id">03 / UMA EMPRESA É UM SISTEMA VIVO</span>
           <h2>Sete áreas. <em>Uma leitura conectada.</em></h2>
           <p>
-            Um sinal pode aparecer em uma ponta e ter origem em outra. Por isso analisamos Marca, Digital, Financeiro, Operação, Atendimento, Gestão e Equipe de forma conectada — observando também confiança, reputação, relação com os públicos e coerência entre discurso e prática.
+            Um sinal pode aparecer em uma ponta e ter origem em outra. Por isso analisamos Marca, Digital, Financeiro, Operação, Atendimento, Gestão e Equipe de forma conectada. Também observamos confiança, reputação, relação com os públicos e coerência entre discurso e prática.
           </p>
         </div>
         <div className="pillar-list">
