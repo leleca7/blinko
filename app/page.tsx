@@ -68,7 +68,16 @@ export default function Home() {
       <div className="cursor-glow" aria-hidden="true" />
       <div className="progress" aria-hidden="true" />
 
-      <header className="topbar">
+      <header
+        className="topbar"
+        style={{
+          background: "rgba(1,48,30,.56)",
+          border: "1px solid rgba(255,255,255,.2)",
+          backdropFilter: "blur(18px) saturate(120%)",
+          WebkitBackdropFilter: "blur(18px) saturate(120%)",
+          boxShadow: "0 20px 50px rgba(0,0,0,.12)",
+        }}
+      >
         <a href="#top" aria-label="Blinko, início" className="logo-wrap">
           <img src={BLINKO_LOGO_DARK_DATA_URI} alt="Blinko" />
         </a>
@@ -100,7 +109,7 @@ export default function Home() {
           <p>Não começamos escolhendo um serviço. Começamos entendendo a empresa, o contexto e a ordem certa de mexer nas coisas.</p>
         </div>
         <figure className="walk-photo">
-          <img src="/photos/notebook-2.webp" alt="Profissional em ambiente Blinko" />
+          <img src="/photos/caminhando.webp" alt="Profissional caminhando em direção a um espaço Blinko" />
           <figcaption>entrar · observar · perguntar · conectar</figcaption>
         </figure>
         <span className="giant-word">ENTRAR</span>
