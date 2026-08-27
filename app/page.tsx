@@ -57,7 +57,7 @@ export default function Home() {
           <h1>O problema <em>raramente</em> está onde parece.</h1>
           <p className="hero-lede">A Blinko entra na empresa, encontra a raiz do que está travando o negócio e implanta a solução certa — da estratégia à tecnologia.</p>
           <div className="actions">
-            <a className="button light" href="#diagnostico">Fazer diagnóstico</a>
+            <a className="button light" href="/diagnostico">Fazer diagnóstico</a>
             <a className="text-link" href="#como">investigar ↓</a>
           </div>
         </div>
@@ -129,7 +129,7 @@ export default function Home() {
           <span className="section-id inverse">05 / COMECE PELO PONTO CERTO</span>
           <h2>Descubra onde sua empresa pode estar perdendo evolução.</h2>
           <p>Uma análise inicial para organizar sinais e entender se existe uma oportunidade real para aprofundar.</p>
-          <a className="button pink" href="mailto:contato@blinko.com.br?subject=Diagnóstico%20Blinko">Quero começar</a>
+          <a className="button pink" href="/diagnostico">Quero começar</a>
           <small>O diagnóstico gratuito é uma triagem inicial. O Diagnóstico Blinko profundo é uma etapa separada.</small>
         </div>
       </section>
