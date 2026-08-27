@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BLINKO_LOGO_DARK_DATA_URI } from "../../lib/blinko/brand-logo-data";
 import PreDiagnosticForm from "./PreDiagnosticForm";
 import styles from "./diagnostico.module.css";
 
@@ -13,7 +14,11 @@ export default function DiagnosticoPage() {
     <main className={styles.page}>
       <header className={styles.topbar}>
         <Link href="/" className={styles.brand} aria-label="Voltar para Blinko">
-          BLINKO
+          <img
+            src={BLINKO_LOGO_DARK_DATA_URI}
+            alt="Blinko"
+            style={{ display: "block", width: 112, maxWidth: "34vw", height: "auto" }}
+          />
         </Link>
         <Link href="/" className={styles.back}>← voltar ao site</Link>
       </header>

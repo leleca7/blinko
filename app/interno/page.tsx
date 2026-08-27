@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireInternalSession } from "../../lib/blinko/internal-auth";
 import { getBlinkoTodayQueue } from "../../lib/blinko/neon-server";
 import { normalizeBlinkoTodayQueue } from "../../lib/blinko/internal-queue";
+import InternalBrand from "./InternalBrand";
 import styles from "./interno.module.css";
 
 function labelPriority(priority: string) {
@@ -16,7 +17,7 @@ export default async function InternalTodayPage() {
     <main className={styles.page}>
       <div className={styles.shell}>
         <header className={styles.topbar}>
-          <strong className={styles.brand}>BLINKO OS</strong>
+          <InternalBrand />
           <nav className={styles.nav}>
             <span className={styles.link}>{session.user}</span>
             <form action="/api/interno/logout" method="post">

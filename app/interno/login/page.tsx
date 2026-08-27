@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getInternalSession, isInternalAccessConfigured } from "../../../lib/blinko/internal-auth";
+import InternalBrand from "../InternalBrand";
 import styles from "../interno.module.css";
 
 type Props = {
@@ -17,7 +18,10 @@ export default async function InternalLoginPage({ searchParams }: Props) {
   return (
     <main className={styles.loginWrap}>
       <section className={styles.loginCard}>
-        <span className={styles.eyebrow}>BLINKO OS · ACESSO INTERNO</span>
+        <div style={{ marginBottom: 24 }}>
+          <InternalBrand />
+        </div>
+        <span className={styles.eyebrow}>ACESSO INTERNO</span>
         <h1>Hoje na Blinko.</h1>
         <p>Fila operacional, pré-diagnósticos e revisões humanas em um ambiente separado do site público.</p>
 

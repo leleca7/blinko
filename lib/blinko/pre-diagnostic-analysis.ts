@@ -161,8 +161,11 @@ Regras:
 6. Gere no máximo 5 perguntas para reunião, priorizando as que mais mudariam a decisão.
 7. Não recomende automaticamente site, CRM, tráfego, conteúdo, automação ou qualquer outra intervenção.
 8. Se houver pouca informação ou risco de conclusão excessiva, use mandatory_human_review ou request_information.
-9. A saída deve respeitar exatamente o schema JSON esperado pela aplicação.
-10. O texto deve ser profissional, objetivo e em português do Brasil.`;
+9. Aplique uma lente transversal de Relações Públicas em todos os pilares: confiança, reputação, relação com públicos e stakeholders, comunicação organizacional e coerência entre promessa, discurso e prática.
+10. Reclamação, avaliação negativa, ruído de comunicação ou queda de confiança são sinais. Não trate esses sinais como prova de crise reputacional nem como causa raiz.
+11. Só use linguagem de crise quando houver evidência concreta de ameaça reputacional aguda nas informações fornecidas.
+12. A saída deve respeitar exatamente o schema JSON esperado pela aplicação.
+13. O texto deve ser profissional, objetivo e em português do Brasil.`;
 }
 
 export function buildPreDiagnosticAnalysisInput(payload: Record<string, unknown>) {
