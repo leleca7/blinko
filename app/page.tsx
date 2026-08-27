@@ -14,31 +14,63 @@ const cases = [
 export default function Home() {
   useEffect(() => {
     const root = document.documentElement;
-    const pointer = (event: PointerEvent) => {
-      root.style.setProperty("--mx", String(event.clientX / innerWidth - 0.5));
-      root.style.setProperty("--my", String(event.clientY / innerHeight - 0.5));
+    const rootStory = document.querySelector<HTMLElement>(".root-story");
+    let frame = 0;
+
+    const updatePointer = (event: PointerEvent) => {
+      root.style.setProperty("--mouse-x", `${event.clientX}px`);
+      root.style.setProperty("--mouse-y", `${event.clientY}px`);
+      root.style.setProperty("--mx", String(event.clientX / window.innerWidth - 0.5));
+      root.style.setProperty("--my", String(event.clientY / window.innerHeight - 0.5));
+      root.dataset.pointer = "active";
     };
-    const scroll = () => {
-      const max = document.documentElement.scrollHeight - innerHeight;
-      root.style.setProperty("--scroll", String(max > 0 ? scrollY / max : 0));
+
+    const updateScroll = () => {
+      frame = 0;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      root.style.setProperty("--scroll", String(max > 0 ? window.scrollY / max : 0));
+
+      if (!rootStory) return;
+
+      const rect = rootStory.getBoundingClientRect();
+      const travel = Math.max(rootStory.offsetHeight - window.innerHeight, 1);
+      const progress = Math.min(1, Math.max(0, -rect.top / travel));
+      const scene = progress < 0.3 ? "surface" : progress < 0.64 ? "layers" : "root";
+
+      rootStory.style.setProperty("--root-progress", String(progress));
+      if (rootStory.dataset.scene !== scene) {
+        rootStory.dataset.scene = scene;
+      }
     };
-    addEventListener("pointermove", pointer, { passive: true });
-    addEventListener("scroll", scroll, { passive: true });
-    scroll();
+
+    const scheduleScrollUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateScroll);
+    };
+
+    window.addEventListener("pointermove", updatePointer, { passive: true });
+    window.addEventListener("scroll", scheduleScrollUpdate, { passive: true });
+    window.addEventListener("resize", scheduleScrollUpdate, { passive: true });
+    updateScroll();
+
     return () => {
-      removeEventListener("pointermove", pointer);
-      removeEventListener("scroll", scroll);
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("pointermove", updatePointer);
+      window.removeEventListener("scroll", scheduleScrollUpdate);
+      window.removeEventListener("resize", scheduleScrollUpdate);
+      delete root.dataset.pointer;
     };
   }, []);
 
   return (
     <main>
+      <div className="cursor-glow" aria-hidden="true" />
       <div className="progress" aria-hidden="true" />
+
       <header className="topbar">
         <a href="#top" aria-label="Blinko, início" className="logo-wrap">
           <img src="/brand/logo-claro.webp" alt="Blinko" />
         </a>
-        <nav>
+        <nav aria-label="Navegação principal">
           <a href="#como">Como funciona</a>
           <a href="#analise">Análise</a>
           <a href="#cases">Cases</a>
@@ -47,11 +79,6 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <video className="hero-video" autoPlay muted loop playsInline poster="/media/hero-poster.webp" aria-hidden="true">
-          <source src="/media/hero.mp4" type="video/mp4" />
-        </video>
-        <div className="hero-wash" />
-        <div className="hero-grid" />
         <div className="hero-content">
           <p className="eyebrow">DIAGNÓSTICO · ESTRATÉGIA · EXECUÇÃO · EVOLUÇÃO</p>
           <h1>O problema <em>raramente</em> está onde parece.</h1>
@@ -61,7 +88,6 @@ export default function Home() {
             <a className="text-link" href="#como">investigar ↓</a>
           </div>
         </div>
-        <img className="hero-stamp" src="/brand/flor-centro.webp" alt="" aria-hidden="true" />
         <span className="side-note">ROLE PARA ENTRAR NA EMPRESA</span>
       </section>
 
@@ -78,16 +104,37 @@ export default function Home() {
         <span className="giant-word">ENTRAR</span>
       </section>
 
-      <section className="root-story">
+      <section className="root-story" aria-label="Da superfície até a raiz">
         <div className="root-sticky">
-          <div className="botanical" aria-hidden="true">
-            <i className="leaf one" /><i className="leaf two" /><i className="stem" />
-            <i className="root r1" /><i className="root r2" /><i className="root r3" /><i className="root r4" />
+          <div className="root-organic" aria-hidden="true">
+            <div className="root-orbit root-orbit-a" />
+            <div className="root-orbit root-orbit-b" />
+            <div className="root-shape root-shape-a" />
+            <div className="root-shape root-shape-b" />
+            <div className="root-shape root-shape-c" />
+            <div className="root-core">
+              <span>RAIZ</span>
+              <small>o ponto que sustenta o resto</small>
+            </div>
+            <span className="root-caption">sintoma → contexto → causa</span>
           </div>
+
           <div className="root-scenes">
-            <article className="scene s1"><span>SUPERFÍCIE</span><h3>“Precisamos postar mais.”</h3><p>Talvez. Mas isso é a causa ou só o lugar onde o problema aparece?</p></article>
-            <article className="scene s2"><span>CAMADAS</span><h3>Comunicação. Atendimento. Operação.</h3><p>A leitura muda quando as áreas deixam de ser vistas isoladamente.</p></article>
-            <article className="scene s3"><span>RAIZ</span><h3>Primeiro corrigimos o que sustenta tudo.</h3><p>Depois avançamos para as pontas com muito mais precisão.</p></article>
+            <article className="scene s1">
+              <span>SUPERFÍCIE</span>
+              <h3>“Precisamos postar mais.”</h3>
+              <p>Talvez. Mas isso é a causa ou só o lugar onde o problema aparece?</p>
+            </article>
+            <article className="scene s2">
+              <span>CAMADAS</span>
+              <h3>Comunicação. Atendimento. Operação.</h3>
+              <p>A leitura muda quando as áreas deixam de ser vistas isoladamente.</p>
+            </article>
+            <article className="scene s3">
+              <span>RAIZ</span>
+              <h3>Primeiro corrigimos o que sustenta tudo.</h3>
+              <p>Depois avançamos para as pontas com muito mais precisão.</p>
+            </article>
           </div>
         </div>
       </section>
@@ -102,7 +149,6 @@ export default function Home() {
             {[["01","Entender"],["02","Diagnosticar"],["03","Priorizar"],["04","Implantar"],["05","Acompanhar"]].map(([n,t]) => <div key={n}><span>{n}</span><strong>{t}</strong></div>)}
           </div>
         </div>
-        <img className="floating-stamp" src="/brand/flor-centro.webp" alt="" aria-hidden="true" />
       </section>
 
       <section className="pillars" id="analise">
@@ -124,7 +170,10 @@ export default function Home() {
       </section>
 
       <section className="diagnostic" id="diagnostico">
-        <div className="diag-orbit" aria-hidden="true"><i/><i/><b>*</b></div>
+        <div className="diag-orbit" aria-hidden="true">
+          <i/><i/>
+          <img className="diag-flower" src="/brand/flor-centro.webp" alt="" />
+        </div>
         <div className="diag-copy">
           <span className="section-id inverse">05 / COMECE PELO PONTO CERTO</span>
           <h2>Descubra onde sua empresa pode estar perdendo evolução.</h2>
@@ -134,7 +183,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer><img src="/brand/logo-claro.webp" alt="Blinko" /><p>Inovação aplicada ao problema real da empresa.</p><a href="#top">Voltar ao topo ↑</a></footer>
+      <footer><img className="footer-logo" src="/brand/logo-claro.webp" alt="Blinko" /><p>Inovação aplicada ao problema real da empresa.</p><a href="#top">Voltar ao topo ↑</a></footer>
     </main>
   );
 }
