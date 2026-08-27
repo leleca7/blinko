@@ -51,7 +51,7 @@ export default function BioPage() {
         <h2>Inovação aplicada ao <em>problema real da empresa.</em></h2>
         <p>
           Marketing, comunicação, design, tecnologia, processos, gestão e automação continuam fazendo parte da Blinko.
-          A diferença é que entram como ferramentas de intervenção — não como respostas prontas antes de entender o problema.
+          A diferença é que entram como ferramentas de intervenção. Não são respostas prontas antes de entender o problema.
         </p>
       </section>
 
