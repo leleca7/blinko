@@ -1,4 +1,9 @@
-import { supabaseRpc } from "./supabase-server";
+import {
+  approvePreDiagnosticInitialReading,
+  createPreDiagnosticInitialReadingDraft,
+  markPreDiagnosticInitialReadingFailed,
+  markPreDiagnosticInitialReadingSent,
+} from "./neon-server";
 import { INITIAL_READING_VERSION, type InitialReadingChannel } from "./initial-reading";
 
 type CreateInitialReadingDraftInput = {
@@ -13,16 +18,16 @@ type CreateInitialReadingDraftInput = {
 };
 
 export async function createInitialReadingDraft(input: CreateInitialReadingDraftInput) {
-  return supabaseRpc<string>("create_pre_diagnostic_initial_reading_draft", {
-    p_pre_diagnostic_id: input.preDiagnosticId,
-    p_analysis_run_id: input.analysisRunId ?? null,
-    p_channel: input.channel,
-    p_subject: input.subject ?? "",
-    p_body: input.body,
-    p_content_version: INITIAL_READING_VERSION,
-    p_created_by_type: input.createdByType,
-    p_created_by_id: input.createdById ?? null,
-    p_supersedes_id: input.supersedesId ?? null,
+  return createPreDiagnosticInitialReadingDraft({
+    preDiagnosticId: input.preDiagnosticId,
+    analysisRunId: input.analysisRunId ?? null,
+    channel: input.channel,
+    subject: input.subject ?? "",
+    body: input.body,
+    contentVersion: INITIAL_READING_VERSION,
+    createdByType: input.createdByType,
+    createdById: input.createdById ?? null,
+    supersedesId: input.supersedesId ?? null,
   });
 }
 
@@ -40,14 +45,7 @@ type ApproveInitialReadingInput = {
  * A função Postgres também valida que a revisão humana pertence ao mesmo pré-diagnóstico.
  */
 export async function approveInitialReading(input: ApproveInitialReadingInput) {
-  return supabaseRpc<string>("approve_pre_diagnostic_initial_reading", {
-    p_reading_id: input.readingId,
-    p_human_review_id: input.humanReviewId,
-    p_approved_body: input.body,
-    p_approved_subject: input.subject ?? "",
-    p_reviewer_user_id: input.reviewerUserId ?? null,
-    p_reviewer_label: input.reviewerLabel ?? "",
-  });
+  return approvePreDiagnosticInitialReading(input);
 }
 
 /**
@@ -59,11 +57,7 @@ export async function recordInitialReadingSent(input: {
   deliveryProvider: string;
   deliveryMessageId?: string;
 }) {
-  return supabaseRpc<string>("record_pre_diagnostic_initial_reading_sent", {
-    p_reading_id: input.readingId,
-    p_delivery_provider: input.deliveryProvider,
-    p_delivery_message_id: input.deliveryMessageId ?? "",
-  });
+  return markPreDiagnosticInitialReadingSent(input);
 }
 
 export async function recordInitialReadingDeliveryFailed(input: {
@@ -71,9 +65,5 @@ export async function recordInitialReadingDeliveryFailed(input: {
   deliveryProvider: string;
   error: string;
 }) {
-  return supabaseRpc<string>("record_pre_diagnostic_initial_reading_failed", {
-    p_reading_id: input.readingId,
-    p_delivery_provider: input.deliveryProvider,
-    p_error: input.error,
-  });
+  return markPreDiagnosticInitialReadingFailed(input);
 }
