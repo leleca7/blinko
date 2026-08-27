@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import styles from "./diagnostico.module.css";
 
 const areas = ["Marca", "Digital", "Financeiro", "Operação", "Atendimento", "Gestão", "Equipe", "Não sei identificar ainda"];
@@ -71,11 +71,14 @@ function values(form: FormData, name: string) {
 
 export default function PreDiagnosticForm() {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const submissionIdRef = useRef<string | null>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const element = event.currentTarget;
     const form = new FormData(element);
+
+    submissionIdRef.current ??= crypto.randomUUID();
 
     const pillarAnswers = Object.fromEntries(
       pillarQuestions.map((pillar) => [pillar.key, String(form.get(`pillar_${pillar.key}`) || "")]),
@@ -110,7 +113,10 @@ export default function PreDiagnosticForm() {
     try {
       const response = await fetch("/api/pre-diagnostico", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Blinko-Submission-Id": submissionIdRef.current,
+        },
         body: JSON.stringify(payload),
       });
 
