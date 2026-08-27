@@ -13,6 +13,13 @@ type Props = {
   searchParams?: Promise<{ status?: string }>;
 };
 
+function statusNotice(status?: string) {
+  if (status === "saved") return "Revisão registrada no histórico.";
+  if (status === "unchanged") return "Nenhuma alteração detectada. O histórico existente foi preservado sem criar uma versão duplicada.";
+  if (status === "missing") return "Escreva uma nota antes de registrar a revisão.";
+  return null;
+}
+
 export default async function PreDiagnosticReviewPage({ params, searchParams }: Props) {
   const session = await requireInternalSession();
   const { id } = await params;
@@ -21,6 +28,7 @@ export default async function PreDiagnosticReviewPage({ params, searchParams }: 
 
   const workspace = normalizeReviewWorkspace(await getPreDiagnosticReviewWorkspace(id));
   if (!workspace) notFound();
+  const notice = statusNotice(query.status);
 
   return (
     <main className={styles.page}>
@@ -37,6 +45,7 @@ export default async function PreDiagnosticReviewPage({ params, searchParams }: 
 
         <div className={styles.hero} style={{ paddingBottom: 14 }}>
           <Link className={styles.back} href="/interno">← voltar para Hoje na Blinko</Link>
+          {notice ? <div className={styles.notice} style={{ marginTop: 14, maxWidth: 760 }}>{notice}</div> : null}
         </div>
 
         <div className={styles.reviewShell}>
@@ -50,9 +59,6 @@ export default async function PreDiagnosticReviewPage({ params, searchParams }: 
             <p style={{ opacity: .65, lineHeight: 1.5, maxWidth: 760 }}>
               Registre o que foi validado ou precisa ser investigado. Esta nota não é enviada ao cliente e não apaga a análise original da IA.
             </p>
-            {query.status === "saved" ? <div className={styles.notice}>Revisão registrada no histórico.</div> : null}
-            {query.status === "unchanged" ? <div className={styles.notice}>Nenhuma alteração detectada. O histórico existente foi preservado sem criar uma versão duplicada.</div> : null}
-            {query.status === "missing" ? <div className={styles.notice}>Escreva uma nota antes de registrar a revisão.</div> : null}
             <form action={`/api/interno/pre-diagnosticos/${id}/review`} method="post" className={styles.form}>
               <label>
                 Nota da revisão
