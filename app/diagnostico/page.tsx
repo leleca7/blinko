@@ -4,7 +4,7 @@ import PreDiagnosticForm from "./PreDiagnosticForm";
 import styles from "./diagnostico.module.css";
 
 export const metadata: Metadata = {
-  title: "Pré-Diagnóstico — Blinko",
+  title: "Pré-Diagnóstico | Blinko",
   description: "Mostre o que está acontecendo na sua empresa. A Blinko organiza os sinais e prepara a próxima conversa.",
 };
 
