@@ -25,7 +25,7 @@ export default function DiagnosticoPage() {
           Mostre onde a empresa quer chegar e o que está acontecendo hoje. Vamos organizar os sinais para entender se existe algo que vale aprofundar.
         </p>
         <div className={styles.notice}>
-          <strong>Importante.</strong> Esta etapa não é o Diagnóstico Blinko profundo e não gera uma conclusão automática sobre a empresa.
+          <strong>Importante.</strong> Esta etapa não é o Diagnóstico Blinko profundo e não gera uma conclusão automática. A tecnologia organiza os sinais internamente, e a equipe Blinko revisa antes de qualquer leitura personalizada enviada por WhatsApp ou e-mail.
         </div>
       </section>
 
