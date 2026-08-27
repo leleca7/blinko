@@ -51,6 +51,7 @@ export default async function PreDiagnosticReviewPage({ params, searchParams }: 
               Registre o que foi validado ou precisa ser investigado. Esta nota não é enviada ao cliente e não apaga a análise original da IA.
             </p>
             {query.status === "saved" ? <div className={styles.notice}>Revisão registrada no histórico.</div> : null}
+            {query.status === "unchanged" ? <div className={styles.notice}>Nenhuma alteração detectada. O histórico existente foi preservado sem criar uma versão duplicada.</div> : null}
             {query.status === "missing" ? <div className={styles.notice}>Escreva uma nota antes de registrar a revisão.</div> : null}
             <form action={`/api/interno/pre-diagnosticos/${id}/review`} method="post" className={styles.form}>
               <label>
