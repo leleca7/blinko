@@ -9,6 +9,12 @@ const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}
 
 type Context = { params: Promise<{ id: string }> };
 
+function asRecord(value: unknown) {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+}
+
 export async function POST(request: Request, context: Context) {
   const session = await getInternalSession();
   if (!session) return NextResponse.redirect(new URL("/interno/login", request.url), 303);
@@ -25,11 +31,22 @@ export async function POST(request: Request, context: Context) {
   const rawWorkspace = await getPreDiagnosticReviewWorkspace(id) as Record<string, unknown> | null;
   if (!rawWorkspace) return NextResponse.json({ ok: false }, { status: 404 });
 
-  const analysis = rawWorkspace.current_analysis;
-  const analysisRunId = analysis && typeof analysis === "object" && !Array.isArray(analysis)
-    && typeof (analysis as Record<string, unknown>).id === "string"
-    ? String((analysis as Record<string, unknown>).id)
-    : null;
+  const analysis = asRecord(rawWorkspace.current_analysis);
+  const analysisRunId = typeof analysis?.id === "string" ? analysis.id : null;
+
+  const currentReview = asRecord(rawWorkspace.current_human_review);
+  const currentDecision = asRecord(currentReview?.decision);
+  const currentNotes = typeof currentDecision?.notes === "string" ? currentDecision.notes.trim() : "";
+  const currentReviewer = typeof currentReview?.reviewer_label === "string" ? currentReview.reviewer_label : "";
+  const currentAnalysisRunId = typeof currentReview?.analysis_run_id === "string" ? currentReview.analysis_run_id : null;
+
+  const unchanged = currentNotes === notes
+    && currentReviewer === session.user
+    && currentAnalysisRunId === analysisRunId;
+
+  if (unchanged) {
+    return NextResponse.redirect(new URL(`/interno/pre-diagnosticos/${id}?status=unchanged`, request.url), 303);
+  }
 
   await recordPreDiagnosticReview({
     preDiagnosticId: id,
