@@ -192,7 +192,7 @@ export default async function PreDiagnosticReviewPage({ params, searchParams }: 
                     <input type="hidden" name="reading_id" value={readingId} />
                     <label>
                       Assunto
-                      <input name="subject" maxLength={180} defaultValue={readingSubject} />
+                      <input name="subject" maxLength={180} defaultValue={readingSubject} style={{ borderColor: "rgba(1,48,30,.18)", background: "rgba(255,255,255,.72)", color: "#08271b" }} />
                     </label>
                     <label>
                       Texto da leitura inicial
