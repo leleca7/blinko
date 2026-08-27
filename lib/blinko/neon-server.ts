@@ -31,6 +31,56 @@ export async function createPreDiagnosticSubmission<T>(payload: Record<string, u
   return rows[0]?.result as T;
 }
 
+export async function recordPreDiagnosticAnalysis(input: {
+  preDiagnosticId: string;
+  status: "processing" | "ready" | "failed";
+  provider?: string;
+  model?: string;
+  promptVersion: string;
+  inputSnapshot: Record<string, unknown>;
+  output?: Record<string, unknown> | null;
+  errorCode?: string | null;
+  errorDetail?: string | null;
+}) {
+  const sql = getSql();
+  const rows = await sql`
+    select public.record_pre_diagnostic_analysis(
+      ${input.preDiagnosticId}::uuid,
+      ${input.status},
+      ${input.provider ?? ""},
+      ${input.model ?? ""},
+      ${input.promptVersion},
+      ${JSON.stringify(input.inputSnapshot)}::jsonb,
+      ${input.output ? JSON.stringify(input.output) : null}::jsonb,
+      ${input.errorCode ?? null},
+      ${input.errorDetail ?? null}
+    ) as result
+  `;
+
+  return rows[0]?.result as string;
+}
+
+export async function recordPreDiagnosticReview(input: {
+  preDiagnosticId: string;
+  analysisRunId?: string | null;
+  reviewerUserId?: string | null;
+  reviewerLabel?: string;
+  decision: Record<string, unknown>;
+}) {
+  const sql = getSql();
+  const rows = await sql`
+    select public.record_pre_diagnostic_review(
+      ${input.preDiagnosticId}::uuid,
+      ${input.analysisRunId ?? null}::uuid,
+      ${input.reviewerUserId ?? null}::uuid,
+      ${input.reviewerLabel ?? ""},
+      ${JSON.stringify(input.decision)}::jsonb
+    ) as result
+  `;
+
+  return rows[0]?.result as string;
+}
+
 export async function createPreDiagnosticInitialReadingDraft(input: {
   preDiagnosticId: string;
   analysisRunId?: string | null;
