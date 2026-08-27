@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import { isSupabaseConfigured, supabaseRpc } from "../../../lib/blinko/supabase-server";
+import {
+  PRE_DIAGNOSTIC_CONSENT_VERSION,
+  PRE_DIAGNOSTIC_FORM_VERSION,
+  PRE_DIAGNOSTIC_SOURCE_PAGE,
+} from "../../../lib/blinko/pre-diagnostic-version";
 
 type FormBody = {
   name?: unknown;
@@ -27,6 +32,7 @@ type FormBody = {
 };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function text(value: unknown, max: number) {
   if (typeof value !== "string") return "";
@@ -92,6 +98,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
+    const submissionId = request.headers.get("x-blinko-submission-id")?.trim() ?? "";
+    if (!uuidPattern.test(submissionId)) {
+      return NextResponse.json({ ok: false, error: "invalid_submission_id" }, { status: 400 });
+    }
+
     const name = text(body.name, 120);
     const email = text(body.email, 180).toLowerCase();
     const whatsapp = text(body.whatsapp, 40);
@@ -154,6 +165,10 @@ export async function POST(request: Request) {
     }
 
     const payload = {
+      submission_id: submissionId,
+      form_version: PRE_DIAGNOSTIC_FORM_VERSION,
+      consent_version: PRE_DIAGNOSTIC_CONSENT_VERSION,
+      source_page: PRE_DIAGNOSTIC_SOURCE_PAGE,
       name,
       email,
       whatsapp,
