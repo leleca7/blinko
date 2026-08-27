@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { isSupabaseConfigured, supabaseRpc } from "../../../lib/blinko/supabase-server";
+import {
+  createPreDiagnosticSubmission,
+  isNeonConfigured,
+} from "../../../lib/blinko/neon-server";
 import {
   PRE_DIAGNOSTIC_CONSENT_VERSION,
   PRE_DIAGNOSTIC_FORM_VERSION,
@@ -159,8 +162,8 @@ export async function POST(request: Request) {
       investment: investmentIntent,
     });
 
-    if (!isSupabaseConfigured()) {
-      console.error("Blinko pre-diagnostic: Supabase environment is not configured.");
+    if (!isNeonConfigured()) {
+      console.error("Blinko pre-diagnostic: Neon DATABASE_URL is not configured.");
       return NextResponse.json({ ok: false, error: "service_not_configured" }, { status: 503 });
     }
 
@@ -194,20 +197,20 @@ export async function POST(request: Request) {
       source: "site_pre_diagnostic",
     };
 
-    await supabaseRpc("create_pre_diagnostic_submission", { payload });
+    await createPreDiagnosticSubmission(payload);
 
     // Não devolvemos score comercial nem IDs internos ao visitante.
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown";
 
-    if (message === "supabase_not_configured") {
-      console.error("Blinko pre-diagnostic: Supabase environment is not configured.");
+    if (message === "neon_not_configured") {
+      console.error("Blinko pre-diagnostic: Neon DATABASE_URL is not configured.");
       return NextResponse.json({ ok: false, error: "service_not_configured" }, { status: 503 });
     }
 
-    if (message.startsWith("supabase_rpc_failed:")) {
-      console.error("Blinko pre-diagnostic: Supabase RPC failed", message.slice(0, 1200));
+    if (message.includes("create_pre_diagnostic_submission")) {
+      console.error("Blinko pre-diagnostic: Neon database function failed", message.slice(0, 1200));
       return NextResponse.json({ ok: false, error: "submission_failed" }, { status: 502 });
     }
 
