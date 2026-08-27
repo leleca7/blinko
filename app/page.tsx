@@ -102,16 +102,16 @@ export default function Home() {
         <span className="side-note">ROLE PARA ENTRAR NA EMPRESA</span>
       </section>
 
-      <section className="enter" id="como">
-        <div className="enter-copy">
+      <section
+        className="enter"
+        id="como"
+        style={{ gridTemplateColumns: "1fr", minHeight: "100vh" }}
+      >
+        <div className="enter-copy" style={{ maxWidth: "920px" }}>
           <span className="section-id">01 / ANTES DE PROPOR, ENTRAMOS.</span>
           <h2>Você mostra o que está acontecendo. <em>A Blinko procura o que está causando.</em></h2>
           <p>Não começamos escolhendo um serviço. Começamos entendendo a empresa, o contexto e a ordem certa de mexer nas coisas.</p>
         </div>
-        <figure className="walk-photo">
-          <img src="/photos/caminhando.webp" alt="Profissional caminhando em direção a um espaço Blinko" />
-          <figcaption>entrar · observar · perguntar · conectar</figcaption>
-        </figure>
         <span className="giant-word">ENTRAR</span>
       </section>
 
