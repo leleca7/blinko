@@ -1,0 +1,43 @@
+name: Blinko CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - feat/central-empresas-sistemas
+      - feat/catalogo-solucoes
+      - feat/direcoes-visuais
+      - feat/kits-implantacao
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BLINKO_AI_PROVIDER: disabled
+      INTERNAL_USER: ci
+      INTERNAL_PASSWORD: ci-only
+      INTERNAL_SESSION_SECRET: ci-only-session-secret-not-for-production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: TypeScript
+        run: npm run typecheck
+
+      - name: Next.js build
+        run: npm run build
