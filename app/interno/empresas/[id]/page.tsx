@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireInternalSession } from "../../../../lib/blinko/internal-auth";
 import { getCompanyWithSystems } from "../../../../lib/blinko/company-systems-server";
-import InternalBrand from "../../InternalBrand";
+import InternalTopbar from "../../InternalTopbar";
 import styles from "../empresas.module.css";
 
 function statusLabel(status: string) {
@@ -26,7 +26,7 @@ function authLabel(strategy: string) {
 }
 
 export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireInternalSession();
+  const session = await requireInternalSession();
   const { id } = await params;
 
   let company = null;
@@ -41,14 +41,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
   return (
     <main className={styles.page}>
       <div className={styles.shell}>
-        <header className={styles.topbar}>
-          <InternalBrand />
-          <nav className={styles.nav}>
-            <Link href="/interno">Hoje</Link>
-            <Link href="/interno/empresas">Empresas</Link>
-            <Link href="/interno/projetos">Projetos</Link>
-          </nav>
-        </header>
+        <InternalTopbar user={session.user} active="companies" />
 
         <Link className={styles.back} href="/interno/empresas">← voltar para empresas</Link>
 
