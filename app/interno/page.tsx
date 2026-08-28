@@ -19,6 +19,8 @@ export default async function InternalTodayPage() {
         <header className={styles.topbar}>
           <InternalBrand />
           <nav className={styles.nav}>
+            <Link className={styles.link} href="/interno/empresas">Empresas</Link>
+            <Link className={styles.link} href="/interno/projetos">Projetos</Link>
             <span className={styles.link}>{session.user}</span>
             <form action="/api/interno/logout" method="post">
               <button className={styles.logout} type="submit">Sair</button>
