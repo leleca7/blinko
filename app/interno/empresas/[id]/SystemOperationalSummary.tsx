@@ -1,6 +1,7 @@
 import styles from "../empresas.module.css";
 import type { ConnectedSystemOperationalSummary } from "../../../../lib/blinko/company-systems-server";
 
+// A UI recebe somente o resumo já sanitizado no servidor, nunca a resposta externa bruta.
 function metricLabel(key: string) {
   const known: Record<string, string> = {
     vehiclesTracked: "Veículos acompanhados",
