@@ -7,7 +7,11 @@ import {
   isDiagnosticAnalysisSchemaPending,
   recordDiagnosticAnalysis,
 } from "../../../../../../../lib/blinko/diagnostic-analysis-server";
-import { BlinkoAiAnalysisError } from "../../../../../../../lib/blinko/ai-server";
+import {
+  BlinkoAiAnalysisError,
+  getBlinkoAiModel,
+  getBlinkoAiProvider,
+} from "../../../../../../../lib/blinko/ai-server";
 
 export const maxDuration = 60;
 
@@ -43,7 +47,7 @@ export async function POST(request: Request, context: Context) {
       diagnosticId: id,
       collectionVersionId: collectionId,
       status: "ready",
-      provider: "vercel-ai-gateway",
+      provider: result.provider,
       model: result.model,
       promptVersion: DIAGNOSTIC_ANALYSIS_PROMPT_VERSION,
       inputSnapshot: result.safeInput,
@@ -58,7 +62,9 @@ export async function POST(request: Request, context: Context) {
 
     const code = error instanceof BlinkoAiAnalysisError ? error.code : "diagnostic_analysis_failed";
     const detail = error instanceof Error ? error.message.slice(0, 1500) : "Falha desconhecida";
-    console.error("Blinko AI: falha na análise profunda", { code, detail, actor: session.user });
+    const provider = getBlinkoAiProvider();
+    const model = getBlinkoAiModel();
+    console.error("Blinko AI: falha na análise profunda", { code, detail, actor: session.user, provider, model });
 
     try {
       const contextData = await getDiagnosticAnalysisContext(id);
@@ -69,7 +75,8 @@ export async function POST(request: Request, context: Context) {
           diagnosticId: id,
           collectionVersionId: collectionId,
           status: "failed",
-          provider: "vercel-ai-gateway",
+          provider,
+          model,
           promptVersion: DIAGNOSTIC_ANALYSIS_PROMPT_VERSION,
           inputSnapshot: safeInput,
           errorCode: code,
