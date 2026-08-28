@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireInternalSession } from "../../../lib/blinko/internal-auth";
 import { listCompaniesWithSystems } from "../../../lib/blinko/company-systems-server";
-import InternalBrand from "../InternalBrand";
+import InternalTopbar from "../InternalTopbar";
 import styles from "./empresas.module.css";
 
 function systemStatusLabel(status: string) {
@@ -15,7 +15,7 @@ function systemStatusLabel(status: string) {
 }
 
 export default async function CompaniesPage() {
-  await requireInternalSession();
+  const session = await requireInternalSession();
 
   let companies = [] as Awaited<ReturnType<typeof listCompaniesWithSystems>>;
   let loadFailed = false;
@@ -29,13 +29,7 @@ export default async function CompaniesPage() {
   return (
     <main className={styles.page}>
       <div className={styles.shell}>
-        <header className={styles.topbar}>
-          <InternalBrand />
-          <nav className={styles.nav}>
-            <Link href="/interno">Hoje</Link>
-            <Link href="/interno/projetos">Projetos</Link>
-          </nav>
-        </header>
+        <InternalTopbar user={session.user} active="companies" />
 
         <section className={styles.hero}>
           <span className={styles.eyebrow}>PORTFÓLIO · EMPRESAS · SISTEMAS</span>
