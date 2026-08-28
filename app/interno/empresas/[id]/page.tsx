@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { requireInternalSession } from "../../../../lib/blinko/internal-auth";
 import { getCompanyWithSystems } from "../../../../lib/blinko/company-systems-server";
 import { getCompanySolutions } from "../../../../lib/blinko/solution-catalog-server";
-import { getCompanyImplementationPlans } from "../../../../lib/blinko/solution-kits-server";
+import { getCompanyImplementationPlans, getSolutionKits } from "../../../../lib/blinko/solution-kits-server";
+import { getVisualDirections } from "../../../../lib/blinko/visual-directions-server";
 import InternalTopbar from "../../InternalTopbar";
+import CreateImplementationPlanForm from "./CreateImplementationPlanForm";
 import styles from "../empresas.module.css";
 
 function statusLabel(status: string) {
@@ -50,9 +52,24 @@ function planStatusLabel(status: string) {
   }[status] ?? status;
 }
 
-export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
+function feedbackLabel(status?: string) {
+  return {
+    implementation_plan_created: "Plano criado como rascunho. Revise os módulos antes de qualquer aprovação.",
+    implementation_plan_invalid: "Não foi possível criar o plano: revise os campos informados.",
+    implementation_plan_failed: "O plano não pôde ser criado com segurança. Nenhuma publicação foi feita.",
+  }[status || ""] ?? null;
+}
+
+export default async function CompanyDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ status?: string }>;
+}) {
   const session = await requireInternalSession();
   const { id } = await params;
+  const { status } = await searchParams;
 
   let company = null;
   try {
@@ -64,18 +81,16 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
   if (!company) notFound();
 
   let solutions = [] as Awaited<ReturnType<typeof getCompanySolutions>>;
-  try {
-    solutions = await getCompanySolutions(id);
-  } catch {
-    solutions = [];
-  }
-
   let plans = [] as Awaited<ReturnType<typeof getCompanyImplementationPlans>>;
-  try {
-    plans = await getCompanyImplementationPlans(id);
-  } catch {
-    plans = [];
-  }
+  let kits = [] as Awaited<ReturnType<typeof getSolutionKits>>;
+  let directions = [] as Awaited<ReturnType<typeof getVisualDirections>>;
+
+  try { solutions = await getCompanySolutions(id); } catch { solutions = []; }
+  try { plans = await getCompanyImplementationPlans(id); } catch { plans = []; }
+  try { kits = await getSolutionKits(); } catch { kits = []; }
+  try { directions = await getVisualDirections(); } catch { directions = []; }
+
+  const feedback = feedbackLabel(status);
 
   return (
     <main className={styles.page}>
@@ -94,7 +109,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
           </div>
         </section>
 
-        <div className={styles.sectionTitle}>
+        {feedback ? <div className={styles.feedback}>{feedback}</div> : null}
+
+        <CreateImplementationPlanForm companyId={id} kits={kits} directions={directions} />
+
+        <div className={styles.sectionTitle} id="implementation-plans">
           <h2>Planos de implantação</h2>
           <span>kit + direção visual + soluções em execução, sempre com aprovação humana</span>
         </div>
@@ -111,6 +130,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                     <p>{plan.kit ? `Kit: ${plan.kit.name} · v${plan.kit.version}` : "Plano personalizado sem kit-base"}</p>
                     <p>{plan.visual_direction ? `Direção visual: ${plan.visual_direction.name}` : "Direção visual ainda não definida"}</p>
                     <p>{plan.items.length} soluções no plano</p>
+                    {plan.created_by_label ? <p>Criado por {plan.created_by_label}</p> : null}
                   </div>
                   <span className={styles.solutionStatus}>{planStatusLabel(plan.status)}</span>
                 </div>
