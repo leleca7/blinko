@@ -51,10 +51,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
   if (!company) notFound();
 
   let solutions = [] as Awaited<ReturnType<typeof getCompanySolutions>>;
+  let solutionsUnavailable = false;
   try {
     solutions = await getCompanySolutions(id);
   } catch {
-    solutions = [];
+    solutionsUnavailable = true;
   }
 
   return (
@@ -79,7 +80,9 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
           <span>blueprint funcional + direção visual quando definida</span>
         </div>
 
-        {solutions.length === 0 ? (
+        {solutionsUnavailable ? (
+          <div className={styles.empty}>As soluções desta empresa estão temporariamente indisponíveis. O sistema não assumiu que a empresa está sem soluções.</div>
+        ) : solutions.length === 0 ? (
           <div className={styles.empty}>Nenhuma solução do catálogo foi vinculada a esta empresa ainda.</div>
         ) : (
           <section className={styles.solutionGrid} aria-label="Soluções Blinko">
