@@ -16,6 +16,7 @@ export type ConnectedSystem = {
   last_health_checked_at: string | null;
   last_health_status_code: number | null;
   last_health_detail: string | null;
+  metadata: Record<string, unknown>;
 };
 
 export type CompanyWithSystems = {
@@ -28,10 +29,106 @@ export type CompanyWithSystems = {
   systems: ConnectedSystem[];
 };
 
+export type ConnectedSystemOperationalSummary = {
+  state: "ready" | "not_configured" | "unavailable";
+  status?: string;
+  generatedAt?: string;
+  metrics?: Record<string, string | number | boolean>;
+  integrations?: Record<string, boolean>;
+  message?: string;
+};
+
 function getSql() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) throw new Error("neon_not_configured");
   return neon(databaseUrl);
+}
+
+function safeMetadataString(metadata: Record<string, unknown>, key: string) {
+  const value = metadata?.[key];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function sanitizePrimitiveRecord(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+
+  const entries = Object.entries(value as Record<string, unknown>)
+    .filter(([, item]) => typeof item === "string" || typeof item === "number" || typeof item === "boolean")
+    .slice(0, 20) as Array<[string, string | number | boolean]>;
+
+  return entries.length ? Object.fromEntries(entries) : undefined;
+}
+
+function sanitizeBooleanRecord(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+
+  const entries = Object.entries(value as Record<string, unknown>)
+    .filter(([, item]) => typeof item === "boolean")
+    .slice(0, 30) as Array<[string, boolean]>;
+
+  return entries.length ? Object.fromEntries(entries) : undefined;
+}
+
+export async function getConnectedSystemOperationalSummary(
+  system: ConnectedSystem,
+): Promise<ConnectedSystemOperationalSummary> {
+  const summaryUrl = safeMetadataString(system.metadata, "summary_url");
+  const secretEnv = safeMetadataString(system.metadata, "summary_secret_env");
+
+  if (!summaryUrl || !secretEnv) {
+    return { state: "not_configured", message: "Resumo operacional ainda não configurado." };
+  }
+
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(summaryUrl);
+  } catch {
+    return { state: "unavailable", message: "Endpoint de resumo inválido." };
+  }
+
+  if (parsedUrl.protocol !== "https:") {
+    return { state: "unavailable", message: "Endpoint de resumo precisa usar HTTPS." };
+  }
+
+  const secret = process.env[secretEnv]?.trim();
+  if (!secret) {
+    return { state: "not_configured", message: "Credencial do resumo ainda não configurada no servidor." };
+  }
+
+  try {
+    const response = await fetch(parsedUrl, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${secret}`,
+      },
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!response.ok) {
+      return {
+        state: "unavailable",
+        message: `Resumo indisponível agora (HTTP ${response.status}).`,
+      };
+    }
+
+    const payload = await response.json() as Record<string, unknown>;
+    const status = typeof payload.status === "string" ? payload.status : undefined;
+    const generatedAt = typeof payload.generatedAt === "string" ? payload.generatedAt : undefined;
+    const metrics = sanitizePrimitiveRecord(payload.metrics);
+    const integrations = sanitizeBooleanRecord(payload.integrations);
+
+    return {
+      state: "ready",
+      status,
+      generatedAt,
+      metrics,
+      integrations,
+    };
+  } catch {
+    return { state: "unavailable", message: "Resumo operacional indisponível neste momento." };
+  }
 }
 
 export async function listCompaniesWithSystems(): Promise<CompanyWithSystems[]> {
@@ -60,7 +157,8 @@ export async function listCompaniesWithSystems(): Promise<CompanyWithSystems[]> 
             'auth_strategy', s.auth_strategy,
             'last_health_checked_at', s.last_health_checked_at,
             'last_health_status_code', s.last_health_status_code,
-            'last_health_detail', s.last_health_detail
+            'last_health_detail', s.last_health_detail,
+            'metadata', s.metadata
           ) order by s.created_at asc
         ) filter (where s.id is not null),
         '[]'::jsonb
@@ -102,7 +200,8 @@ export async function getCompanyWithSystems(companyId: string): Promise<CompanyW
             'auth_strategy', s.auth_strategy,
             'last_health_checked_at', s.last_health_checked_at,
             'last_health_status_code', s.last_health_status_code,
-            'last_health_detail', s.last_health_detail
+            'last_health_detail', s.last_health_detail,
+            'metadata', s.metadata
           ) order by s.created_at asc
         ) filter (where s.id is not null),
         '[]'::jsonb
