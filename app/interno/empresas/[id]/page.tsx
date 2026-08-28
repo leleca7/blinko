@@ -84,13 +84,18 @@ export default async function CompanyDetailPage({
   let plans = [] as Awaited<ReturnType<typeof getCompanyImplementationPlans>>;
   let kits = [] as Awaited<ReturnType<typeof getSolutionKits>>;
   let directions = [] as Awaited<ReturnType<typeof getVisualDirections>>;
+  let solutionsUnavailable = false;
+  let plansUnavailable = false;
+  let kitsUnavailable = false;
+  let directionsUnavailable = false;
 
-  try { solutions = await getCompanySolutions(id); } catch { solutions = []; }
-  try { plans = await getCompanyImplementationPlans(id); } catch { plans = []; }
-  try { kits = await getSolutionKits(); } catch { kits = []; }
-  try { directions = await getVisualDirections(); } catch { directions = []; }
+  try { solutions = await getCompanySolutions(id); } catch { solutionsUnavailable = true; }
+  try { plans = await getCompanyImplementationPlans(id); } catch { plansUnavailable = true; }
+  try { kits = await getSolutionKits(); } catch { kitsUnavailable = true; }
+  try { directions = await getVisualDirections(); } catch { directionsUnavailable = true; }
 
   const feedback = feedbackLabel(status);
+  const creationDependenciesUnavailable = kitsUnavailable || directionsUnavailable;
 
   return (
     <main className={styles.page}>
@@ -111,14 +116,20 @@ export default async function CompanyDetailPage({
 
         {feedback ? <div className={styles.feedback}>{feedback}</div> : null}
 
-        <CreateImplementationPlanForm companyId={id} kits={kits} directions={directions} />
+        {creationDependenciesUnavailable ? (
+          <div className={styles.empty}>A criação de plano está temporariamente indisponível porque Kits ou Direções não puderam ser consultados. Nenhum plano foi criado.</div>
+        ) : (
+          <CreateImplementationPlanForm companyId={id} kits={kits} directions={directions} />
+        )}
 
         <div className={styles.sectionTitle} id="implementation-plans">
           <h2>Planos de implantação</h2>
           <span>kit + direção visual + soluções em execução, sempre com aprovação humana</span>
         </div>
 
-        {plans.length === 0 ? (
+        {plansUnavailable ? (
+          <div className={styles.empty}>Os planos de implantação estão temporariamente indisponíveis. O sistema não assumiu que esta empresa está sem planos.</div>
+        ) : plans.length === 0 ? (
           <div className={styles.empty}>Nenhum plano de implantação foi criado para esta empresa ainda.</div>
         ) : (
           <section className={styles.solutionGrid} aria-label="Planos de implantação">
@@ -148,7 +159,9 @@ export default async function CompanyDetailPage({
           <span>soluções já selecionadas/ativas, separadas dos planos em preparação</span>
         </div>
 
-        {solutions.length === 0 ? (
+        {solutionsUnavailable ? (
+          <div className={styles.empty}>As soluções desta empresa estão temporariamente indisponíveis. O sistema não assumiu que a empresa está sem soluções.</div>
+        ) : solutions.length === 0 ? (
           <div className={styles.empty}>Nenhuma solução do catálogo foi vinculada a esta empresa ainda.</div>
         ) : (
           <section className={styles.solutionGrid} aria-label="Soluções Blinko">
