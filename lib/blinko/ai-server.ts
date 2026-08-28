@@ -56,6 +56,25 @@ function parseJsonObject(raw: string) {
   }
 }
 
+function isTransientGoogleFailure(error: unknown) {
+  const errorObject = object(error);
+  const statusCode = typeof errorObject.statusCode === "number" ? errorObject.statusCode : null;
+  if (statusCode === 429 || (statusCode !== null && statusCode >= 500)) return true;
+
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  return [
+    "high demand",
+    "temporarily unavailable",
+    "temporary unavailable",
+    "try again later",
+    "resource exhausted",
+    "rate limit",
+    "too many requests",
+    "overloaded",
+    "service unavailable",
+  ].some((signal) => message.includes(signal));
+}
+
 export function getBlinkoAiProvider(): BlinkoAiProvider {
   return process.env.BLINKO_AI_PROVIDER?.trim().toLowerCase() === "google"
     ? "google-generative-ai"
@@ -87,7 +106,12 @@ export async function generateBlinkoText(prompt: string): Promise<{
     const { text } = await generateText({ model: google(primaryModel), prompt });
     return { text, model: primaryModel, provider };
   } catch (primaryError) {
-    if (primaryModel === BLINKO_GOOGLE_FALLBACK_MODEL) throw primaryError;
+    if (
+      primaryModel === BLINKO_GOOGLE_FALLBACK_MODEL
+      || !isTransientGoogleFailure(primaryError)
+    ) {
+      throw primaryError;
+    }
 
     console.warn("Blinko AI: modelo Google primário indisponível; tentando fallback", {
       primaryModel,
