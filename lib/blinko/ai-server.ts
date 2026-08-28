@@ -1,6 +1,7 @@
 import "server-only";
 
 import { google } from "@ai-sdk/google";
+import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import {
   buildInitialReadingInput,
@@ -15,11 +16,12 @@ import {
 } from "./pre-diagnostic-analysis";
 import type { ReviewWorkspace } from "./review-workspace";
 
-const DEFAULT_BLINKO_AI_MODEL = "openai/gpt-5.6-sol";
+const DEFAULT_BLINKO_GATEWAY_MODEL = "openai/gpt-5.6-sol";
+const DEFAULT_BLINKO_OPENAI_MODEL = "gpt-5.6-sol";
 const DEFAULT_BLINKO_GOOGLE_MODEL = "gemini-3.7-flash";
 const BLINKO_GOOGLE_FALLBACK_MODEL = "gemini-3.1-flash-lite";
 
-export type BlinkoAiProvider = "vercel-ai-gateway" | "google-generative-ai";
+export type BlinkoAiProvider = "vercel-ai-gateway" | "openai-direct" | "google-generative-ai";
 
 export class BlinkoAiAnalysisError extends Error {
   constructor(public readonly code: string, message: string) {
@@ -76,17 +78,21 @@ function isTransientGoogleFailure(error: unknown) {
 }
 
 export function getBlinkoAiProvider(): BlinkoAiProvider {
-  return process.env.BLINKO_AI_PROVIDER?.trim().toLowerCase() === "google"
-    ? "google-generative-ai"
-    : "vercel-ai-gateway";
+  const configured = process.env.BLINKO_AI_PROVIDER?.trim().toLowerCase();
+  if (configured === "google") return "google-generative-ai";
+  if (configured === "openai") return "openai-direct";
+  return "vercel-ai-gateway";
 }
 
 export function getBlinkoAiModel() {
-  if (getBlinkoAiProvider() === "google-generative-ai") {
+  const provider = getBlinkoAiProvider();
+  if (provider === "google-generative-ai") {
     return process.env.BLINKO_AI_GOOGLE_MODEL?.trim() || DEFAULT_BLINKO_GOOGLE_MODEL;
   }
-
-  return process.env.BLINKO_AI_MODEL?.trim() || DEFAULT_BLINKO_AI_MODEL;
+  if (provider === "openai-direct") {
+    return process.env.BLINKO_AI_OPENAI_MODEL?.trim() || DEFAULT_BLINKO_OPENAI_MODEL;
+  }
+  return process.env.BLINKO_AI_MODEL?.trim() || DEFAULT_BLINKO_GATEWAY_MODEL;
 }
 
 export async function generateBlinkoText(prompt: string): Promise<{
@@ -97,7 +103,12 @@ export async function generateBlinkoText(prompt: string): Promise<{
   const provider = getBlinkoAiProvider();
   const primaryModel = getBlinkoAiModel();
 
-  if (provider !== "google-generative-ai") {
+  if (provider === "openai-direct") {
+    const { text } = await generateText({ model: openai(primaryModel), prompt });
+    return { text, model: primaryModel, provider };
+  }
+
+  if (provider === "vercel-ai-gateway") {
     const { text } = await generateText({ model: primaryModel, prompt });
     return { text, model: primaryModel, provider };
   }
