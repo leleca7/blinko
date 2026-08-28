@@ -65,19 +65,124 @@ const pillarQuestions = [
   },
 ] as const;
 
+const steps = [
+  { eyebrow: "COMEÇANDO PELO ESSENCIAL", title: "Onde você quer chegar?", helper: "Primeiro, queremos entender o movimento que a empresa precisa fazer — sem tentar diagnosticar nada ainda." },
+  { eyebrow: "LEITURA RÁPIDA", title: "Como a empresa funciona hoje?", helper: "Passe pelos sete pilares com a percepção que você tem agora. Não existe resposta certa." },
+  { eyebrow: "ROTINA REAL", title: "O que acontece no dia a dia?", helper: "Agora saímos da percepção geral e olhamos para situações que aparecem na operação." },
+  { eyebrow: "CONTEXTO", title: "Conte um pouco sobre a empresa.", helper: "Esses dados ajudam a interpretar as respostas dentro da realidade do negócio." },
+  { eyebrow: "ÚLTIMA ETAPA", title: "Como seguimos a partir daqui?", helper: "Só precisamos entender abertura para mudança e como falar com você depois da leitura." },
+] as const;
+
 function values(form: FormData, name: string) {
   return form.getAll(name).map(String);
 }
 
 export default function PreDiagnosticForm() {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [step, setStep] = useState(0);
+  const [pillarStep, setPillarStep] = useState(0);
   const submissionIdRef = useRef<string | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const progressRef = useRef<HTMLDivElement | null>(null);
+
+  function scrollToProgress() {
+    requestAnimationFrame(() => {
+      progressRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function moveToStep(nextStep: number) {
+    setStep(nextStep);
+    setStatus("idle");
+    scrollToProgress();
+  }
+
+  function validateContainer(container: HTMLElement | null) {
+    if (!container) return false;
+    const requiredControls = Array.from(container.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input[required], select[required], textarea[required]"));
+    const invalid = requiredControls.find((control) => !control.checkValidity());
+    if (invalid) {
+      invalid.reportValidity();
+      return false;
+    }
+    return true;
+  }
+
+  function validateStep(stepIndex: number) {
+    const form = formRef.current;
+    if (!form) return false;
+    return validateContainer(form.querySelector<HTMLElement>(`[data-step="${stepIndex}"]`));
+  }
+
+  function validatePillar(pillarIndex: number) {
+    const form = formRef.current;
+    if (!form) return false;
+    return validateContainer(form.querySelector<HTMLElement>(`[data-pillar="${pillarIndex}"]`));
+  }
+
+  function next() {
+    if (step === 1) {
+      if (!validatePillar(pillarStep)) return;
+      if (pillarStep < pillarQuestions.length - 1) {
+        setPillarStep((current) => current + 1);
+        scrollToProgress();
+        return;
+      }
+      moveToStep(2);
+      return;
+    }
+
+    if (!validateStep(step)) return;
+    moveToStep(Math.min(step + 1, steps.length - 1));
+  }
+
+  function back() {
+    if (step === 1 && pillarStep > 0) {
+      setPillarStep((current) => current - 1);
+      scrollToProgress();
+      return;
+    }
+    if (step === 2) {
+      setPillarStep(pillarQuestions.length - 1);
+      moveToStep(1);
+      return;
+    }
+    moveToStep(Math.max(step - 1, 0));
+  }
+
+  function firstInvalidLocation() {
+    const form = formRef.current;
+    if (!form) return null;
+
+    for (let index = 0; index < steps.length; index += 1) {
+      if (index === 1) {
+        for (let pillarIndex = 0; pillarIndex < pillarQuestions.length; pillarIndex += 1) {
+          const pillar = form.querySelector<HTMLElement>(`[data-pillar="${pillarIndex}"]`);
+          const required = Array.from(pillar?.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input[required], select[required], textarea[required]") ?? []);
+          if (required.some((control) => !control.checkValidity())) return { step: 1, pillar: pillarIndex };
+        }
+        continue;
+      }
+
+      const container = form.querySelector<HTMLElement>(`[data-step="${index}"]`);
+      const required = Array.from(container?.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input[required], select[required], textarea[required]") ?? []);
+      if (required.some((control) => !control.checkValidity())) return { step: index, pillar: null as number | null };
+    }
+    return null;
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const element = event.currentTarget;
-    const form = new FormData(element);
+    const invalid = firstInvalidLocation();
+    if (invalid) {
+      if (invalid.pillar !== null) setPillarStep(invalid.pillar);
+      moveToStep(invalid.step);
+      requestAnimationFrame(() => invalid.pillar !== null ? validatePillar(invalid.pillar) : validateStep(invalid.step));
+      return;
+    }
 
+    const form = new FormData(element);
     submissionIdRef.current ??= crypto.randomUUID();
 
     const pillarAnswers = Object.fromEntries(
@@ -142,29 +247,33 @@ export default function PreDiagnosticForm() {
     );
   }
 
+  const progress = ((step + 1) / steps.length) * 100;
+  const stepLabel = step === 1 ? `Pilar ${pillarStep + 1} de ${pillarQuestions.length}` : `Etapa ${step + 1} de ${steps.length}`;
+
   return (
-    <form className={styles.form} onSubmit={submit}>
+    <form className={styles.form} onSubmit={submit} ref={formRef} noValidate>
       <div className={styles.honeypot} aria-hidden="true">
         <label>Fax da empresa<input name="companyFax" tabIndex={-1} autoComplete="off" /></label>
       </div>
 
-      <fieldset className={styles.block}>
-        <legend><span>01</span> Quem está falando com a Blinko</legend>
-        <div className={styles.gridTwo}>
-          <label>Seu nome<input name="name" required maxLength={120} /></label>
-          <label>E-mail<input name="email" type="email" required maxLength={180} /></label>
-          <label>WhatsApp<input name="whatsapp" required maxLength={40} placeholder="(00) 00000-0000" /></label>
-          <label>Empresa<input name="companyName" required maxLength={160} /></label>
-          <label>Seu cargo/função<input name="companyRole" required maxLength={120} /></label>
-          <label>Cidade / estado<input name="cityState" required maxLength={120} /></label>
-          <label>Segmento principal<input name="segment" required maxLength={120} /></label>
-          <label>Site <small>opcional</small><input name="website" maxLength={240} placeholder="https://" /></label>
-          <label>Instagram/rede principal <small>opcional</small><input name="socialUrl" maxLength={240} /></label>
+      <div className={styles.progressShell} ref={progressRef}>
+        <div className={styles.progressMeta}>
+          <span>{stepLabel}</span>
+          <span>{steps[step].eyebrow}</span>
         </div>
-      </fieldset>
+        <div className={styles.progressTrack} aria-hidden="true"><span style={{ width: `${progress}%` }} /></div>
+        <div className={styles.stepIntro}>
+          <h2>{steps[step].title}</h2>
+          <p>{steps[step].helper}</p>
+        </div>
+        {step === 1 ? (
+          <div className={styles.pillarProgress} aria-hidden="true">
+            {pillarQuestions.map((pillar, index) => <span key={pillar.key} data-active={index <= pillarStep ? "true" : "false"} />)}
+          </div>
+        ) : null}
+      </div>
 
-      <fieldset className={styles.block}>
-        <legend><span>02</span> Onde vocês querem chegar</legend>
+      <fieldset className={styles.stepPanel} data-step="0" hidden={step !== 0}>
         <label className={styles.wideLabel}>
           Qual é o objetivo mais importante da empresa nos próximos meses?
           <textarea name="objective" required maxLength={1200} rows={4} placeholder="Ex.: aumentar vendas sem sobrecarregar a operação, organizar atendimento, melhorar margem..." />
@@ -182,7 +291,7 @@ export default function PreDiagnosticForm() {
         </label>
         <label className={styles.wideLabel}>
           Hoje, o que mais parece estar impedindo a empresa de chegar nesse objetivo?
-          <textarea name="perceivedBlocker" required maxLength={1600} rows={5} />
+          <textarea name="perceivedBlocker" required maxLength={1600} rows={5} placeholder="Pode responder do seu jeito. Não precisa usar termos técnicos." />
         </label>
         <div className={styles.questionGroup}>
           <p>Em quais áreas você sente que existem problemas ou oportunidades importantes?</p>
@@ -192,13 +301,12 @@ export default function PreDiagnosticForm() {
         </div>
       </fieldset>
 
-      <fieldset className={styles.block}>
-        <legend><span>03</span> Leitura rápida dos 7 pilares</legend>
+      <fieldset className={styles.stepPanel} data-step="1" hidden={step !== 1}>
         <p className={styles.helper}>Isso registra sinais percebidos. Não confirma que exista um problema em cada área.</p>
         <div className={styles.pillars}>
-          {pillarQuestions.map((pillar) => (
-            <div className={styles.pillarQuestion} key={pillar.key}>
-              <span>{pillar.label}</span>
+          {pillarQuestions.map((pillar, index) => (
+            <div className={styles.pillarQuestion} key={pillar.key} data-pillar={index} hidden={pillarStep !== index}>
+              <div className={styles.pillarHeading}><span>{pillar.label}</span><small>{index + 1}/7</small></div>
               <p>{pillar.question}</p>
               <div className={styles.radioGrid}>
                 {pillar.options.map(([value, label]) => (
@@ -213,23 +321,32 @@ export default function PreDiagnosticForm() {
         </div>
       </fieldset>
 
-      <fieldset className={styles.block}>
-        <legend><span>04</span> O que acontece na rotina</legend>
-        <div className={styles.questionGroup}>
+      <fieldset className={styles.stepPanel} data-step="2" hidden={step !== 2}>
+        <div className={styles.questionGroupFirst}>
           <p>Quais situações acontecem com frequência hoje?</p>
           <div className={styles.checkList}>
             {operationalSignals.map((signal) => <label className={styles.check} key={signal}><input type="checkbox" name="operationalSignals" value={signal} /><span>{signal}</span></label>)}
           </div>
         </div>
-        <div className={styles.gridTwo}>
+        <div className={styles.gridTwoSpaced}>
           <label>Tamanho aproximado da equipe<select name="teamSize" required defaultValue=""><option value="" disabled>Selecione</option><option value="founder_only">Somente fundador/dono</option><option value="2_5">2 a 5 pessoas</option><option value="6_15">6 a 15</option><option value="16_50">16 a 50</option><option value="50_plus">Mais de 50</option><option value="prefer_not">Prefiro não informar</option></select></label>
           <label>Momento da empresa<select name="companyMoment" required defaultValue=""><option value="" disabled>Selecione</option><option value="starting">Começando</option><option value="organizing">Opera, mas precisa organizar</option><option value="growing">Crescendo</option><option value="stable">Estabilizada buscando nova evolução</option><option value="difficulty">Passando por dificuldade/queda</option><option value="other">Outro</option></select></label>
         </div>
       </fieldset>
 
-      <fieldset className={styles.block}>
-        <legend><span>05</span> Fit para mudança</legend>
-        <div className={styles.questionGroup}>
+      <fieldset className={styles.stepPanel} data-step="3" hidden={step !== 3}>
+        <div className={styles.gridTwo}>
+          <label>Empresa<input name="companyName" required maxLength={160} /></label>
+          <label>Segmento principal<input name="segment" required maxLength={120} /></label>
+          <label>Seu cargo/função<input name="companyRole" required maxLength={120} /></label>
+          <label>Cidade / estado<input name="cityState" required maxLength={120} /></label>
+          <label>Site <small>opcional</small><input name="website" maxLength={240} placeholder="https://" /></label>
+          <label>Instagram/rede principal <small>opcional</small><input name="socialUrl" maxLength={240} /></label>
+        </div>
+      </fieldset>
+
+      <fieldset className={styles.stepPanel} data-step="4" hidden={step !== 4}>
+        <div className={styles.questionGroupFirst}>
           <p>Se descobrirmos que o problema está em uma área diferente da que você imaginava, a empresa está aberta a mudar a prioridade?</p>
           <div className={styles.radioGrid}>
             <label className={styles.radio}><input type="radio" name="opennessToChange" value="yes" required /><span>Sim</span></label>
@@ -247,18 +364,49 @@ export default function PreDiagnosticForm() {
           </div>
         </div>
         <label className={styles.wideLabel}>Tem algo importante que não capturamos? <small>opcional</small><textarea name="additionalContext" maxLength={1800} rows={4} /></label>
+
+        <div className={styles.contactCard}>
+          <div className={styles.contactIntro}>
+            <span>PARA RECEBER A DEVOLUTIVA</span>
+            <h3>Como podemos falar com você?</h3>
+            <p>Seus dados de contato entram só agora, depois de você nos contar sobre a empresa.</p>
+          </div>
+          <div className={styles.gridTwo}>
+            <label>Seu nome<input name="name" required maxLength={120} autoComplete="name" /></label>
+            <label>E-mail<input name="email" type="email" required maxLength={180} autoComplete="email" /></label>
+            <label>WhatsApp<input name="whatsapp" required maxLength={40} placeholder="(00) 00000-0000" autoComplete="tel" /></label>
+          </div>
+        </div>
+
         <label className={styles.consent}>
           <input type="checkbox" name="consent" value="yes" required />
           <span>Autorizo a Blinko a usar estas informações para analisar esta solicitação, armazená-las para acompanhamento comercial e entrar em contato por e-mail ou WhatsApp sobre este pré-diagnóstico.</span>
         </label>
       </fieldset>
 
-      {status === "error" && <p className={styles.error} role="alert">Não conseguimos registrar agora. Confira os campos e tente novamente.</p>}
+      {status === "error" && <p className={styles.error} role="alert">Não conseguimos registrar agora. Suas respostas continuam na tela; tente novamente.</p>}
 
-      <div className={styles.submitRow}>
-        <div><strong>O envio não gera diagnóstico automático.</strong><span>A equipe recebe os sinais para uma leitura inicial.</span></div>
-        <button type="submit" disabled={status === "sending"}>{status === "sending" ? "Enviando…" : "Enviar pré-diagnóstico"}</button>
+      <div className={styles.stepActions}>
+        {step > 0 ? <button className={styles.secondaryButton} type="button" onClick={back}>← Voltar</button> : <span />}
+        {step < steps.length - 1 ? (
+          <button className={styles.primaryButton} type="button" onClick={next}>{step === 1 && pillarStep < pillarQuestions.length - 1 ? "Próximo pilar →" : "Continuar →"}</button>
+        ) : (
+          <button className={styles.primaryButton} type="submit" disabled={status === "sending"}>{status === "sending" ? "Enviando…" : "Enviar pré-diagnóstico"}</button>
+        )}
       </div>
+
+      <p className={styles.formFootnote}>{step === 1 ? "Um pilar por vez. Suas respostas anteriores ficam salvas nesta tela." : "Você pode voltar entre as etapas sem perder o que já respondeu."}</p>
+
+      {status === "sending" ? (
+        <div className={styles.sendingOverlay} role="status" aria-live="polite" aria-busy="true">
+          <div className={styles.sendingCard}>
+            <span className={styles.spinner} aria-hidden="true" />
+            <small>BLINKO</small>
+            <h3>Registrando suas respostas…</h3>
+            <p>Estamos organizando o pré-diagnóstico com segurança. Não feche esta página.</p>
+          </div>
+        </div>
+      ) : null}
     </form>
   );
 }
