@@ -21,7 +21,7 @@ const DEFAULT_BLINKO_OPENAI_MODEL = "gpt-5.6-sol";
 const DEFAULT_BLINKO_GOOGLE_MODEL = "gemini-3.7-flash";
 const BLINKO_GOOGLE_FALLBACK_MODEL = "gemini-3.1-flash-lite";
 
-export type BlinkoAiProvider = "vercel-ai-gateway" | "openai-direct" | "google-generative-ai";
+export type BlinkoAiProvider = "disabled" | "vercel-ai-gateway" | "openai-direct" | "google-generative-ai";
 
 export class BlinkoAiAnalysisError extends Error {
   constructor(public readonly code: string, message: string) {
@@ -81,11 +81,17 @@ export function getBlinkoAiProvider(): BlinkoAiProvider {
   const configured = process.env.BLINKO_AI_PROVIDER?.trim().toLowerCase();
   if (configured === "google") return "google-generative-ai";
   if (configured === "openai") return "openai-direct";
-  return "vercel-ai-gateway";
+  if (configured === "gateway") return "vercel-ai-gateway";
+  return "disabled";
+}
+
+export function isBlinkoAiEnabled() {
+  return getBlinkoAiProvider() !== "disabled";
 }
 
 export function getBlinkoAiModel() {
   const provider = getBlinkoAiProvider();
+  if (provider === "disabled") return "disabled";
   if (provider === "google-generative-ai") {
     return process.env.BLINKO_AI_GOOGLE_MODEL?.trim() || DEFAULT_BLINKO_GOOGLE_MODEL;
   }
@@ -102,6 +108,13 @@ export async function generateBlinkoText(prompt: string): Promise<{
 }> {
   const provider = getBlinkoAiProvider();
   const primaryModel = getBlinkoAiModel();
+
+  if (provider === "disabled") {
+    throw new BlinkoAiAnalysisError(
+      "ai_disabled",
+      "A Blinko AI está desativada neste ambiente. O fluxo humano continua disponível.",
+    );
+  }
 
   if (provider === "openai-direct") {
     const { text } = await generateText({ model: openai(primaryModel), prompt });
