@@ -80,22 +80,24 @@ function values(form: FormData, name: string) {
 export default function PreDiagnosticForm() {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [step, setStep] = useState(0);
+  const [pillarStep, setPillarStep] = useState(0);
   const submissionIdRef = useRef<string | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
 
-  function moveToStep(nextStep: number) {
-    setStep(nextStep);
-    setStatus("idle");
+  function scrollToProgress() {
     requestAnimationFrame(() => {
       progressRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
 
-  function validateStep(stepIndex: number) {
-    const form = formRef.current;
-    if (!form) return false;
-    const container = form.querySelector<HTMLElement>(`[data-step="${stepIndex}"]`);
+  function moveToStep(nextStep: number) {
+    setStep(nextStep);
+    setStatus("idle");
+    scrollToProgress();
+  }
+
+  function validateContainer(container: HTMLElement | null) {
     if (!container) return false;
     const requiredControls = Array.from(container.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input[required], select[required], textarea[required]"));
     const invalid = requiredControls.find((control) => !control.checkValidity());
@@ -106,23 +108,65 @@ export default function PreDiagnosticForm() {
     return true;
   }
 
+  function validateStep(stepIndex: number) {
+    const form = formRef.current;
+    if (!form) return false;
+    return validateContainer(form.querySelector<HTMLElement>(`[data-step="${stepIndex}"]`));
+  }
+
+  function validatePillar(pillarIndex: number) {
+    const form = formRef.current;
+    if (!form) return false;
+    return validateContainer(form.querySelector<HTMLElement>(`[data-pillar="${pillarIndex}"]`));
+  }
+
   function next() {
+    if (step === 1) {
+      if (!validatePillar(pillarStep)) return;
+      if (pillarStep < pillarQuestions.length - 1) {
+        setPillarStep((current) => current + 1);
+        scrollToProgress();
+        return;
+      }
+      moveToStep(2);
+      return;
+    }
+
     if (!validateStep(step)) return;
     moveToStep(Math.min(step + 1, steps.length - 1));
   }
 
   function back() {
+    if (step === 1 && pillarStep > 0) {
+      setPillarStep((current) => current - 1);
+      scrollToProgress();
+      return;
+    }
+    if (step === 2) {
+      setPillarStep(pillarQuestions.length - 1);
+      moveToStep(1);
+      return;
+    }
     moveToStep(Math.max(step - 1, 0));
   }
 
-  function firstInvalidStep() {
+  function firstInvalidLocation() {
     const form = formRef.current;
     if (!form) return null;
+
     for (let index = 0; index < steps.length; index += 1) {
+      if (index === 1) {
+        for (let pillarIndex = 0; pillarIndex < pillarQuestions.length; pillarIndex += 1) {
+          const pillar = form.querySelector<HTMLElement>(`[data-pillar="${pillarIndex}"]`);
+          const required = Array.from(pillar?.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input[required], select[required], textarea[required]") ?? []);
+          if (required.some((control) => !control.checkValidity())) return { step: 1, pillar: pillarIndex };
+        }
+        continue;
+      }
+
       const container = form.querySelector<HTMLElement>(`[data-step="${index}"]`);
-      if (!container) continue;
-      const requiredControls = Array.from(container.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input[required], select[required], textarea[required]"));
-      if (requiredControls.some((control) => !control.checkValidity())) return index;
+      const required = Array.from(container?.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input[required], select[required], textarea[required]") ?? []);
+      if (required.some((control) => !control.checkValidity())) return { step: index, pillar: null as number | null };
     }
     return null;
   }
@@ -130,10 +174,11 @@ export default function PreDiagnosticForm() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const element = event.currentTarget;
-    const invalidStep = firstInvalidStep();
-    if (invalidStep !== null) {
-      moveToStep(invalidStep);
-      requestAnimationFrame(() => validateStep(invalidStep));
+    const invalid = firstInvalidLocation();
+    if (invalid) {
+      if (invalid.pillar !== null) setPillarStep(invalid.pillar);
+      moveToStep(invalid.step);
+      requestAnimationFrame(() => invalid.pillar !== null ? validatePillar(invalid.pillar) : validateStep(invalid.step));
       return;
     }
 
@@ -203,6 +248,7 @@ export default function PreDiagnosticForm() {
   }
 
   const progress = ((step + 1) / steps.length) * 100;
+  const stepLabel = step === 1 ? `Pilar ${pillarStep + 1} de ${pillarQuestions.length}` : `Etapa ${step + 1} de ${steps.length}`;
 
   return (
     <form className={styles.form} onSubmit={submit} ref={formRef} noValidate>
@@ -212,7 +258,7 @@ export default function PreDiagnosticForm() {
 
       <div className={styles.progressShell} ref={progressRef}>
         <div className={styles.progressMeta}>
-          <span>Etapa {step + 1} de {steps.length}</span>
+          <span>{stepLabel}</span>
           <span>{steps[step].eyebrow}</span>
         </div>
         <div className={styles.progressTrack} aria-hidden="true"><span style={{ width: `${progress}%` }} /></div>
@@ -220,6 +266,11 @@ export default function PreDiagnosticForm() {
           <h2>{steps[step].title}</h2>
           <p>{steps[step].helper}</p>
         </div>
+        {step === 1 ? (
+          <div className={styles.pillarProgress} aria-hidden="true">
+            {pillarQuestions.map((pillar, index) => <span key={pillar.key} data-active={index <= pillarStep ? "true" : "false"} />)}
+          </div>
+        ) : null}
       </div>
 
       <fieldset className={styles.stepPanel} data-step="0" hidden={step !== 0}>
@@ -254,7 +305,7 @@ export default function PreDiagnosticForm() {
         <p className={styles.helper}>Isso registra sinais percebidos. Não confirma que exista um problema em cada área.</p>
         <div className={styles.pillars}>
           {pillarQuestions.map((pillar, index) => (
-            <div className={styles.pillarQuestion} key={pillar.key}>
+            <div className={styles.pillarQuestion} key={pillar.key} data-pillar={index} hidden={pillarStep !== index}>
               <div className={styles.pillarHeading}><span>{pillar.label}</span><small>{index + 1}/7</small></div>
               <p>{pillar.question}</p>
               <div className={styles.radioGrid}>
@@ -338,13 +389,13 @@ export default function PreDiagnosticForm() {
       <div className={styles.stepActions}>
         {step > 0 ? <button className={styles.secondaryButton} type="button" onClick={back}>← Voltar</button> : <span />}
         {step < steps.length - 1 ? (
-          <button className={styles.primaryButton} type="button" onClick={next}>Continuar →</button>
+          <button className={styles.primaryButton} type="button" onClick={next}>{step === 1 && pillarStep < pillarQuestions.length - 1 ? "Próximo pilar →" : "Continuar →"}</button>
         ) : (
           <button className={styles.primaryButton} type="submit" disabled={status === "sending"}>{status === "sending" ? "Enviando…" : "Enviar pré-diagnóstico"}</button>
         )}
       </div>
 
-      <p className={styles.formFootnote}>Você pode voltar entre as etapas sem perder o que já respondeu.</p>
+      <p className={styles.formFootnote}>{step === 1 ? "Um pilar por vez. Suas respostas anteriores ficam salvas nesta tela." : "Você pode voltar entre as etapas sem perder o que já respondeu."}</p>
 
       {status === "sending" ? (
         <div className={styles.sendingOverlay} role="status" aria-live="polite" aria-busy="true">
