@@ -38,6 +38,12 @@ export type CompanySolution = {
   selected_by_label: string | null;
   selected_at: string;
   blueprint: Pick<SolutionBlueprint, "slug" | "name" | "category" | "status" | "version">;
+  visual_direction: null | {
+    slug: string;
+    name: string;
+    status: string;
+    version: string;
+  };
 };
 
 export async function getSolutionCatalog() {
@@ -91,9 +97,16 @@ export async function getCompanySolutions(companyId: string) {
         'category', b.category,
         'status', b.status,
         'version', b.version
-      ) as blueprint
+      ) as blueprint,
+      case when vd.id is null then null else jsonb_build_object(
+        'slug', vd.slug,
+        'name', vd.name,
+        'status', vd.status,
+        'version', vd.version
+      ) end as visual_direction
     from public.company_solutions cs
     join public.solution_blueprints b on b.id = cs.blueprint_id
+    left join public.visual_directions vd on vd.id = cs.visual_direction_id
     where cs.company_id = ${companyId}::uuid
     order by cs.selected_at desc
   `;
