@@ -31,7 +31,7 @@ export async function getVisualDirections() {
   const rows = await sql`
     select
       d.*,
-      count(cs.id)::int as selected_companies
+      count(distinct cs.company_id)::int as selected_companies
     from public.visual_directions d
     left join public.company_solutions cs
       on cs.visual_direction_id = d.id and cs.status <> 'retired'
@@ -48,7 +48,7 @@ export async function getVisualDirection(slug: string) {
   const rows = await sql`
     select
       d.*,
-      count(cs.id)::int as selected_companies
+      count(distinct cs.company_id)::int as selected_companies
     from public.visual_directions d
     left join public.company_solutions cs
       on cs.visual_direction_id = d.id and cs.status <> 'retired'
