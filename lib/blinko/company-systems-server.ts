@@ -116,6 +116,7 @@ export async function getConnectedSystemOperationalSummary(
   try {
     const response = await fetch(parsedUrl, {
       method: "GET",
+      redirect: "error",
       headers: {
         Accept: "application/json",
         Authorization: `Bearer ${secret}`,
