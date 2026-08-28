@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/google": "latest",
     "@neondatabase/serverless": "^1.0.0",
     "ai": "latest",
     "next": "latest",
