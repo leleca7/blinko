@@ -8,6 +8,7 @@ import styles from "../../interno.module.css";
 import DiagnosticAnalysisSection from "./DiagnosticAnalysisSection";
 import DiagnosticStrategySection from "./DiagnosticStrategySection";
 import DiagnosticProposalSection from "./DiagnosticProposalSection";
+import ProposalExecutionSection from "./ProposalExecutionSection";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -67,6 +68,11 @@ function notice(status?: string) {
   if (status === "proposal_approval_confirmation_required") return "Confirme explicitamente a revisão interna antes de aprovar a proposta.";
   if (status === "proposal_approval_blocked") return "A proposta não está pronta para aprovação interna.";
   if (status === "proposal_approved_internal") return "Proposta aprovada internamente. O envio externo continua bloqueado até uma decisão humana específica.";
+  if (status === "proposal_external_recorded") return "Fato externo da proposta registrado no histórico. Nenhuma comunicação foi disparada pelo OS.";
+  if (status === "proposal_external_invalid") return "Confirme o fato, informe data e uma referência verificável antes de registrar.";
+  if (status === "proposal_external_blocked") return "O fato externo não foi registrado porque a proposta não está no estado correto.";
+  if (status === "project_contract_invalid") return "Complete os dados e confirme a contratação real antes de criar o projeto.";
+  if (status === "project_contract_blocked") return "O projeto só pode ser criado depois que a proposta estiver registrada como aceita.";
   return null;
 }
 
@@ -91,7 +97,7 @@ export default async function DiagnosticPage({ params, searchParams }: Props) {
             <section className={styles.reviewCard}>
               <span className={styles.eyebrow}>DIAGNÓSTICO BLINKO</span>
               <h1>Coleta dos 7 pilares</h1>
-              <div className={styles.notice}>A interface está pronta, mas as migrações 003 a 007 ainda não foram aplicadas ao Neon principal. Nenhum dado será simulado.</div>
+              <div className={styles.notice}>A interface está pronta, mas as migrações 003 a 008 ainda não foram aplicadas ao Neon principal. Nenhum dado será simulado.</div>
             </section>
           </div>
         </div>
@@ -205,6 +211,7 @@ export default async function DiagnosticPage({ params, searchParams }: Props) {
           <DiagnosticAnalysisSection diagnosticId={id} />
           <DiagnosticStrategySection diagnosticId={id} />
           <DiagnosticProposalSection diagnosticId={id} />
+          <ProposalExecutionSection diagnosticId={id} />
         </div>
       </div>
     </main>
