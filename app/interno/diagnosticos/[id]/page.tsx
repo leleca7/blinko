@@ -6,6 +6,7 @@ import { getDiagnosticWorkspace } from "../../../../lib/blinko/diagnostic-collec
 import InternalBrand from "../../InternalBrand";
 import styles from "../../interno.module.css";
 import DiagnosticAnalysisSection from "./DiagnosticAnalysisSection";
+import DiagnosticStrategySection from "./DiagnosticStrategySection";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -43,6 +44,13 @@ function notice(status?: string) {
   if (status === "deep_review_missing") return "Preencha a leitura humana antes de registrar a revisão da análise.";
   if (status === "deep_review_not_current") return "A análise informada não é mais a versão atual.";
   if (status === "deep_review_failed") return "A revisão humana não foi registrada. Nenhuma versão existente foi apagada.";
+  if (status === "strategy_saved") return "Estrutura estratégica registrada. O histórico anterior foi preservado.";
+  if (status === "strategy_invalid") return "Revise os campos. Confirmação exige evidência e intervenção exige objetivo e escopo.";
+  if (status === "strategy_review_required") return "A estrutura estratégica só abre depois da revisão humana da análise profunda.";
+  if (status === "strategy_failed") return "A estrutura estratégica não foi registrada. Nenhum dado existente foi apagado.";
+  if (status === "strategy_finalized") return "Problema, causa, prioridade e intervenção validados. O diagnóstico está pronto para preparar a apresentação.";
+  if (status === "strategy_finalize_confirmation_required") return "Confirme explicitamente a revisão antes de finalizar a estrutura.";
+  if (status === "strategy_finalize_blocked") return "Para finalizar, é preciso uma cadeia com problema confirmado, causa confirmada, prioridade selecionada e intervenção selecionada.";
   return null;
 }
 
@@ -67,7 +75,7 @@ export default async function DiagnosticPage({ params, searchParams }: Props) {
             <section className={styles.reviewCard}>
               <span className={styles.eyebrow}>DIAGNÓSTICO BLINKO</span>
               <h1>Coleta dos 7 pilares</h1>
-              <div className={styles.notice}>A interface está pronta, mas as migrações 003 e 004 ainda não foram aplicadas ao Neon principal. Nenhum dado será simulado.</div>
+              <div className={styles.notice}>A interface está pronta, mas as migrações 003 a 006 ainda não foram aplicadas ao Neon principal. Nenhum dado será simulado.</div>
             </section>
           </div>
         </div>
@@ -179,6 +187,7 @@ export default async function DiagnosticPage({ params, searchParams }: Props) {
           </section>
 
           <DiagnosticAnalysisSection diagnosticId={id} />
+          <DiagnosticStrategySection diagnosticId={id} />
         </div>
       </div>
     </main>
