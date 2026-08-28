@@ -7,6 +7,7 @@ import InternalBrand from "../../InternalBrand";
 import styles from "../../interno.module.css";
 import DiagnosticAnalysisSection from "./DiagnosticAnalysisSection";
 import DiagnosticStrategySection from "./DiagnosticStrategySection";
+import DiagnosticProposalSection from "./DiagnosticProposalSection";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -51,6 +52,21 @@ function notice(status?: string) {
   if (status === "strategy_finalized") return "Problema, causa, prioridade e intervenção validados. O diagnóstico está pronto para preparar a apresentação.";
   if (status === "strategy_finalize_confirmation_required") return "Confirme explicitamente a revisão antes de finalizar a estrutura.";
   if (status === "strategy_finalize_blocked") return "Para finalizar, é preciso uma cadeia com problema confirmado, causa confirmada, prioridade selecionada e intervenção selecionada.";
+  if (status === "presentation_recorded") return "Apresentação do Diagnóstico Blinko registrada. A proposta agora pode ser preparada.";
+  if (status === "presentation_invalid") return "Confirme a realização e informe uma data e horário válidos para registrar a apresentação.";
+  if (status === "presentation_blocked") return "A apresentação só pode ser registrada quando o diagnóstico estiver pronto para apresentação.";
+  if (status === "presentation_failed") return "A apresentação não foi registrada. Nenhum estado anterior foi alterado.";
+  if (status === "proposal_saved") return "Nova versão da proposta registrada. Nenhuma comunicação externa foi enviada.";
+  if (status === "proposal_missing_intervention") return "Selecione ao menos uma intervenção validada para compor a proposta.";
+  if (status === "proposal_requires_presentation") return "Registre a apresentação do Diagnóstico Blinko antes de preparar a proposta.";
+  if (status === "proposal_invalid") return "A proposta contém uma intervenção que não está selecionada no diagnóstico.";
+  if (status === "proposal_failed") return "A proposta não foi salva. Nenhuma versão existente foi apagada.";
+  if (status === "proposal_review_started") return "A proposta entrou em revisão interna. Ela continua sem envio externo.";
+  if (status === "proposal_review_blocked") return "A proposta atual não está em estado de rascunho para iniciar revisão.";
+  if (status === "proposal_incomplete") return "Complete escopo, responsabilidades, prazo, investimento, condições e validade antes da revisão interna.";
+  if (status === "proposal_approval_confirmation_required") return "Confirme explicitamente a revisão interna antes de aprovar a proposta.";
+  if (status === "proposal_approval_blocked") return "A proposta não está pronta para aprovação interna.";
+  if (status === "proposal_approved_internal") return "Proposta aprovada internamente. O envio externo continua bloqueado até uma decisão humana específica.";
   return null;
 }
 
@@ -75,7 +91,7 @@ export default async function DiagnosticPage({ params, searchParams }: Props) {
             <section className={styles.reviewCard}>
               <span className={styles.eyebrow}>DIAGNÓSTICO BLINKO</span>
               <h1>Coleta dos 7 pilares</h1>
-              <div className={styles.notice}>A interface está pronta, mas as migrações 003 a 006 ainda não foram aplicadas ao Neon principal. Nenhum dado será simulado.</div>
+              <div className={styles.notice}>A interface está pronta, mas as migrações 003 a 007 ainda não foram aplicadas ao Neon principal. Nenhum dado será simulado.</div>
             </section>
           </div>
         </div>
@@ -188,6 +204,7 @@ export default async function DiagnosticPage({ params, searchParams }: Props) {
 
           <DiagnosticAnalysisSection diagnosticId={id} />
           <DiagnosticStrategySection diagnosticId={id} />
+          <DiagnosticProposalSection diagnosticId={id} />
         </div>
       </div>
     </main>
