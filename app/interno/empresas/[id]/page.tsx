@@ -76,7 +76,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
 
         <div className={styles.sectionTitle}>
           <h2>Soluções Blinko</h2>
-          <span>capacidades selecionadas a partir do catálogo reutilizável</span>
+          <span>blueprint funcional + direção visual quando definida</span>
         </div>
 
         {solutions.length === 0 ? (
@@ -89,6 +89,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                   <div>
                     <h3>{solution.blueprint.name}</h3>
                     <p>{solution.blueprint.category} · v{solution.selected_version || solution.blueprint.version}</p>
+                    {solution.visual_direction ? (
+                      <p>Direção visual: {solution.visual_direction.name}</p>
+                    ) : (
+                      <p>Direção visual ainda não definida</p>
+                    )}
                   </div>
                   <span className={styles.solutionStatus}>{solutionStatusLabel(solution.status)}</span>
                 </div>
@@ -96,6 +101,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                   <Link className={styles.secondary} href={`/interno/solucoes/${solution.blueprint.slug}`}>
                     Ver blueprint →
                   </Link>
+                  {solution.visual_direction ? (
+                    <Link className={styles.secondary} href={`/interno/direcoes-visuais/${solution.visual_direction.slug}`}>
+                      Ver direção →
+                    </Link>
+                  ) : null}
                 </div>
               </article>
             ))}
