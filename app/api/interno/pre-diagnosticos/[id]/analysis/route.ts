@@ -4,6 +4,7 @@ import {
   BlinkoAiAnalysisError,
   generateBlinkoPreDiagnosticAnalysis,
   getBlinkoAiModel,
+  getBlinkoAiProvider,
 } from "../../../../../../lib/blinko/ai-server";
 import { getInternalSession } from "../../../../../../lib/blinko/internal-auth";
 import {
@@ -51,6 +52,7 @@ export async function POST(request: Request, context: Context) {
 
   const inputSnapshot = buildAiSafePreDiagnosticSnapshot(workspace);
   const model = getBlinkoAiModel();
+  const provider = getBlinkoAiProvider();
 
   try {
     const result = await generateBlinkoPreDiagnosticAnalysis(inputSnapshot);
@@ -58,7 +60,7 @@ export async function POST(request: Request, context: Context) {
     await recordPreDiagnosticAnalysis({
       preDiagnosticId: id,
       status: "ready",
-      provider: "vercel-ai-gateway",
+      provider: result.provider,
       model: result.model,
       promptVersion: PRE_DIAGNOSTIC_PROMPT_VERSION,
       inputSnapshot,
@@ -77,7 +79,7 @@ export async function POST(request: Request, context: Context) {
       await recordPreDiagnosticAnalysis({
         preDiagnosticId: id,
         status: "failed",
-        provider: "vercel-ai-gateway",
+        provider,
         model,
         promptVersion: PRE_DIAGNOSTIC_PROMPT_VERSION,
         inputSnapshot,
@@ -88,7 +90,7 @@ export async function POST(request: Request, context: Context) {
       console.error("Blinko AI: falha ao registrar execução com erro", recordError);
     }
 
-    console.error("Blinko AI: análise do pré-diagnóstico falhou", { code, detail });
+    console.error("Blinko AI: análise do pré-diagnóstico falhou", { code, detail, provider, model });
     return NextResponse.redirect(
       new URL(`/interno/pre-diagnosticos/${id}?status=ai_failed`, request.url),
       303,
