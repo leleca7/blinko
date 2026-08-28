@@ -4,6 +4,7 @@ import PreDiagnosticReviewView from "../../../internal/PreDiagnosticReviewView";
 import { requireInternalSession } from "../../../../lib/blinko/internal-auth";
 import { getPreDiagnosticReviewWorkspace } from "../../../../lib/blinko/neon-server";
 import { normalizeReviewWorkspace } from "../../../../lib/blinko/review-workspace";
+import DiagnosticCommercialSection from "./DiagnosticCommercialSection";
 import InternalBrand from "../../InternalBrand";
 import styles from "../../interno.module.css";
 
@@ -43,6 +44,13 @@ function statusNotice(status?: string) {
   if (status === "meeting_scheduled") return "Reunião registrada no Blinko OS e adicionada à fila operacional. Nenhum convite externo foi enviado.";
   if (status === "meeting_missing_review") return "Registre a revisão humana antes de agendar a reunião no OS.";
   if (status === "meeting_invalid_date") return "Informe uma data e horário válidos para a reunião.";
+  if (status === "diagnostic_schema_pending") return "A etapa comercial do Diagnóstico Blinko está preparada, mas a migração correspondente ainda não foi aplicada ao banco principal.";
+  if (status === "diagnostic_requires_meeting") return "Registre a reunião antes de marcar o Diagnóstico Blinko como oferecido.";
+  if (status === "diagnostic_offered") return "Diagnóstico Blinko registrado como oferecido. Nenhuma proposta, preço ou mensagem foi enviada pelo OS.";
+  if (status === "payment_confirmation_required") return "A confirmação humana do recebimento é obrigatória antes de registrar o pagamento.";
+  if (status === "diagnostic_not_current") return "O diagnóstico informado não é mais a versão ativa deste registro.";
+  if (status === "diagnostic_paid") return "Pagamento do Diagnóstico Blinko registrado após confirmação humana. A próxima etapa é a coleta.";
+  if (status === "diagnostic_failed") return "A operação do Diagnóstico Blinko não pôde ser registrada. Nenhum pagamento ou envio externo foi executado.";
   return null;
 }
 
@@ -298,6 +306,8 @@ export default async function PreDiagnosticReviewPage({ params, searchParams }: 
               </div>
             )}
           </section>
+
+          <DiagnosticCommercialSection preDiagnosticId={id} leadStatus={workspace.lead.status} />
         </div>
       </div>
     </main>
