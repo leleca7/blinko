@@ -6,6 +6,7 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 18px;
+  margin-bottom: 24px;
   padding: 13px 16px;
   border-radius: 22px;
   background: #01301e;
