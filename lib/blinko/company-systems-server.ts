@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 
+// Esta leitura roda no servidor e depende de DATABASE_URL disponível no ambiente do deployment.
 export type ConnectedSystem = {
   id: string;
   company_id: string;
