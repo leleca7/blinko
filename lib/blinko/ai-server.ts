@@ -17,6 +17,7 @@ import type { ReviewWorkspace } from "./review-workspace";
 
 const DEFAULT_BLINKO_AI_MODEL = "openai/gpt-5.6-sol";
 const DEFAULT_BLINKO_GOOGLE_MODEL = "gemini-3.7-flash";
+const BLINKO_GOOGLE_FALLBACK_MODEL = "gemini-3.1-flash-lite";
 
 export type BlinkoAiProvider = "vercel-ai-gateway" | "google-generative-ai";
 
@@ -69,9 +70,36 @@ export function getBlinkoAiModel() {
   return process.env.BLINKO_AI_MODEL?.trim() || DEFAULT_BLINKO_AI_MODEL;
 }
 
-function getBlinkoAiLanguageModel() {
-  const model = getBlinkoAiModel();
-  return getBlinkoAiProvider() === "google-generative-ai" ? google(model) : model;
+export async function generateBlinkoText(prompt: string): Promise<{
+  text: string;
+  model: string;
+  provider: BlinkoAiProvider;
+}> {
+  const provider = getBlinkoAiProvider();
+  const primaryModel = getBlinkoAiModel();
+
+  if (provider !== "google-generative-ai") {
+    const { text } = await generateText({ model: primaryModel, prompt });
+    return { text, model: primaryModel, provider };
+  }
+
+  try {
+    const { text } = await generateText({ model: google(primaryModel), prompt });
+    return { text, model: primaryModel, provider };
+  } catch (primaryError) {
+    if (primaryModel === BLINKO_GOOGLE_FALLBACK_MODEL) throw primaryError;
+
+    console.warn("Blinko AI: modelo Google primário indisponível; tentando fallback", {
+      primaryModel,
+      fallbackModel: BLINKO_GOOGLE_FALLBACK_MODEL,
+    });
+
+    const { text } = await generateText({
+      model: google(BLINKO_GOOGLE_FALLBACK_MODEL),
+      prompt,
+    });
+    return { text, model: BLINKO_GOOGLE_FALLBACK_MODEL, provider };
+  }
 }
 
 /**
@@ -101,16 +129,12 @@ export function buildAiSafePreDiagnosticSnapshot(workspace: ReviewWorkspace) {
 export async function generateBlinkoPreDiagnosticAnalysis(
   inputSnapshot: Record<string, unknown>,
 ): Promise<{ analysis: PreDiagnosticAnalysis; model: string; provider: BlinkoAiProvider }> {
-  const model = getBlinkoAiModel();
-  const provider = getBlinkoAiProvider();
   const request = buildPreDiagnosticAnalysisInput(inputSnapshot);
+  const result = await generateBlinkoText(
+    `${request.instruction}\n\nIMPORTANTE SOBRE O FORMATO:\nResponda somente com um objeto JSON válido. Não use markdown, bloco de código, comentário antes ou depois do JSON. Não inclua dados pessoais que não aparecem na entrada.\n\nENTRADA DO PRÉ-DIAGNÓSTICO:\n${JSON.stringify(request.submission, null, 2)}\n\nFORMATO ESPERADO:\n${JSON.stringify(request.expectedShape, null, 2)}`,
+  );
 
-  const { text } = await generateText({
-    model: getBlinkoAiLanguageModel(),
-    prompt: `${request.instruction}\n\nIMPORTANTE SOBRE O FORMATO:\nResponda somente com um objeto JSON válido. Não use markdown, bloco de código, comentário antes ou depois do JSON. Não inclua dados pessoais que não aparecem na entrada.\n\nENTRADA DO PRÉ-DIAGNÓSTICO:\n${JSON.stringify(request.submission, null, 2)}\n\nFORMATO ESPERADO:\n${JSON.stringify(request.expectedShape, null, 2)}`,
-  });
-
-  const parsed = parseJsonObject(text);
+  const parsed = parseJsonObject(result.text);
   if (!parsed) {
     throw new BlinkoAiAnalysisError("invalid_json", "A Blinko AI não retornou JSON válido.");
   }
@@ -120,7 +144,7 @@ export async function generateBlinkoPreDiagnosticAnalysis(
     throw new BlinkoAiAnalysisError("invalid_output", "A saída da Blinko AI não passou pela validação do contrato.");
   }
 
-  return { analysis, model, provider };
+  return { analysis, model: result.model, provider: result.provider };
 }
 
 function buildAiSafeInitialReadingRequest(
@@ -155,16 +179,12 @@ export async function generateBlinkoInitialReadingDraft(
   workspace: ReviewWorkspace,
   preferredChannel: InitialReadingChannel,
 ): Promise<{ draft: InitialReadingDraft; model: string; provider: BlinkoAiProvider }> {
-  const model = getBlinkoAiModel();
-  const provider = getBlinkoAiProvider();
   const request = buildAiSafeInitialReadingRequest(workspace, preferredChannel);
+  const result = await generateBlinkoText(
+    `${request.instruction}\n\nIMPORTANTE SOBRE O FORMATO:\nResponda somente com um objeto JSON válido. Não use markdown, bloco de código, comentário antes ou depois. O canal deve ser ${preferredChannel}. Não inclua nome, e-mail, WhatsApp, score comercial, nome da empresa, notas de fit ou qualquer dado que não esteja no contexto seguro.\n\nCONTEXTO REVISADO:\n${JSON.stringify(request.context, null, 2)}\n\nFORMATO ESPERADO:\n${JSON.stringify(request.expectedShape, null, 2)}`,
+  );
 
-  const { text } = await generateText({
-    model: getBlinkoAiLanguageModel(),
-    prompt: `${request.instruction}\n\nIMPORTANTE SOBRE O FORMATO:\nResponda somente com um objeto JSON válido. Não use markdown, bloco de código, comentário antes ou depois. O canal deve ser ${preferredChannel}. Não inclua nome, e-mail, WhatsApp, score comercial, nome da empresa, notas de fit ou qualquer dado que não esteja no contexto seguro.\n\nCONTEXTO REVISADO:\n${JSON.stringify(request.context, null, 2)}\n\nFORMATO ESPERADO:\n${JSON.stringify(request.expectedShape, null, 2)}`,
-  });
-
-  const parsed = parseJsonObject(text);
+  const parsed = parseJsonObject(result.text);
   if (!parsed) {
     throw new BlinkoAiAnalysisError("initial_reading_invalid_json", "A Blinko AI não retornou JSON válido para a leitura inicial.");
   }
@@ -176,7 +196,7 @@ export async function generateBlinkoInitialReadingDraft(
 
   return {
     draft: { ...draft, channel: preferredChannel },
-    model,
-    provider,
+    model: result.model,
+    provider: result.provider,
   };
 }
