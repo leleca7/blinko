@@ -49,6 +49,7 @@ function safeMetadataString(metadata: Record<string, unknown>, key: string) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+// Metadata só pode selecionar secrets dedicados à integração Blinko, nunca variáveis genéricas do runtime.
 function isAllowedSummarySecretEnv(value: string) {
   return /^[A-Z][A-Z0-9_]*_BLINKO_API_SECRET$/.test(value);
 }
