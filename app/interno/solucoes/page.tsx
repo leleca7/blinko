@@ -16,10 +16,11 @@ export default async function SolutionsPage() {
   const session = await requireInternalSession();
 
   let solutions = [] as Awaited<ReturnType<typeof getSolutionCatalog>>;
+  let catalogUnavailable = false;
   try {
     solutions = await getSolutionCatalog();
   } catch {
-    solutions = [];
+    catalogUnavailable = true;
   }
 
   const readyCount = solutions.filter((item) => item.status === "ready").length;
@@ -35,8 +36,8 @@ export default async function SolutionsPage() {
             <h1>O que já sabemos construir não começa do zero.</h1>
           </div>
           <div className={styles.heroAside}>
-            <strong>{solutions.length}</strong>
-            <span>soluções catalogadas · {readyCount} prontas para uso</span>
+            <strong>{catalogUnavailable ? "–" : solutions.length}</strong>
+            <span>{catalogUnavailable ? "catálogo temporariamente indisponível" : `soluções catalogadas · ${readyCount} prontas para uso`}</span>
           </div>
         </section>
 
@@ -45,7 +46,11 @@ export default async function SolutionsPage() {
           <span>blueprint funcional primeiro; identidade e direção de arte depois</span>
         </div>
 
-        {solutions.length === 0 ? (
+        {catalogUnavailable ? (
+          <div className={styles.empty}>
+            O catálogo está temporariamente indisponível. Nenhuma conclusão sobre quantidade de soluções foi assumida.
+          </div>
+        ) : solutions.length === 0 ? (
           <div className={styles.empty}>
             O catálogo ainda não possui blueprints cadastrados neste ambiente. A estrutura está pronta para receber as primeiras soluções oficiais da Blinko.
           </div>
