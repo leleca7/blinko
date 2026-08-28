@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getBlinkoDiagnosticContext } from "../../../../lib/blinko/diagnostic-commercial";
 import styles from "../../interno.module.css";
 
@@ -23,6 +24,7 @@ export default async function DiagnosticCommercialSection({
 
   const canOffer = !diagnostic && leadStatus === "meeting";
   const canConfirmPayment = Boolean(diagnosticId && diagnosticStatus === "awaiting_payment");
+  const canOpenDiagnostic = Boolean(diagnosticId && diagnosticStatus && diagnosticStatus !== "awaiting_payment");
 
   return (
     <section className={styles.reviewCard} style={{ borderColor: "rgba(239,59,127,.24)", background: "rgba(239,59,127,.035)" }}>
@@ -110,9 +112,14 @@ export default async function DiagnosticCommercialSection({
             </form>
           ) : null}
 
-          {diagnosticStatus === "collection" ? (
-            <div className={styles.notice} style={{ maxWidth: 860 }}>
-              Pagamento registrado por decisão humana. A próxima etapa operacional é a coleta do Diagnóstico Blinko. A Empresa já pode ser tratada como entidade própria no OS sem perder o histórico do lead.
+          {canOpenDiagnostic ? (
+            <div style={{ display: "grid", gap: 12, maxWidth: 860 }}>
+              <div className={styles.notice}>
+                O Diagnóstico Blinko agora tem workspace próprio. A coleta dos 7 pilares fica separada do pré-diagnóstico e mantém versões do que foi registrado.
+              </div>
+              <Link className={styles.button} href={`/interno/diagnosticos/${diagnosticId}`} style={{ justifySelf: "start" }}>
+                Abrir Diagnóstico Blinko
+              </Link>
             </div>
           ) : null}
         </div>
