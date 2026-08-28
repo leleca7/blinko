@@ -64,17 +64,19 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
   if (!company) notFound();
 
   let solutions = [] as Awaited<ReturnType<typeof getCompanySolutions>>;
+  let solutionsUnavailable = false;
   try {
     solutions = await getCompanySolutions(id);
   } catch {
-    solutions = [];
+    solutionsUnavailable = true;
   }
 
   let plans = [] as Awaited<ReturnType<typeof getCompanyImplementationPlans>>;
+  let plansUnavailable = false;
   try {
     plans = await getCompanyImplementationPlans(id);
   } catch {
-    plans = [];
+    plansUnavailable = true;
   }
 
   return (
@@ -99,7 +101,9 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
           <span>kit + direção visual + soluções em execução, sempre com aprovação humana</span>
         </div>
 
-        {plans.length === 0 ? (
+        {plansUnavailable ? (
+          <div className={styles.empty}>Os planos de implantação estão temporariamente indisponíveis. O sistema não assumiu que esta empresa está sem planos.</div>
+        ) : plans.length === 0 ? (
           <div className={styles.empty}>Nenhum plano de implantação foi criado para esta empresa ainda.</div>
         ) : (
           <section className={styles.solutionGrid} aria-label="Planos de implantação">
@@ -128,7 +132,9 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
           <span>soluções já selecionadas/ativas, separadas dos planos em preparação</span>
         </div>
 
-        {solutions.length === 0 ? (
+        {solutionsUnavailable ? (
+          <div className={styles.empty}>As soluções desta empresa estão temporariamente indisponíveis. O sistema não assumiu que a empresa está sem soluções.</div>
+        ) : solutions.length === 0 ? (
           <div className={styles.empty}>Nenhuma solução do catálogo foi vinculada a esta empresa ainda.</div>
         ) : (
           <section className={styles.solutionGrid} aria-label="Soluções Blinko">
