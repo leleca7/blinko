@@ -1,6 +1,7 @@
 -- Blinko OS — Catálogo de Soluções
 -- Blueprints reutilizáveis + seleção por empresa.
 -- Não provisiona, publica ou conecta integrações automaticamente.
+-- Revisada após sincronização da PR #14 com a main.
 
 create table if not exists public.solution_blueprints (
   id uuid primary key default gen_random_uuid(),
