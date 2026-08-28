@@ -5,6 +5,7 @@ import { BLINKO_DIAGNOSTIC_PILLARS } from "../../../../lib/blinko/diagnostic-col
 import { getDiagnosticWorkspace } from "../../../../lib/blinko/diagnostic-collection-server";
 import InternalBrand from "../../InternalBrand";
 import styles from "../../interno.module.css";
+import DiagnosticAnalysisSection from "./DiagnosticAnalysisSection";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -34,6 +35,14 @@ function notice(status?: string) {
   if (status === "diagnostic_schema_pending") return "A estrutura do Diagnóstico Blinko ainda aguarda aplicação das migrações no Neon principal.";
   if (status === "analysis_ready") return "Coleta encerrada como etapa atual. O diagnóstico avançou para análise.";
   if (status === "analysis_blocked") return "Salve ao menos uma versão válida da coleta antes de avançar para análise.";
+  if (status === "deep_analysis_ready") return "A Blinko AI concluiu o rascunho analítico profundo. Agora ele precisa de revisão humana.";
+  if (status === "deep_analysis_failed") return "A análise profunda não foi concluída. Nenhuma conclusão foi gravada como válida.";
+  if (status === "deep_analysis_exists") return "Já existe uma análise profunda atual. A versão existente foi preservada.";
+  if (status === "deep_analysis_blocked") return "A análise profunda só abre depois que o diagnóstico entra oficialmente na etapa de análise.";
+  if (status === "deep_review_saved") return "Revisão humana da análise registrada. O diagnóstico avançou para revisão.";
+  if (status === "deep_review_missing") return "Preencha a leitura humana antes de registrar a revisão da análise.";
+  if (status === "deep_review_not_current") return "A análise informada não é mais a versão atual.";
+  if (status === "deep_review_failed") return "A revisão humana não foi registrada. Nenhuma versão existente foi apagada.";
   return null;
 }
 
@@ -168,6 +177,8 @@ export default async function DiagnosticPage({ params, searchParams }: Props) {
               <div className={styles.notice}>O diagnóstico já está em {diagnosticStatus}. As versões da coleta permanecem disponíveis como evidência do processo.</div>
             )}
           </section>
+
+          <DiagnosticAnalysisSection diagnosticId={id} />
         </div>
       </div>
     </main>
