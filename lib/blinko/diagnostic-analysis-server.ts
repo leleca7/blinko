@@ -99,6 +99,26 @@ export async function recordDiagnosticAnalysis(input: {
   return rows[0]?.result as string;
 }
 
+export async function recordManualDiagnosticAnalysis(input: {
+  diagnosticId: string;
+  collectionVersionId: string;
+  actorLabel: string;
+  inputSnapshot: Record<string, unknown>;
+  output: Record<string, unknown>;
+}) {
+  const sql = getSql();
+  const rows = await sql`
+    select public.record_manual_diagnostic_analysis(
+      ${input.diagnosticId}::uuid,
+      ${input.collectionVersionId}::uuid,
+      ${input.actorLabel},
+      ${JSON.stringify(input.inputSnapshot)}::jsonb,
+      ${JSON.stringify(input.output)}::jsonb
+    ) as result
+  `;
+  return rows[0]?.result as string;
+}
+
 export async function recordDiagnosticAnalysisReview(input: {
   diagnosticId: string;
   analysisRunId: string;
