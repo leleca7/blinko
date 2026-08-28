@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireInternalSession } from "../../../../lib/blinko/internal-auth";
 import { getCompanyWithSystems } from "../../../../lib/blinko/company-systems-server";
+import { getCompanySolutions } from "../../../../lib/blinko/solution-catalog-server";
 import InternalTopbar from "../../InternalTopbar";
 import styles from "../empresas.module.css";
 
@@ -25,6 +26,17 @@ function authLabel(strategy: string) {
   }[strategy] ?? strategy;
 }
 
+function solutionStatusLabel(status: string) {
+  return {
+    planned: "Planejada",
+    selected: "Selecionada",
+    in_build: "Em implantação",
+    live: "Ativa",
+    paused: "Pausada",
+    retired: "Encerrada",
+  }[status] ?? status;
+}
+
 export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireInternalSession();
   const { id } = await params;
@@ -37,6 +49,14 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
   }
 
   if (!company) notFound();
+
+  let solutions = [] as Awaited<ReturnType<typeof getCompanySolutions>>;
+  let solutionsUnavailable = false;
+  try {
+    solutions = await getCompanySolutions(id);
+  } catch {
+    solutionsUnavailable = true;
+  }
 
   return (
     <main className={styles.page}>
@@ -56,14 +76,42 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         </section>
 
         <div className={styles.sectionTitle}>
+          <h2>Soluções Blinko</h2>
+          <span>capacidades selecionadas a partir do catálogo reutilizável</span>
+        </div>
+
+        {solutionsUnavailable ? (
+          <div className={styles.empty}>As soluções desta empresa estão temporariamente indisponíveis. O sistema não assumiu que a empresa está sem soluções.</div>
+        ) : solutions.length === 0 ? (
+          <div className={styles.empty}>Nenhuma solução do catálogo foi vinculada a esta empresa ainda.</div>
+        ) : (
+          <section className={styles.solutionGrid} aria-label="Soluções Blinko">
+            {solutions.map((solution) => (
+              <article className={styles.solutionCard} key={solution.id}>
+                <div className={styles.solutionTop}>
+                  <div>
+                    <h3>{solution.blueprint.name}</h3>
+                    <p>{solution.blueprint.category} · v{solution.selected_version || solution.blueprint.version}</p>
+                  </div>
+                  <span className={styles.solutionStatus}>{solutionStatusLabel(solution.status)}</span>
+                </div>
+                <div className={styles.actions}>
+                  <Link className={styles.secondary} href={`/interno/solucoes/${solution.blueprint.slug}`}>
+                    Ver blueprint →
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </section>
+        )}
+
+        <div className={styles.sectionTitle}>
           <h2>Sistemas conectados</h2>
           <span>cada sistema mantém banco e operação próprios</span>
         </div>
 
         {company.systems.length === 0 ? (
-          <div className={styles.empty}>
-            Esta empresa ainda não tem um sistema conectado ao Blinko OS.
-          </div>
+          <div className={styles.empty}>Esta empresa ainda não tem um sistema conectado ao Blinko OS.</div>
         ) : (
           <section className={styles.systemGrid} aria-label="Sistemas conectados">
             {company.systems.map((system) => (
@@ -73,9 +121,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                     <h3>{system.name}</h3>
                     <p>{system.system_type} · {system.environment}</p>
                   </div>
-                  <span className={styles.statusPill} data-status={system.status}>
-                    {statusLabel(system.status)}
-                  </span>
+                  <span className={styles.statusPill} data-status={system.status}>{statusLabel(system.status)}</span>
                 </div>
 
                 <div className={styles.detailList}>
@@ -85,16 +131,8 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                 </div>
 
                 <div className={styles.actions}>
-                  {system.app_url ? (
-                    <a className={styles.primary} href={system.app_url} target="_blank" rel="noreferrer">
-                      Abrir sistema ↗
-                    </a>
-                  ) : null}
-                  {system.repository_url ? (
-                    <a className={styles.secondary} href={system.repository_url} target="_blank" rel="noreferrer">
-                      Repositório ↗
-                    </a>
-                  ) : null}
+                  {system.app_url ? <a className={styles.primary} href={system.app_url} target="_blank" rel="noreferrer">Abrir sistema ↗</a> : null}
+                  {system.repository_url ? <a className={styles.secondary} href={system.repository_url} target="_blank" rel="noreferrer">Repositório ↗</a> : null}
                 </div>
               </article>
             ))}
