@@ -1,5 +1,6 @@
 import "server-only";
 
+import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 import {
   buildInitialReadingInput,
@@ -15,6 +16,9 @@ import {
 import type { ReviewWorkspace } from "./review-workspace";
 
 const DEFAULT_BLINKO_AI_MODEL = "openai/gpt-5.6-sol";
+const DEFAULT_BLINKO_GOOGLE_MODEL = "gemini-3.7-flash";
+
+export type BlinkoAiProvider = "vercel-ai-gateway" | "google-generative-ai";
 
 export class BlinkoAiAnalysisError extends Error {
   constructor(public readonly code: string, message: string) {
@@ -51,8 +55,23 @@ function parseJsonObject(raw: string) {
   }
 }
 
+export function getBlinkoAiProvider(): BlinkoAiProvider {
+  return process.env.BLINKO_AI_PROVIDER?.trim().toLowerCase() === "google"
+    ? "google-generative-ai"
+    : "vercel-ai-gateway";
+}
+
 export function getBlinkoAiModel() {
+  if (getBlinkoAiProvider() === "google-generative-ai") {
+    return process.env.BLINKO_AI_GOOGLE_MODEL?.trim() || DEFAULT_BLINKO_GOOGLE_MODEL;
+  }
+
   return process.env.BLINKO_AI_MODEL?.trim() || DEFAULT_BLINKO_AI_MODEL;
+}
+
+function getBlinkoAiLanguageModel() {
+  const model = getBlinkoAiModel();
+  return getBlinkoAiProvider() === "google-generative-ai" ? google(model) : model;
 }
 
 /**
@@ -81,12 +100,13 @@ export function buildAiSafePreDiagnosticSnapshot(workspace: ReviewWorkspace) {
 
 export async function generateBlinkoPreDiagnosticAnalysis(
   inputSnapshot: Record<string, unknown>,
-): Promise<{ analysis: PreDiagnosticAnalysis; model: string }> {
+): Promise<{ analysis: PreDiagnosticAnalysis; model: string; provider: BlinkoAiProvider }> {
   const model = getBlinkoAiModel();
+  const provider = getBlinkoAiProvider();
   const request = buildPreDiagnosticAnalysisInput(inputSnapshot);
 
   const { text } = await generateText({
-    model,
+    model: getBlinkoAiLanguageModel(),
     prompt: `${request.instruction}\n\nIMPORTANTE SOBRE O FORMATO:\nResponda somente com um objeto JSON válido. Não use markdown, bloco de código, comentário antes ou depois do JSON. Não inclua dados pessoais que não aparecem na entrada.\n\nENTRADA DO PRÉ-DIAGNÓSTICO:\n${JSON.stringify(request.submission, null, 2)}\n\nFORMATO ESPERADO:\n${JSON.stringify(request.expectedShape, null, 2)}`,
   });
 
@@ -100,7 +120,7 @@ export async function generateBlinkoPreDiagnosticAnalysis(
     throw new BlinkoAiAnalysisError("invalid_output", "A saída da Blinko AI não passou pela validação do contrato.");
   }
 
-  return { analysis, model };
+  return { analysis, model, provider };
 }
 
 function buildAiSafeInitialReadingRequest(
@@ -134,12 +154,13 @@ function buildAiSafeInitialReadingRequest(
 export async function generateBlinkoInitialReadingDraft(
   workspace: ReviewWorkspace,
   preferredChannel: InitialReadingChannel,
-): Promise<{ draft: InitialReadingDraft; model: string }> {
+): Promise<{ draft: InitialReadingDraft; model: string; provider: BlinkoAiProvider }> {
   const model = getBlinkoAiModel();
+  const provider = getBlinkoAiProvider();
   const request = buildAiSafeInitialReadingRequest(workspace, preferredChannel);
 
   const { text } = await generateText({
-    model,
+    model: getBlinkoAiLanguageModel(),
     prompt: `${request.instruction}\n\nIMPORTANTE SOBRE O FORMATO:\nResponda somente com um objeto JSON válido. Não use markdown, bloco de código, comentário antes ou depois. O canal deve ser ${preferredChannel}. Não inclua nome, e-mail, WhatsApp, score comercial, nome da empresa, notas de fit ou qualquer dado que não esteja no contexto seguro.\n\nCONTEXTO REVISADO:\n${JSON.stringify(request.context, null, 2)}\n\nFORMATO ESPERADO:\n${JSON.stringify(request.expectedShape, null, 2)}`,
   });
 
@@ -156,5 +177,6 @@ export async function generateBlinkoInitialReadingDraft(
   return {
     draft: { ...draft, channel: preferredChannel },
     model,
+    provider,
   };
 }
