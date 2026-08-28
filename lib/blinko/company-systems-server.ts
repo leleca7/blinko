@@ -49,6 +49,10 @@ function safeMetadataString(metadata: Record<string, unknown>, key: string) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+function isAllowedSummarySecretEnv(value: string) {
+  return /^[A-Z][A-Z0-9_]*_BLINKO_API_SECRET$/.test(value);
+}
+
 function sanitizePrimitiveRecord(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
 
@@ -79,15 +83,28 @@ export async function getConnectedSystemOperationalSummary(
     return { state: "not_configured", message: "Resumo operacional ainda não configurado." };
   }
 
+  if (!isAllowedSummarySecretEnv(secretEnv)) {
+    return { state: "unavailable", message: "Credencial de integração não autorizada." };
+  }
+
   let parsedUrl: URL;
+  let parsedAppUrl: URL;
   try {
     parsedUrl = new URL(summaryUrl);
+    if (!system.app_url) throw new Error("missing_app_url");
+    parsedAppUrl = new URL(system.app_url);
   } catch {
     return { state: "unavailable", message: "Endpoint de resumo inválido." };
   }
 
-  if (parsedUrl.protocol !== "https:") {
-    return { state: "unavailable", message: "Endpoint de resumo precisa usar HTTPS." };
+  if (
+    parsedUrl.protocol !== "https:" ||
+    parsedAppUrl.protocol !== "https:" ||
+    parsedUrl.origin !== parsedAppUrl.origin ||
+    parsedUrl.username ||
+    parsedUrl.password
+  ) {
+    return { state: "unavailable", message: "Endpoint de resumo não autorizado para este sistema." };
   }
 
   const secret = process.env[secretEnv]?.trim();
