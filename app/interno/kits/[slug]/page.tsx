@@ -18,10 +18,23 @@ export default async function KitDetailPage({ params }: { params: Promise<{ slug
   const { slug } = await params;
 
   let kit = null;
+  let lookupUnavailable = false;
   try {
     kit = await getSolutionKit(slug);
   } catch {
-    kit = null;
+    lookupUnavailable = true;
+  }
+
+  if (lookupUnavailable) {
+    return (
+      <main className={styles.page}>
+        <div className={styles.shell}>
+          <InternalTopbar user={session.user} active="kits" />
+          <Link className={styles.back} href="/interno/kits">← voltar para kits</Link>
+          <div className={styles.empty}>O kit não pôde ser consultado neste momento. O sistema não assumiu que ele é inexistente.</div>
+        </div>
+      </main>
+    );
   }
 
   if (!kit) notFound();
