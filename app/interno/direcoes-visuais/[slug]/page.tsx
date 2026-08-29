@@ -17,11 +17,24 @@ export default async function VisualDirectionDetail({ params }: { params: Promis
   const session = await requireInternalSession();
   const { slug } = await params;
   let direction = null;
+  let lookupUnavailable = false;
 
   try {
     direction = await getVisualDirection(slug);
   } catch {
-    direction = null;
+    lookupUnavailable = true;
+  }
+
+  if (lookupUnavailable) {
+    return (
+      <main className={styles.page}>
+        <div className={styles.shell}>
+          <InternalTopbar user={session.user} active="directions" />
+          <Link className={styles.back} href="/interno/direcoes-visuais">← voltar para direções visuais</Link>
+          <div className={styles.empty}>A direção visual não pôde ser consultada neste momento. O sistema não assumiu que ela é inexistente.</div>
+        </div>
+      </main>
+    );
   }
 
   if (!direction) notFound();
