@@ -33,6 +33,10 @@ export default function DiagnosticoPage() {
         <div className={styles.notice}>
           <strong>Importante.</strong> Esta etapa não é o Diagnóstico Blinko profundo e não gera uma conclusão automática. A tecnologia organiza os sinais internamente, e a equipe Blinko revisa antes de qualquer leitura personalizada enviada por WhatsApp ou e-mail.
         </div>
+        <p style={{ marginTop: 16, display: "flex", gap: 18, flexWrap: "wrap", fontSize: 13 }}>
+          <Link href="/diagnostico-blinko">Entender o Diagnóstico Blinko →</Link>
+          <Link href="/privacidade">Como tratamos as informações enviadas →</Link>
+        </p>
       </section>
 
       <PreDiagnosticForm />
