@@ -29,10 +29,23 @@ export default async function SolutionDetailPage({ params }: { params: Promise<{
   const { slug } = await params;
 
   let solution = null;
+  let lookupUnavailable = false;
   try {
     solution = await getSolutionBlueprint(slug);
   } catch {
-    solution = null;
+    lookupUnavailable = true;
+  }
+
+  if (lookupUnavailable) {
+    return (
+      <main className={styles.page}>
+        <div className={styles.shell}>
+          <InternalTopbar user={session.user} active="solutions" />
+          <Link className={styles.back} href="/interno/solucoes">← voltar para o catálogo</Link>
+          <div className={styles.empty}>A solução não pôde ser consultada neste momento. O sistema não assumiu que o blueprint é inexistente.</div>
+        </div>
+      </main>
+    );
   }
 
   if (!solution) notFound();
