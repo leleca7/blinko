@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireInternalSession } from "../../../../lib/blinko/internal-auth";
-import { getCompanyWithSystems } from "../../../../lib/blinko/company-systems-server";
+import {
+  getCompanyWithSystems,
+  getConnectedSystemOperationalSummary,
+} from "../../../../lib/blinko/company-systems-server";
 import { getCompanySolutions } from "../../../../lib/blinko/solution-catalog-server";
 import { getCompanyImplementationPlans, getSolutionKits } from "../../../../lib/blinko/solution-kits-server";
 import { getVisualDirections } from "../../../../lib/blinko/visual-directions-server";
 import InternalTopbar from "../../InternalTopbar";
 import CreateImplementationPlanForm from "./CreateImplementationPlanForm";
+import SystemOperationalSummary from "./SystemOperationalSummary";
 import styles from "../empresas.module.css";
 
 function statusLabel(status: string) {
@@ -94,6 +98,10 @@ export default async function CompanyDetailPage({
   try { kits = await getSolutionKits(); } catch { kitsUnavailable = true; }
   try { directions = await getVisualDirections(); } catch { directionsUnavailable = true; }
 
+  const summaryEntries = await Promise.all(
+    company.systems.map(async (system) => [system.id, await getConnectedSystemOperationalSummary(system)] as const),
+  );
+  const summaries = new Map(summaryEntries);
   const feedback = feedbackLabel(status);
   const creationDependenciesUnavailable = kitsUnavailable || directionsUnavailable;
 
@@ -207,6 +215,9 @@ export default async function CompanyDetailPage({
                   <span><strong>Health:</strong> {system.last_health_checked_at ? new Date(system.last_health_checked_at).toLocaleString("pt-BR") : "ainda não verificado"}</span>
                   {system.last_health_status_code ? <span><strong>Último código:</strong> {system.last_health_status_code}</span> : null}
                 </div>
+
+                <SystemOperationalSummary summary={summaries.get(system.id) || { state: "not_configured" }} />
+
                 <div className={styles.actions}>
                   {system.app_url ? <a className={styles.primary} href={system.app_url} target="_blank" rel="noreferrer">Abrir sistema ↗</a> : null}
                   {system.repository_url ? <a className={styles.secondary} href={system.repository_url} target="_blank" rel="noreferrer">Repositório ↗</a> : null}

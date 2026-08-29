@@ -310,6 +310,50 @@
 .planFormFooter > span { max-width: 650px; color: rgba(255,255,255,.57); font-size: 11px; line-height: 1.5; }
 .planFormFooter .primary { background: #f8f6ef; color: #12372b; min-width: 150px; }
 
+.operationalSummary {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(18,55,43,.1);
+}
+
+.operationalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.operationalHeader strong { font-size: 12px; letter-spacing: .02em; }
+.operationalHeader span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(18,55,43,.08);
+  font-size: 10px;
+  font-weight: 800;
+}
+.operationalHeader span[data-state="healthy"] { background: rgba(21,129,83,.12); }
+.operationalHeader span[data-state="attention"],
+.operationalHeader span[data-state="degraded"] { background: rgba(201,145,31,.16); }
+.operationalHeader span[data-state="offline"] { background: rgba(180,64,64,.14); }
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 8px;
+}
+
+.metricCard {
+  min-height: 82px;
+  padding: 12px;
+  border-radius: 16px;
+  background: #f1f3ee;
+}
+.metricCard strong { display: block; font-size: 21px; letter-spacing: -.03em; }
+.metricCard span { display: block; margin-top: 4px; font-size: 10px; line-height: 1.3; color: rgba(18,55,43,.58); }
+.integrationLine { margin-top: 12px !important; font-size: 11px !important; font-weight: 700; }
+.summaryTimestamp { margin-top: 6px !important; font-size: 10px !important; color: rgba(18,55,43,.48) !important; }
+
 @media (max-width: 760px) {
   .shell { width: min(100% - 22px, 1180px); }
   .companyCard { grid-template-columns: 1fr; gap: 14px; }
