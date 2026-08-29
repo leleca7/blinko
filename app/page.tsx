@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BLINKO_LOGO_DARK_DATA_URI } from "../lib/blinko/brand-logo-data";
 import { BLINKO_FLOWER_DATA_URI } from "../lib/blinko/brand-flower-data";
 import styles from "./home-v2.module.css";
@@ -31,6 +31,8 @@ const faq = [
 ];
 
 export default function Home() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
   useEffect(() => {
     const root = document.documentElement;
     const rootStory = document.querySelector<HTMLElement>(".root-story");
@@ -251,9 +253,16 @@ export default function Home() {
           <h2>Perguntas antes de <em>começar.</em></h2>
         </div>
         <div className={styles.faqList}>
-          {faq.map(([question, answer]) => (
-            <details key={question}>
-              <summary>{question}<span>+</span></summary>
+          {faq.map(([question, answer], index) => (
+            <details key={question} open={openFaq === index}>
+              <summary
+                onClick={(event) => {
+                  event.preventDefault();
+                  setOpenFaq((current) => current === index ? null : index);
+                }}
+              >
+                {question}<span>+</span>
+              </summary>
               <p>{answer}</p>
             </details>
           ))}
