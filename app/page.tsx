@@ -32,6 +32,7 @@ const faq = [
 
 export default function Home() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -66,19 +67,32 @@ export default function Home() {
       if (!frame) frame = window.requestAnimationFrame(updateScroll);
     };
 
+    const closeMobileNavOnDesktop = () => {
+      if (window.innerWidth > 980) setMobileNavOpen(false);
+      scheduleScrollUpdate();
+    };
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileNavOpen(false);
+    };
+
     window.addEventListener("pointermove", updatePointer, { passive: true });
     window.addEventListener("scroll", scheduleScrollUpdate, { passive: true });
-    window.addEventListener("resize", scheduleScrollUpdate, { passive: true });
+    window.addEventListener("resize", closeMobileNavOnDesktop, { passive: true });
+    window.addEventListener("keydown", closeOnEscape);
     updateScroll();
 
     return () => {
       if (frame) window.cancelAnimationFrame(frame);
       window.removeEventListener("pointermove", updatePointer);
       window.removeEventListener("scroll", scheduleScrollUpdate);
-      window.removeEventListener("resize", scheduleScrollUpdate);
+      window.removeEventListener("resize", closeMobileNavOnDesktop);
+      window.removeEventListener("keydown", closeOnEscape);
       delete root.dataset.pointer;
     };
   }, []);
+
+  const closeMobileNav = () => setMobileNavOpen(false);
 
   return (
     <main>
@@ -95,17 +109,36 @@ export default function Home() {
           boxShadow: "0 20px 50px rgba(0,0,0,.12)",
         }}
       >
-        <a href="#top" aria-label="Blinko, início" className="logo-wrap">
+        <a href="#top" aria-label="Blinko, início" className="logo-wrap" onClick={closeMobileNav}>
           <img src={BLINKO_LOGO_DARK_DATA_URI} alt="Blinko" />
         </a>
-        <nav aria-label="Navegação principal">
+        <nav className={styles.desktopNav} aria-label="Navegação principal">
           <a href="#como">Método</a>
           <a href="#para-quem">Para quem</a>
           <a href="#analise">Análise</a>
           <a href="#faq">FAQ</a>
           <a className="nav-cta" href="/diagnostico">Pré-diagnóstico</a>
         </nav>
+        <button
+          className={styles.menuButton}
+          type="button"
+          aria-expanded={mobileNavOpen}
+          aria-controls="mobile-main-nav"
+          onClick={() => setMobileNavOpen((current) => !current)}
+        >
+          {mobileNavOpen ? "Fechar" : "Menu"}
+        </button>
       </header>
+
+      {mobileNavOpen ? (
+        <nav className={styles.mobileNav} id="mobile-main-nav" aria-label="Navegação principal mobile">
+          <a href="#como" onClick={closeMobileNav}>Método <span>01</span></a>
+          <a href="#para-quem" onClick={closeMobileNav}>Para quem <span>02</span></a>
+          <a href="#analise" onClick={closeMobileNav}>Análise <span>03</span></a>
+          <a href="#faq" onClick={closeMobileNav}>FAQ <span>04</span></a>
+          <a className={styles.mobileNavCta} href="/diagnostico" onClick={closeMobileNav}>Pré-diagnóstico gratuito</a>
+        </nav>
+      ) : null}
 
       <section className="hero" id="top">
         <div className="hero-content">
