@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireInternalSession } from "../../../../lib/blinko/internal-auth";
 import { getCompanyWithSystems } from "../../../../lib/blinko/company-systems-server";
 import { getCompanySolutions } from "../../../../lib/blinko/solution-catalog-server";
+import { getCompanyImplementationPlans } from "../../../../lib/blinko/solution-kits-server";
 import InternalTopbar from "../../InternalTopbar";
 import styles from "../empresas.module.css";
 
@@ -37,6 +38,18 @@ function solutionStatusLabel(status: string) {
   }[status] ?? status;
 }
 
+function planStatusLabel(status: string) {
+  return {
+    draft: "Rascunho",
+    approved: "Aprovado",
+    in_build: "Em implantação",
+    review: "Em revisão",
+    live: "Ativo",
+    paused: "Pausado",
+    cancelled: "Cancelado",
+  }[status] ?? status;
+}
+
 export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireInternalSession();
   const { id } = await params;
@@ -58,6 +71,14 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     solutionsUnavailable = true;
   }
 
+  let plans = [] as Awaited<ReturnType<typeof getCompanyImplementationPlans>>;
+  let plansUnavailable = false;
+  try {
+    plans = await getCompanyImplementationPlans(id);
+  } catch {
+    plansUnavailable = true;
+  }
+
   return (
     <main className={styles.page}>
       <div className={styles.shell}>
@@ -76,8 +97,39 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         </section>
 
         <div className={styles.sectionTitle}>
+          <h2>Planos de implantação</h2>
+          <span>kit + direção visual + soluções em execução, sempre com aprovação humana</span>
+        </div>
+
+        {plansUnavailable ? (
+          <div className={styles.empty}>Os planos de implantação estão temporariamente indisponíveis. O sistema não assumiu que esta empresa está sem planos.</div>
+        ) : plans.length === 0 ? (
+          <div className={styles.empty}>Nenhum plano de implantação foi criado para esta empresa ainda.</div>
+        ) : (
+          <section className={styles.solutionGrid} aria-label="Planos de implantação">
+            {plans.map((plan) => (
+              <article className={styles.solutionCard} key={plan.id}>
+                <div className={styles.solutionTop}>
+                  <div>
+                    <h3>{plan.name}</h3>
+                    <p>{plan.kit ? `Kit: ${plan.kit.name} · v${plan.kit.version}` : "Plano personalizado sem kit-base"}</p>
+                    <p>{plan.visual_direction ? `Direção visual: ${plan.visual_direction.name}` : "Direção visual ainda não definida"}</p>
+                    <p>{plan.items.length} soluções no plano</p>
+                  </div>
+                  <span className={styles.solutionStatus}>{planStatusLabel(plan.status)}</span>
+                </div>
+                <div className={styles.actions}>
+                  {plan.kit ? <Link className={styles.secondary} href={`/interno/kits/${plan.kit.slug}`}>Ver kit →</Link> : null}
+                  {plan.visual_direction ? <Link className={styles.secondary} href={`/interno/direcoes-visuais/${plan.visual_direction.slug}`}>Ver direção →</Link> : null}
+                </div>
+              </article>
+            ))}
+          </section>
+        )}
+
+        <div className={styles.sectionTitle}>
           <h2>Soluções Blinko</h2>
-          <span>blueprint funcional + direção visual quando definida</span>
+          <span>soluções já selecionadas/ativas, separadas dos planos em preparação</span>
         </div>
 
         {solutionsUnavailable ? (
@@ -92,23 +144,13 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                   <div>
                     <h3>{solution.blueprint.name}</h3>
                     <p>{solution.blueprint.category} · v{solution.selected_version || solution.blueprint.version}</p>
-                    {solution.visual_direction ? (
-                      <p>Direção visual: {solution.visual_direction.name}</p>
-                    ) : (
-                      <p>Direção visual ainda não definida</p>
-                    )}
+                    {solution.visual_direction ? <p>Direção visual: {solution.visual_direction.name}</p> : <p>Direção visual ainda não definida</p>}
                   </div>
                   <span className={styles.solutionStatus}>{solutionStatusLabel(solution.status)}</span>
                 </div>
                 <div className={styles.actions}>
-                  <Link className={styles.secondary} href={`/interno/solucoes/${solution.blueprint.slug}`}>
-                    Ver blueprint →
-                  </Link>
-                  {solution.visual_direction ? (
-                    <Link className={styles.secondary} href={`/interno/direcoes-visuais/${solution.visual_direction.slug}`}>
-                      Ver direção →
-                    </Link>
-                  ) : null}
+                  <Link className={styles.secondary} href={`/interno/solucoes/${solution.blueprint.slug}`}>Ver blueprint →</Link>
+                  {solution.visual_direction ? <Link className={styles.secondary} href={`/interno/direcoes-visuais/${solution.visual_direction.slug}`}>Ver direção →</Link> : null}
                 </div>
               </article>
             ))}
@@ -133,13 +175,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                   </div>
                   <span className={styles.statusPill} data-status={system.status}>{statusLabel(system.status)}</span>
                 </div>
-
                 <div className={styles.detailList}>
                   <span><strong>Acesso:</strong> {authLabel(system.auth_strategy)}</span>
                   <span><strong>Health:</strong> {system.last_health_checked_at ? new Date(system.last_health_checked_at).toLocaleString("pt-BR") : "ainda não verificado"}</span>
                   {system.last_health_status_code ? <span><strong>Último código:</strong> {system.last_health_status_code}</span> : null}
                 </div>
-
                 <div className={styles.actions}>
                   {system.app_url ? <a className={styles.primary} href={system.app_url} target="_blank" rel="noreferrer">Abrir sistema ↗</a> : null}
                   {system.repository_url ? <a className={styles.secondary} href={system.repository_url} target="_blank" rel="noreferrer">Repositório ↗</a> : null}
