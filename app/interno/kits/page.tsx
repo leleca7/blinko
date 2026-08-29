@@ -12,10 +12,11 @@ export default async function KitsPage() {
   const session = await requireInternalSession();
 
   let kits = [] as Awaited<ReturnType<typeof getSolutionKits>>;
+  let kitsUnavailable = false;
   try {
     kits = await getSolutionKits();
   } catch {
-    kits = [];
+    kitsUnavailable = true;
   }
 
   const readyCount = kits.filter((kit) => kit.status === "ready").length;
@@ -31,8 +32,8 @@ export default async function KitsPage() {
             <h1>Combinações que já funcionam não precisam ser reinventadas.</h1>
           </div>
           <div className={styles.heroAside}>
-            <strong>{kits.length}</strong>
-            <span>kits catalogados · {readyCount} prontos para implantação</span>
+            <strong>{kitsUnavailable ? "–" : kits.length}</strong>
+            <span>{kitsUnavailable ? "biblioteca temporariamente indisponível" : `kits catalogados · ${readyCount} prontos para implantação`}</span>
           </div>
         </section>
 
@@ -41,7 +42,9 @@ export default async function KitsPage() {
           <span>cada kit combina blueprints; cada empresa recebe personalização e revisão próprias</span>
         </div>
 
-        {kits.length === 0 ? (
+        {kitsUnavailable ? (
+          <div className={styles.empty}>A biblioteca de Kits está temporariamente indisponível. Nenhuma conclusão sobre quantidade de kits foi assumida.</div>
+        ) : kits.length === 0 ? (
           <div className={styles.empty}>Nenhum kit cadastrado neste ambiente ainda.</div>
         ) : (
           <section className={styles.grid}>
