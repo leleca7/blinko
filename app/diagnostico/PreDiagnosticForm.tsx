@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import styles from "./diagnostico.module.css";
 
 const areas = ["Marca", "Digital", "Financeiro", "Operação", "Atendimento", "Gestão", "Equipe", "Não sei identificar ainda"];
@@ -73,6 +73,17 @@ const steps = [
   { eyebrow: "ÚLTIMA ETAPA", title: "Como seguimos a partir daqui?", helper: "Só precisamos entender abertura para mudança e como falar com você depois da leitura." },
 ] as const;
 
+const DRAFT_KEY = "blinko:pre-diagnostico:draft:v1";
+const DRAFT_MAX_AGE = 1000 * 60 * 60 * 24 * 30;
+
+type DraftValue = string | string[];
+type DraftPayload = {
+  savedAt: number;
+  step: number;
+  pillarStep: number;
+  fields: Record<string, DraftValue>;
+};
+
 function values(form: FormData, name: string) {
   return form.getAll(name).map(String);
 }
@@ -81,9 +92,82 @@ export default function PreDiagnosticForm() {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [step, setStep] = useState(0);
   const [pillarStep, setPillarStep] = useState(0);
+  const [hasDraft, setHasDraft] = useState(false);
   const submissionIdRef = useRef<string | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form) return;
+
+    try {
+      const raw = window.localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+
+      const draft = JSON.parse(raw) as DraftPayload;
+      if (!draft?.savedAt || Date.now() - draft.savedAt > DRAFT_MAX_AGE) {
+        window.localStorage.removeItem(DRAFT_KEY);
+        return;
+      }
+
+      for (const [name, saved] of Object.entries(draft.fields ?? {})) {
+        const controls = Array.from(
+          form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`[name="${name}"]`),
+        );
+        const savedValues = Array.isArray(saved) ? saved : [saved];
+
+        for (const control of controls) {
+          if (control instanceof HTMLInputElement && (control.type === "checkbox" || control.type === "radio")) {
+            control.checked = savedValues.includes(control.value);
+          } else {
+            control.value = savedValues[0] ?? "";
+          }
+        }
+      }
+
+      setStep(Math.min(Math.max(Number(draft.step) || 0, 0), steps.length - 1));
+      setPillarStep(Math.min(Math.max(Number(draft.pillarStep) || 0, 0), pillarQuestions.length - 1));
+      setHasDraft(true);
+    } catch {
+      window.localStorage.removeItem(DRAFT_KEY);
+    }
+  }, []);
+
+  function collectDraftFields(form: HTMLFormElement) {
+    const data = new FormData(form);
+    const fields: Record<string, DraftValue> = {};
+
+    for (const [name, rawValue] of data.entries()) {
+      if (name === "companyFax" || name === "consent") continue;
+      const value = String(rawValue);
+      const current = fields[name];
+      if (current === undefined) fields[name] = value;
+      else if (Array.isArray(current)) current.push(value);
+      else fields[name] = [current, value];
+    }
+
+    return fields;
+  }
+
+  function saveDraft(nextStep = step, nextPillarStep = pillarStep) {
+    const form = formRef.current;
+    if (!form) return;
+
+    const draft: DraftPayload = {
+      savedAt: Date.now(),
+      step: nextStep,
+      pillarStep: nextPillarStep,
+      fields: collectDraftFields(form),
+    };
+
+    try {
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+      setHasDraft(true);
+    } catch {
+      // O preenchimento continua funcionando mesmo se o navegador bloquear armazenamento local.
+    }
+  }
 
   function scrollToProgress() {
     requestAnimationFrame(() => {
@@ -91,9 +175,11 @@ export default function PreDiagnosticForm() {
     });
   }
 
-  function moveToStep(nextStep: number) {
+  function moveToStep(nextStep: number, nextPillarStep = pillarStep) {
     setStep(nextStep);
+    setPillarStep(nextPillarStep);
     setStatus("idle");
+    saveDraft(nextStep, nextPillarStep);
     scrollToProgress();
   }
 
@@ -124,30 +210,27 @@ export default function PreDiagnosticForm() {
     if (step === 1) {
       if (!validatePillar(pillarStep)) return;
       if (pillarStep < pillarQuestions.length - 1) {
-        setPillarStep((current) => current + 1);
-        scrollToProgress();
+        moveToStep(1, pillarStep + 1);
         return;
       }
-      moveToStep(2);
+      moveToStep(2, pillarStep);
       return;
     }
 
     if (!validateStep(step)) return;
-    moveToStep(Math.min(step + 1, steps.length - 1));
+    moveToStep(Math.min(step + 1, steps.length - 1), pillarStep);
   }
 
   function back() {
     if (step === 1 && pillarStep > 0) {
-      setPillarStep((current) => current - 1);
-      scrollToProgress();
+      moveToStep(1, pillarStep - 1);
       return;
     }
     if (step === 2) {
-      setPillarStep(pillarQuestions.length - 1);
-      moveToStep(1);
+      moveToStep(1, pillarQuestions.length - 1);
       return;
     }
-    moveToStep(Math.max(step - 1, 0));
+    moveToStep(Math.max(step - 1, 0), pillarStep);
   }
 
   function firstInvalidLocation() {
@@ -177,7 +260,7 @@ export default function PreDiagnosticForm() {
     const invalid = firstInvalidLocation();
     if (invalid) {
       if (invalid.pillar !== null) setPillarStep(invalid.pillar);
-      moveToStep(invalid.step);
+      moveToStep(invalid.step, invalid.pillar ?? pillarStep);
       requestAnimationFrame(() => invalid.pillar !== null ? validatePillar(invalid.pillar) : validateStep(invalid.step));
       return;
     }
@@ -226,10 +309,13 @@ export default function PreDiagnosticForm() {
       });
 
       if (!response.ok) throw new Error("submission failed");
+      window.localStorage.removeItem(DRAFT_KEY);
+      setHasDraft(false);
       setStatus("success");
       element.reset();
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
+      saveDraft();
       setStatus("error");
     }
   }
@@ -251,7 +337,14 @@ export default function PreDiagnosticForm() {
   const stepLabel = step === 1 ? `Pilar ${pillarStep + 1} de ${pillarQuestions.length}` : `Etapa ${step + 1} de ${steps.length}`;
 
   return (
-    <form className={styles.form} onSubmit={submit} ref={formRef} noValidate>
+    <form
+      className={styles.form}
+      onSubmit={submit}
+      onInput={() => saveDraft()}
+      onChange={() => saveDraft()}
+      ref={formRef}
+      noValidate
+    >
       <div className={styles.honeypot} aria-hidden="true">
         <label>Fax da empresa<input name="companyFax" tabIndex={-1} autoComplete="off" /></label>
       </div>
@@ -384,7 +477,7 @@ export default function PreDiagnosticForm() {
         </label>
       </fieldset>
 
-      {status === "error" && <p className={styles.error} role="alert">Não conseguimos registrar agora. Suas respostas continuam na tela; tente novamente.</p>}
+      {status === "error" && <p className={styles.error} role="alert">Não conseguimos registrar agora. Suas respostas continuam salvas neste navegador; tente novamente.</p>}
 
       <div className={styles.stepActions}>
         {step > 0 ? <button className={styles.secondaryButton} type="button" onClick={back}>← Voltar</button> : <span />}
@@ -395,7 +488,7 @@ export default function PreDiagnosticForm() {
         )}
       </div>
 
-      <p className={styles.formFootnote}>{step === 1 ? "Um pilar por vez. Suas respostas anteriores ficam salvas nesta tela." : "Você pode voltar entre as etapas sem perder o que já respondeu."}</p>
+      <p className={styles.formFootnote}>{hasDraft ? "Rascunho salvo neste navegador. Você pode sair e voltar depois para continuar." : step === 1 ? "Um pilar por vez. Suas respostas anteriores ficam preservadas." : "Você pode voltar entre as etapas sem perder o que já respondeu."}</p>
 
       {status === "sending" ? (
         <div className={styles.sendingOverlay} role="status" aria-live="polite" aria-busy="true">
