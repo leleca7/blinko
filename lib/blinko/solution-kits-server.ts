@@ -48,6 +48,7 @@ export type CompanyImplementationPlan = {
   visual_direction_id: string | null;
   objective: string | null;
   customizations: Record<string, unknown>;
+  created_by_label: string | null;
   approved_by_label: string | null;
   approved_at: string | null;
   created_at: string;
@@ -112,6 +113,28 @@ export async function getSolutionKit(slug: string) {
   return kits.find((kit) => kit.slug === slug) ?? null;
 }
 
+export async function createCompanyImplementationPlanFromKit(input: {
+  companyId: string;
+  kitId: string;
+  name: string;
+  visualDirectionId?: string | null;
+  objective?: string | null;
+  actorLabel: string;
+}) {
+  const sql = getSql();
+  const rows = await sql`
+    select public.create_company_implementation_plan_from_kit(
+      ${input.companyId}::uuid,
+      ${input.kitId}::uuid,
+      ${input.name},
+      ${input.visualDirectionId || null}::uuid,
+      ${input.objective || null},
+      ${input.actorLabel}
+    ) as plan_id
+  `;
+  return String(rows[0]?.plan_id || "");
+}
+
 export async function getCompanyImplementationPlans(companyId: string) {
   const sql = getSql();
   const rows = await sql`
@@ -124,6 +147,7 @@ export async function getCompanyImplementationPlans(companyId: string) {
       p.visual_direction_id,
       p.objective,
       p.customizations,
+      p.created_by_label,
       p.approved_by_label,
       p.approved_at,
       p.created_at,

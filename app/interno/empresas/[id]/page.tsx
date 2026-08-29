@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { requireInternalSession } from "../../../../lib/blinko/internal-auth";
 import { getCompanyWithSystems } from "../../../../lib/blinko/company-systems-server";
 import { getCompanySolutions } from "../../../../lib/blinko/solution-catalog-server";
-import { getCompanyImplementationPlans } from "../../../../lib/blinko/solution-kits-server";
+import { getCompanyImplementationPlans, getSolutionKits } from "../../../../lib/blinko/solution-kits-server";
+import { getVisualDirections } from "../../../../lib/blinko/visual-directions-server";
 import InternalTopbar from "../../InternalTopbar";
+import CreateImplementationPlanForm from "./CreateImplementationPlanForm";
 import styles from "../empresas.module.css";
 
 function statusLabel(status: string) {
@@ -50,9 +52,24 @@ function planStatusLabel(status: string) {
   }[status] ?? status;
 }
 
-export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
+function feedbackLabel(status?: string) {
+  return {
+    implementation_plan_created: "Plano criado como rascunho. Revise os módulos antes de qualquer aprovação.",
+    implementation_plan_invalid: "Não foi possível criar o plano: revise os campos informados.",
+    implementation_plan_failed: "O plano não pôde ser criado com segurança. Nenhuma publicação foi feita.",
+  }[status || ""] ?? null;
+}
+
+export default async function CompanyDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ status?: string }>;
+}) {
   const session = await requireInternalSession();
   const { id } = await params;
+  const { status } = await searchParams;
 
   let company = null;
   try {
@@ -64,20 +81,21 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
   if (!company) notFound();
 
   let solutions = [] as Awaited<ReturnType<typeof getCompanySolutions>>;
-  let solutionsUnavailable = false;
-  try {
-    solutions = await getCompanySolutions(id);
-  } catch {
-    solutionsUnavailable = true;
-  }
-
   let plans = [] as Awaited<ReturnType<typeof getCompanyImplementationPlans>>;
+  let kits = [] as Awaited<ReturnType<typeof getSolutionKits>>;
+  let directions = [] as Awaited<ReturnType<typeof getVisualDirections>>;
+  let solutionsUnavailable = false;
   let plansUnavailable = false;
-  try {
-    plans = await getCompanyImplementationPlans(id);
-  } catch {
-    plansUnavailable = true;
-  }
+  let kitsUnavailable = false;
+  let directionsUnavailable = false;
+
+  try { solutions = await getCompanySolutions(id); } catch { solutionsUnavailable = true; }
+  try { plans = await getCompanyImplementationPlans(id); } catch { plansUnavailable = true; }
+  try { kits = await getSolutionKits(); } catch { kitsUnavailable = true; }
+  try { directions = await getVisualDirections(); } catch { directionsUnavailable = true; }
+
+  const feedback = feedbackLabel(status);
+  const creationDependenciesUnavailable = kitsUnavailable || directionsUnavailable;
 
   return (
     <main className={styles.page}>
@@ -96,7 +114,15 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
           </div>
         </section>
 
-        <div className={styles.sectionTitle}>
+        {feedback ? <div className={styles.feedback}>{feedback}</div> : null}
+
+        {creationDependenciesUnavailable ? (
+          <div className={styles.empty}>A criação de plano está temporariamente indisponível porque Kits ou Direções não puderam ser consultados. Nenhum plano foi criado.</div>
+        ) : (
+          <CreateImplementationPlanForm companyId={id} kits={kits} directions={directions} />
+        )}
+
+        <div className={styles.sectionTitle} id="implementation-plans">
           <h2>Planos de implantação</h2>
           <span>kit + direção visual + soluções em execução, sempre com aprovação humana</span>
         </div>
@@ -115,6 +141,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                     <p>{plan.kit ? `Kit: ${plan.kit.name} · v${plan.kit.version}` : "Plano personalizado sem kit-base"}</p>
                     <p>{plan.visual_direction ? `Direção visual: ${plan.visual_direction.name}` : "Direção visual ainda não definida"}</p>
                     <p>{plan.items.length} soluções no plano</p>
+                    {plan.created_by_label ? <p>Criado por {plan.created_by_label}</p> : null}
                   </div>
                   <span className={styles.solutionStatus}>{planStatusLabel(plan.status)}</span>
                 </div>
