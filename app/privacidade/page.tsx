@@ -45,7 +45,7 @@ export default function PrivacidadePage() {
 
         <article>
           <span>05</span>
-          <div><h2>Armazenamento e acesso</h2><p>As informações podem permanecer armazenadas enquanto forem necessárias para análise da solicitação, acompanhamento do relacionamento e registro operacional. O acesso deve ficar restrito às pessoas e sistemas necessários para essas finalidades.</p></div>
+          <div><h2>Armazenamento e acesso</h2><p>Durante o preenchimento, o próprio navegador pode guardar um rascunho local por até 30 dias para permitir que você saia e continue depois. Esse rascunho não é enviado à Blinko antes do envio do formulário e é removido do navegador após uma submissão concluída. Depois do envio, as informações podem permanecer armazenadas enquanto forem necessárias para análise da solicitação, acompanhamento do relacionamento e registro operacional.</p></div>
         </article>
 
         <article>
