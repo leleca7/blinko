@@ -15,11 +15,12 @@ function list(value: unknown[]) {
 export default async function VisualDirectionsPage() {
   const session = await requireInternalSession();
   let directions = [] as Awaited<ReturnType<typeof getVisualDirections>>;
+  let directionsUnavailable = false;
 
   try {
     directions = await getVisualDirections();
   } catch {
-    directions = [];
+    directionsUnavailable = true;
   }
 
   const ready = directions.filter((item) => item.status === "ready").length;
@@ -35,8 +36,8 @@ export default async function VisualDirectionsPage() {
             <h1>Reutilizar engenharia sem repetir estética.</h1>
           </div>
           <div className={styles.aside}>
-            <strong>{directions.length}</strong>
-            <span>direções cadastradas · {ready} prontas</span>
+            <strong>{directionsUnavailable ? "–" : directions.length}</strong>
+            <span>{directionsUnavailable ? "biblioteca temporariamente indisponível" : `direções cadastradas · ${ready} prontas`}</span>
           </div>
         </section>
 
@@ -45,7 +46,9 @@ export default async function VisualDirectionsPage() {
           <span>a escolha depende do posicionamento, público e personalidade da empresa</span>
         </div>
 
-        {directions.length === 0 ? (
+        {directionsUnavailable ? (
+          <div className={styles.empty}>A biblioteca de Direções está temporariamente indisponível. Nenhuma conclusão sobre quantidade de direções foi assumida.</div>
+        ) : directions.length === 0 ? (
           <div className={styles.empty}>Nenhuma direção visual cadastrada neste ambiente.</div>
         ) : (
           <section className={styles.grid}>
