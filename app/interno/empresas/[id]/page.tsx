@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireInternalSession } from "../../../../lib/blinko/internal-auth";
-import { getCompanyWithSystems } from "../../../../lib/blinko/company-systems-server";
+import {
+  getCompanyWithSystems,
+  getConnectedSystemOperationalSummary,
+} from "../../../../lib/blinko/company-systems-server";
 import InternalTopbar from "../../InternalTopbar";
+import SystemOperationalSummary from "./SystemOperationalSummary";
 import styles from "../empresas.module.css";
 
 function statusLabel(status: string) {
@@ -37,6 +41,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
   }
 
   if (!company) notFound();
+
+  const summaryEntries = await Promise.all(
+    company.systems.map(async (system) => [system.id, await getConnectedSystemOperationalSummary(system)] as const),
+  );
+  const summaries = new Map(summaryEntries);
 
   return (
     <main className={styles.page}>
@@ -83,6 +92,8 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                   <span><strong>Health:</strong> {system.last_health_checked_at ? new Date(system.last_health_checked_at).toLocaleString("pt-BR") : "ainda não verificado"}</span>
                   {system.last_health_status_code ? <span><strong>Último código:</strong> {system.last_health_status_code}</span> : null}
                 </div>
+
+                <SystemOperationalSummary summary={summaries.get(system.id) || { state: "not_configured" }} />
 
                 <div className={styles.actions}>
                   {system.app_url ? (
