@@ -4,7 +4,7 @@ import styles from "./solucoes-graficas.module.css";
 
 export const metadata = {
   title: "Soluções gráficas · Blinko",
-  description: "Solicite uma cotação de produção gráfica com briefing organizado pela Blinko.",
+  description: "Configure seu material, visualize o pedido e solicite uma cotação de produção gráfica com a Blinko.",
 };
 
 export default function GraphicSolutionsPage() {
@@ -17,15 +17,15 @@ export default function GraphicSolutionsPage() {
       </header>
 
       <section className={styles.hero}>
-        <span className={styles.eyebrow}>PRODUÇÃO · PERSONALIZAÇÃO · CRIAÇÃO QUANDO NECESSÁRIO</span>
-        <h1>Conte o que você precisa. A gente organiza o resto.</h1>
+        <span className={styles.eyebrow}>CONFIGURE · VISUALIZE · ENVIE PARA COTAÇÃO</span>
+        <h1>Seu material começa a tomar forma enquanto você responde.</h1>
         <p>
-          Em vez de trocar várias mensagens para descobrir quantidade, medida, arte e entrega, você já deixa o pedido estruturado para uma cotação mais objetiva.
+          Em vez de preencher um formulário técnico e torcer para ter explicado direito, você monta o pedido de forma guiada e acompanha uma prévia conceitual do produto.
         </p>
         <div className={styles.heroMeta}>
-          <div><strong>01</strong><span>Você descreve</span></div>
-          <div><strong>02</strong><span>A Blinko confere</span></div>
-          <div><strong>03</strong><span>Você recebe a cotação</span></div>
+          <div><strong>01</strong><span>Você escolhe</span></div>
+          <div><strong>02</strong><span>A prévia reage</span></div>
+          <div><strong>03</strong><span>A Blinko transforma em cotação</span></div>
         </div>
       </section>
 
