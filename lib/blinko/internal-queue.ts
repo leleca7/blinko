@@ -7,7 +7,7 @@ export type BlinkoInternalRole =
 
 export type BlinkoPriority = "low" | "normal" | "high" | "urgent";
 export type BlinkoTodayBucket = "do_now" | "waiting_client" | "waiting_partner" | "blocked";
-export type BlinkoTodaySource = "crm" | "project_task";
+export type BlinkoTodaySource = "crm" | "project_task" | "approval" | "finance" | "project_closure";
 
 export type BlinkoTodayCounts = {
   pending_pre_diagnostic_reviews: number;
@@ -19,6 +19,11 @@ export type BlinkoTodayCounts = {
   waiting_client_project_tasks: number;
   waiting_partner_project_tasks: number;
   blocked_project_tasks: number;
+  pending_approvals: number;
+  approvals_changes_requested: number;
+  overdue_receivables: number;
+  receivables_due_today: number;
+  projects_ready_to_close: number;
 };
 
 export type BlinkoTodayAction = {
@@ -84,6 +89,11 @@ export function normalizeBlinkoTodayQueue(input: unknown): BlinkoTodayQueue | nu
     waiting_client_project_tasks: number(input.counts.waiting_client_project_tasks),
     waiting_partner_project_tasks: number(input.counts.waiting_partner_project_tasks),
     blocked_project_tasks: number(input.counts.blocked_project_tasks),
+    pending_approvals: number(input.counts.pending_approvals),
+    approvals_changes_requested: number(input.counts.approvals_changes_requested),
+    overdue_receivables: number(input.counts.overdue_receivables),
+    receivables_due_today: number(input.counts.receivables_due_today),
+    projects_ready_to_close: number(input.counts.projects_ready_to_close),
   };
 
   const actions = input.actions.flatMap((raw): BlinkoTodayAction[] => {
@@ -101,7 +111,7 @@ export function normalizeBlinkoTodayQueue(input: unknown): BlinkoTodayQueue | nu
       !title ||
       !["low", "normal", "high", "urgent"].includes(priority) ||
       !["pending", "in_progress", "waiting_client", "waiting_partner", "blocked"].includes(status) ||
-      !["crm", "project_task"].includes(source) ||
+      !["crm", "project_task", "approval", "finance", "project_closure"].includes(source) ||
       !["do_now", "waiting_client", "waiting_partner", "blocked"].includes(bucket)
     ) {
       return [];
