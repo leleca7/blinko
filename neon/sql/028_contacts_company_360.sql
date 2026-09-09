@@ -50,7 +50,8 @@ with relationship_candidates as (
     from public.proposals p join public.diagnostics d on d.id=p.diagnostic_id
    where p.company_id is not null
 ), resolved_company as (
-  select lead_id,case when count(distinct company_id)=1 then min(company_id) else null end as company_id
+  select lead_id,
+         case when count(distinct company_id)=1 then (array_agg(distinct company_id))[1] else null end as company_id
     from relationship_candidates group by lead_id
 )
 insert into public.contacts(
