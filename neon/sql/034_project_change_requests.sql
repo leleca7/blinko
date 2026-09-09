@@ -297,6 +297,7 @@ declare
   v_cr public.project_change_requests%rowtype;
   v_source_opportunity public.commercial_opportunities%rowtype;
   v_proposal_id uuid;
+  v_company_id uuid;
   v_opportunity_id uuid;
 begin
   select * into v_cr from public.project_change_requests where id=p_change_request_id for update;
@@ -306,28 +307,23 @@ begin
   if p_route not in ('strategic','transactional') then raise exception 'invalid commercial route'; end if;
   if p_next_action_at is null then raise exception 'next action date is required'; end if;
 
-  select p.proposal_id into v_proposal_id from public.projects p where p.id=v_cr.project_id;
+  select p.proposal_id,p.company_id into v_proposal_id,v_company_id from public.projects p where p.id=v_cr.project_id;
   select o.* into v_source_opportunity
   from public.proposals pr join public.commercial_opportunities o on o.id=pr.opportunity_id
   where pr.id=v_proposal_id;
   if v_source_opportunity.id is null then raise exception 'source commercial opportunity not found'; end if;
+  if v_company_id is null then raise exception 'project company not found'; end if;
 
   insert into public.commercial_opportunities(
     lead_id,company_id,contact_id,route,pipeline_stage,fit,stated_need,owner_label,
     next_action_title,next_action_at,next_action_channel,last_interaction_at,last_interaction_summary,
     source,created_by_label
   ) values(
-    v_source_opportunity.lead_id,v_cr.project_id::text::uuid,v_source_opportunity.contact_id,p_route,'P01',v_source_opportunity.fit,
+    v_source_opportunity.lead_id,v_company_id,v_source_opportunity.contact_id,p_route,'P01',v_source_opportunity.fit,
     v_cr.description,coalesce(nullif(trim(coalesce(p_actor_label,'')),''),'Blinko'),
     'Qualificar nova demanda originada do projeto',p_next_action_at,'interno',now(),
     'Nova demanda separada do projeto atual via Change Request.','project_change_request',nullif(trim(coalesce(p_actor_label,'')),'')
   ) returning id into v_opportunity_id;
-
-  -- Corrige company_id com a empresa real do projeto (mantido separado da origem comercial).
-  update public.commercial_opportunities o
-     set company_id=p.company_id,updated_at=now()
-    from public.projects p
-   where o.id=v_opportunity_id and p.id=v_cr.project_id;
 
   update public.project_change_requests
      set decision_status='routed',status='routed',routed_opportunity_id=v_opportunity_id,
