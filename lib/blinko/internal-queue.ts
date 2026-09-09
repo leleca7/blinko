@@ -7,7 +7,7 @@ export type BlinkoInternalRole =
 
 export type BlinkoPriority = "low" | "normal" | "high" | "urgent";
 export type BlinkoTodayBucket = "do_now" | "waiting_client" | "waiting_partner" | "blocked";
-export type BlinkoTodaySource = "crm" | "project_task" | "approval" | "finance" | "project_closure";
+export type BlinkoTodaySource = "crm" | "commercial_opportunity" | "project_task" | "approval" | "finance" | "project_closure";
 
 export type BlinkoTodayCounts = {
   pending_pre_diagnostic_reviews: number;
@@ -47,6 +47,8 @@ export type BlinkoTodayAction = {
   project_id: string | null;
   project_status: string;
   responsible_label: string;
+  opportunity_id: string | null;
+  pipeline_stage: string;
 };
 
 export type BlinkoTodayQueue = {
@@ -69,13 +71,8 @@ function text(value: unknown) {
   return typeof value === "string" ? value : "";
 }
 
-/**
- * Normaliza a resposta server-only antes de renderizar.
- * A interface nunca confia cegamente no formato vindo do banco.
- */
 export function normalizeBlinkoTodayQueue(input: unknown): BlinkoTodayQueue | null {
   if (!isObject(input) || !isObject(input.counts) || !Array.isArray(input.actions)) return null;
-
   const generatedAt = text(input.generated_at);
   if (!generatedAt) return null;
 
@@ -98,48 +95,23 @@ export function normalizeBlinkoTodayQueue(input: unknown): BlinkoTodayQueue | nu
 
   const actions = input.actions.flatMap((raw): BlinkoTodayAction[] => {
     if (!isObject(raw)) return [];
-
     const actionId = text(raw.action_id);
     const title = text(raw.title);
     const priority = text(raw.priority) as BlinkoPriority;
     const status = text(raw.status) as BlinkoTodayAction["status"];
     const source = text(raw.source) as BlinkoTodaySource;
     const bucket = text(raw.bucket) as BlinkoTodayBucket;
-
-    if (
-      !actionId ||
-      !title ||
-      !["low", "normal", "high", "urgent"].includes(priority) ||
-      !["pending", "in_progress", "waiting_client", "waiting_partner", "blocked"].includes(status) ||
-      !["crm", "project_task", "approval", "finance", "project_closure"].includes(source) ||
-      !["do_now", "waiting_client", "waiting_partner", "blocked"].includes(bucket)
-    ) {
-      return [];
-    }
-
+    if (!actionId || !title || !["low","normal","high","urgent"].includes(priority) || !["pending","in_progress","waiting_client","waiting_partner","blocked"].includes(status) || !["crm","commercial_opportunity","project_task","approval","finance","project_closure"].includes(source) || !["do_now","waiting_client","waiting_partner","blocked"].includes(bucket)) return [];
     return [{
-      source,
-      bucket,
-      action_id: actionId,
-      action_type: text(raw.action_type),
-      status,
-      priority,
-      title,
-      due_at: raw.due_at == null ? null : text(raw.due_at),
-      created_at: text(raw.created_at),
-      lead_id: raw.lead_id == null ? null : text(raw.lead_id),
-      pre_diagnostic_id: raw.pre_diagnostic_id == null ? null : text(raw.pre_diagnostic_id),
-      lead_name: text(raw.lead_name),
-      company_name: text(raw.company_name),
-      commercial_score: number(raw.commercial_score),
-      lead_status: text(raw.lead_status),
-      ai_analysis_status: raw.ai_analysis_status == null ? null : text(raw.ai_analysis_status) as BlinkoTodayAction["ai_analysis_status"],
-      human_review_status: raw.human_review_status == null ? null : text(raw.human_review_status) as BlinkoTodayAction["human_review_status"],
-      project_id: raw.project_id == null ? null : text(raw.project_id),
-      project_status: text(raw.project_status),
-      responsible_label: text(raw.responsible_label),
+      source,bucket,action_id:actionId,action_type:text(raw.action_type),status,priority,title,
+      due_at:raw.due_at==null?null:text(raw.due_at),created_at:text(raw.created_at),
+      lead_id:raw.lead_id==null?null:text(raw.lead_id),pre_diagnostic_id:raw.pre_diagnostic_id==null?null:text(raw.pre_diagnostic_id),
+      lead_name:text(raw.lead_name),company_name:text(raw.company_name),commercial_score:number(raw.commercial_score),lead_status:text(raw.lead_status),
+      ai_analysis_status:raw.ai_analysis_status==null?null:text(raw.ai_analysis_status) as BlinkoTodayAction["ai_analysis_status"],
+      human_review_status:raw.human_review_status==null?null:text(raw.human_review_status) as BlinkoTodayAction["human_review_status"],
+      project_id:raw.project_id==null?null:text(raw.project_id),project_status:text(raw.project_status),responsible_label:text(raw.responsible_label),
+      opportunity_id:raw.opportunity_id==null?null:text(raw.opportunity_id),pipeline_stage:text(raw.pipeline_stage),
     }];
   });
-
   return { generated_at: generatedAt, counts, actions };
 }
