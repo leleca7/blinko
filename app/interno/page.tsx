@@ -16,13 +16,17 @@ function actionHref(action: BlinkoTodayAction) {
 }
 
 function actionBadge(action: BlinkoTodayAction) {
-  if (action.source === "project_task") {
-    return action.responsible_label || action.project_status || "Projeto";
-  }
+  if (action.source === "approval") return "Aprovação";
+  if (action.source === "finance") return "Financeiro";
+  if (action.source === "project_closure") return "Encerramento";
+  if (action.source === "project_task") return action.responsible_label || action.project_status || "Projeto";
   return action.human_review_status || action.lead_status || "Comercial";
 }
 
 function actionMeta(action: BlinkoTodayAction) {
+  if (action.source === "approval") return "Aprovação de cliente · projeto";
+  if (action.source === "finance") return "Recebível · financeiro";
+  if (action.source === "project_closure") return "Checklist final · projeto";
   if (action.source === "project_task") {
     return ["Tarefa de projeto", action.responsible_label ? `Responsável: ${action.responsible_label}` : ""]
       .filter(Boolean)
@@ -81,7 +85,7 @@ export default async function InternalTodayPage() {
         <section className={styles.hero}>
           <span className={styles.eyebrow}>OPERAÇÃO · AGORA</span>
           <h1>Hoje na Blinko.</h1>
-          <p>Uma fila única para comercial e execução. O sistema separa o que depende da Blinko, do cliente, do parceiro e o que está realmente bloqueado.</p>
+          <p>Uma fila única para comercial, execução, aprovações, financeiro e encerramento. O sistema separa o que depende da Blinko, do cliente, do parceiro e o que está realmente bloqueado.</p>
         </section>
 
         {!queue ? (
@@ -91,10 +95,12 @@ export default async function InternalTodayPage() {
             <section className={styles.counts} aria-label="Resumo de hoje">
               <article className={styles.countCard}><strong>{queue.counts.overdue_project_tasks}</strong><span>tarefas de projeto vencidas</span></article>
               <article className={styles.countCard}><strong>{queue.counts.project_tasks_due_today}</strong><span>tarefas de projeto com prazo hoje</span></article>
-              <article className={styles.countCard}><strong>{queue.counts.waiting_client_project_tasks}</strong><span>aguardando cliente</span></article>
+              <article className={styles.countCard}><strong>{queue.counts.pending_approvals}</strong><span>aprovações aguardando cliente</span></article>
+              <article className={styles.countCard}><strong>{queue.counts.overdue_receivables}</strong><span>recebíveis vencidos</span></article>
+              <article className={styles.countCard}><strong>{queue.counts.projects_ready_to_close}</strong><span>projetos prontos para encerrar</span></article>
+              <article className={styles.countCard}><strong>{queue.counts.waiting_client_project_tasks}</strong><span>tarefas aguardando cliente</span></article>
               <article className={styles.countCard}><strong>{queue.counts.waiting_partner_project_tasks}</strong><span>aguardando parceiro</span></article>
               <article className={styles.countCard}><strong>{queue.counts.blocked_project_tasks}</strong><span>tarefas bloqueadas</span></article>
-              <article className={styles.countCard}><strong>{queue.counts.pending_pre_diagnostic_reviews}</strong><span>pré-diagnósticos aguardando revisão</span></article>
             </section>
 
             <div className={styles.sectionTitle}>
@@ -105,9 +111,9 @@ export default async function InternalTodayPage() {
 
             <div className={styles.sectionTitle}>
               <h2>Aguardando cliente</h2>
-              <span>depende de material, resposta, aprovação ou decisão do cliente</span>
+              <span>inclui materiais, respostas e aprovações pendentes</span>
             </div>
-            <ActionList actions={waitingClient} empty="Nenhuma tarefa está aguardando cliente neste momento." />
+            <ActionList actions={waitingClient} empty="Nenhuma tarefa ou aprovação está aguardando cliente neste momento." />
 
             <div className={styles.sectionTitle}>
               <h2>Aguardando parceiro</h2>
