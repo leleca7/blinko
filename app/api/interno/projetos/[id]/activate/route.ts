@@ -27,17 +27,22 @@ export async function POST(request: Request, context: Context) {
     if (!workspace.schemaReady) {
       return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=execution_schema_pending`, request.url), 303);
     }
-    if (workspace.project?.status !== "onboarding" || !workspace.tasks.length) {
-      return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=activation_blocked`, request.url), 303);
+    if (!workspace.onboardingSchemaReady) {
+      return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=onboarding_schema_pending`, request.url), 303);
+    }
+
+    const onboardingReady = workspace.onboardingReadiness?.ready_for_operation === true;
+    if (workspace.project?.status !== "onboarding" || !workspace.tasks.length || !onboardingReady) {
+      return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=activation_onboarding_blocked`, request.url), 303);
     }
 
     await activateProject({ projectId: id, actorLabel: session.user });
     return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=project_activated`, request.url), 303);
   } catch (error) {
     if (isExecutionSchemaPending(error)) {
-      return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=execution_schema_pending`, request.url), 303);
+      return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=onboarding_schema_pending`, request.url), 303);
     }
     console.error("Blinko OS: falha ao ativar projeto", error);
-    return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=activation_blocked`, request.url), 303);
+    return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=activation_onboarding_blocked`, request.url), 303);
   }
 }
