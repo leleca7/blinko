@@ -70,6 +70,8 @@ export default async function InternalTodayPage() {
 
   const doNow = queue?.actions.filter((action) => action.bucket === "do_now") ?? [];
   const waitingClient = queue?.actions.filter((action) => action.bucket === "waiting_client") ?? [];
+  const waitingPartner = queue?.actions.filter((action) => action.bucket === "waiting_partner") ?? [];
+  const blocked = queue?.actions.filter((action) => action.bucket === "blocked") ?? [];
 
   return (
     <main className={styles.page}>
@@ -79,7 +81,7 @@ export default async function InternalTodayPage() {
         <section className={styles.hero}>
           <span className={styles.eyebrow}>OPERAÇÃO · AGORA</span>
           <h1>Hoje na Blinko.</h1>
-          <p>Uma fila única para comercial e execução. O sistema separa o que exige ação da Blinko do que está aguardando o cliente.</p>
+          <p>Uma fila única para comercial e execução. O sistema separa o que depende da Blinko, do cliente, do parceiro e o que está realmente bloqueado.</p>
         </section>
 
         {!queue ? (
@@ -89,7 +91,9 @@ export default async function InternalTodayPage() {
             <section className={styles.counts} aria-label="Resumo de hoje">
               <article className={styles.countCard}><strong>{queue.counts.overdue_project_tasks}</strong><span>tarefas de projeto vencidas</span></article>
               <article className={styles.countCard}><strong>{queue.counts.project_tasks_due_today}</strong><span>tarefas de projeto com prazo hoje</span></article>
-              <article className={styles.countCard}><strong>{queue.counts.waiting_client_project_tasks}</strong><span>tarefas aguardando cliente</span></article>
+              <article className={styles.countCard}><strong>{queue.counts.waiting_client_project_tasks}</strong><span>aguardando cliente</span></article>
+              <article className={styles.countCard}><strong>{queue.counts.waiting_partner_project_tasks}</strong><span>aguardando parceiro</span></article>
+              <article className={styles.countCard}><strong>{queue.counts.blocked_project_tasks}</strong><span>tarefas bloqueadas</span></article>
               <article className={styles.countCard}><strong>{queue.counts.pending_pre_diagnostic_reviews}</strong><span>pré-diagnósticos aguardando revisão</span></article>
             </section>
 
@@ -101,9 +105,21 @@ export default async function InternalTodayPage() {
 
             <div className={styles.sectionTitle}>
               <h2>Aguardando cliente</h2>
-              <span>não ocupa sua fila de execução enquanto depende de retorno externo</span>
+              <span>depende de material, resposta, aprovação ou decisão do cliente</span>
             </div>
             <ActionList actions={waitingClient} empty="Nenhuma tarefa está aguardando cliente neste momento." />
+
+            <div className={styles.sectionTitle}>
+              <h2>Aguardando parceiro</h2>
+              <span>depende de fornecedor, especialista ou parceiro coordenado</span>
+            </div>
+            <ActionList actions={waitingPartner} empty="Nenhuma tarefa está aguardando parceiro neste momento." />
+
+            <div className={styles.sectionTitle}>
+              <h2>Bloqueado</h2>
+              <span>exige ação de desbloqueio e próxima checagem definida</span>
+            </div>
+            <ActionList actions={blocked} empty="Nenhuma tarefa está bloqueada neste momento." />
           </>
         )}
       </div>
