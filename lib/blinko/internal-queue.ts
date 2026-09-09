@@ -6,7 +6,7 @@ export type BlinkoInternalRole =
   | "viewer";
 
 export type BlinkoPriority = "low" | "normal" | "high" | "urgent";
-export type BlinkoTodayBucket = "do_now" | "waiting_client";
+export type BlinkoTodayBucket = "do_now" | "waiting_client" | "waiting_partner" | "blocked";
 export type BlinkoTodaySource = "crm" | "project_task";
 
 export type BlinkoTodayCounts = {
@@ -17,6 +17,8 @@ export type BlinkoTodayCounts = {
   overdue_project_tasks: number;
   project_tasks_due_today: number;
   waiting_client_project_tasks: number;
+  waiting_partner_project_tasks: number;
+  blocked_project_tasks: number;
 };
 
 export type BlinkoTodayAction = {
@@ -24,7 +26,7 @@ export type BlinkoTodayAction = {
   bucket: BlinkoTodayBucket;
   action_id: string;
   action_type: string;
-  status: "pending" | "in_progress" | "waiting_client";
+  status: "pending" | "in_progress" | "waiting_client" | "waiting_partner" | "blocked";
   priority: BlinkoPriority;
   title: string;
   due_at: string | null;
@@ -80,6 +82,8 @@ export function normalizeBlinkoTodayQueue(input: unknown): BlinkoTodayQueue | nu
     overdue_project_tasks: number(input.counts.overdue_project_tasks),
     project_tasks_due_today: number(input.counts.project_tasks_due_today),
     waiting_client_project_tasks: number(input.counts.waiting_client_project_tasks),
+    waiting_partner_project_tasks: number(input.counts.waiting_partner_project_tasks),
+    blocked_project_tasks: number(input.counts.blocked_project_tasks),
   };
 
   const actions = input.actions.flatMap((raw): BlinkoTodayAction[] => {
@@ -96,9 +100,9 @@ export function normalizeBlinkoTodayQueue(input: unknown): BlinkoTodayQueue | nu
       !actionId ||
       !title ||
       !["low", "normal", "high", "urgent"].includes(priority) ||
-      !["pending", "in_progress", "waiting_client"].includes(status) ||
+      !["pending", "in_progress", "waiting_client", "waiting_partner", "blocked"].includes(status) ||
       !["crm", "project_task"].includes(source) ||
-      !["do_now", "waiting_client"].includes(bucket)
+      !["do_now", "waiting_client", "waiting_partner", "blocked"].includes(bucket)
     ) {
       return [];
     }
