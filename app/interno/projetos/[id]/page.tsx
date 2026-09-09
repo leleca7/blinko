@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireInternalSession } from "../../../../lib/blinko/internal-auth";
 import { getProjectWorkspace } from "../../../../lib/blinko/execution-server";
+import { getProjectExtensions } from "../../../../lib/blinko/project-extensions-server";
 import InternalBrand from "../../InternalBrand";
 import styles from "../../interno.module.css";
 
@@ -14,6 +15,11 @@ type Props = {
 
 function text(value: unknown) {
   return typeof value === "string" ? value : "";
+}
+
+function money(value: unknown) {
+  const numeric = typeof value === "number" ? value : Number(value ?? 0);
+  return Number.isFinite(numeric) ? numeric.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—";
 }
 
 function notice(status?: string) {
@@ -44,6 +50,7 @@ export default async function ProjectPage({ params, searchParams }: Props) {
   if (!uuidPattern.test(id)) notFound();
 
   const workspace = await getProjectWorkspace(id);
+  const extensions = await getProjectExtensions(id);
   const statusNotice = notice(query.status);
 
   if (!workspace.schemaReady) {
@@ -137,7 +144,35 @@ export default async function ProjectPage({ params, searchParams }: Props) {
             </section>
           ) : null}
 
-          {projectStatus === "active" ? <section className={styles.reviewCard}><span className={styles.eyebrow}>V1 CONCLUÍDA</span><h2>Execução inicial ativa</h2><div className={styles.notice}>O fluxo central da V1 chegou à execução inicial com histórico preservado desde o pré-diagnóstico.</div></section> : null}
+          {extensions.schemaReady ? (
+            <>
+              <section className={styles.reviewCard}>
+                <span className={styles.eyebrow}>ARQUIVOS / GOOGLE DRIVE</span>
+                <h2>Contexto documental do projeto</h2>
+                {extensions.driveItems.length ? <div style={{ display: "grid", gap: 10, marginTop: 16 }}>{extensions.driveItems.map((item) => <a key={text(item.id)} href={text(item.drive_url)} target="_blank" rel="noreferrer" className={styles.action} style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}><span><strong>{text(item.title)}</strong><span className={styles.meta}>{text(item.context_type)} · {text(item.logical_path)}</span></span><span className={styles.badge}>Abrir Drive</span></a>)}</div> : <div className={styles.notice}>Nenhuma pasta ou arquivo contextual registrado.</div>}
+              </section>
+
+              <section className={styles.reviewCard}>
+                <span className={styles.eyebrow}>APROVAÇÕES</span>
+                <h2>Histórico de decisão do cliente</h2>
+                {extensions.approvals.length ? <div style={{ display: "grid", gap: 10, marginTop: 16 }}>{extensions.approvals.map((approval) => <article key={text(approval.id)} style={{ padding: 16, border: "1px solid rgba(1,48,30,.12)", borderRadius: 16 }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}><strong>{text(approval.title)}</strong><span className={styles.badge}>{text(approval.status)}</span></div><small style={{ display: "block", marginTop: 7, opacity: .68 }}>Versão {text(approval.version_label)} · resposta: {text(approval.responded_by_label) || "aguardando"}</small>{text(approval.response_notes) ? <p style={{ marginBottom: 0 }}>{text(approval.response_notes)}</p> : null}</article>)}</div> : <div className={styles.notice}>Nenhuma aprovação registrada.</div>}
+              </section>
+
+              <section className={styles.reviewCard}>
+                <span className={styles.eyebrow}>FINANCEIRO GERENCIAL</span>
+                <h2>Rentabilidade e caixa do projeto</h2>
+                {extensions.finance ? <div className={styles.counts} style={{ marginBottom: 0 }}><article className={styles.countCard}><strong>{money(extensions.finance.contracted_revenue)}</strong><span>receita contratada</span></article><article className={styles.countCard}><strong>{money(extensions.finance.planned_total_cost)}</strong><span>custo planejado</span></article><article className={styles.countCard}><strong>{money(extensions.finance.projected_contribution)}</strong><span>contribuição projetada</span></article><article className={styles.countCard}><strong>{text(extensions.finance.projected_margin_pct) || "—"}%</strong><span>margem projetada</span></article></div> : <div className={styles.notice}>Plano financeiro ainda não registrado para este projeto.</div>}
+              </section>
+            </>
+          ) : (
+            <section className={styles.reviewCard}>
+              <span className={styles.eyebrow}>MÓDULOS EM VALIDAÇÃO</span>
+              <h2>Drive, aprovações e financeiro</h2>
+              <div className={styles.notice}>A interface já possui fallback seguro. Estes módulos aparecem quando as migrações 014–016 estiverem disponíveis no banco conectado ao ambiente.</div>
+            </section>
+          )}
+
+          {projectStatus === "active" ? <section className={styles.reviewCard}><span className={styles.eyebrow}>EXECUÇÃO ATIVA</span><h2>Projeto em andamento</h2><div className={styles.notice}>O fluxo central chegou à execução com histórico preservado desde o pré-diagnóstico e já possui extensões preparadas para Drive, aprovação e financeiro.</div></section> : null}
         </div>
       </div>
     </main>
