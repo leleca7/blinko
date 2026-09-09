@@ -39,6 +39,48 @@ export async function getCommercialPipeline() {
   }
 }
 
+export async function getCommercialTodayActions() {
+  const sql = getSql();
+  try {
+    const rows = await sql`
+      select jsonb_build_object(
+        'opportunity_id',p.id,
+        'source','commercial_opportunity',
+        'bucket','do_now',
+        'action_id',p.id,
+        'action_type','commercial_next_action',
+        'status','pending',
+        'priority',case when p.health='overdue' and p.fit='high' then 'urgent' when p.health='overdue' or p.fit='high' then 'high' when p.fit='medium' then 'normal' else 'low' end,
+        'title',p.next_action_title,
+        'due_at',p.next_action_at,
+        'created_at',p.created_at,
+        'lead_id',p.lead_id,
+        'pre_diagnostic_id',p.pre_diagnostic_id,
+        'lead_name',p.contact_name,
+        'company_name',coalesce(p.company_name,p.lead_company_name),
+        'commercial_score',p.commercial_score,
+        'lead_status','',
+        'ai_analysis_status',null,
+        'human_review_status',null,
+        'project_id',p.project_id,
+        'project_status',coalesce(p.project_status,''),
+        'responsible_label',p.owner_label,
+        'pipeline_stage',p.pipeline_stage
+      ) as result
+      from public.commercial_pipeline p
+      where p.outcome_status is null
+        and p.pipeline_stage not in ('P00','P14')
+        and p.next_action_title is not null
+        and p.next_action_at is not null
+      order by case when p.next_action_at < now() then 0 else 1 end,p.next_action_at,p.created_at
+    `;
+    return { schemaReady: true, actions: rows.map((row) => record(row.result)).filter(Boolean) as Record<string, unknown>[] };
+  } catch (error) {
+    if (isCommercialSchemaPending(error)) return { schemaReady: false, actions: [] };
+    throw error;
+  }
+}
+
 export async function getCommercialOpportunity(opportunityId: string) {
   const sql = getSql();
   try {
