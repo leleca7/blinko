@@ -2,12 +2,13 @@ import Link from "next/link";
 import InternalBrand from "./InternalBrand";
 import styles from "./internal-topbar.module.css";
 
-type InternalNavKey = "today" | "commercial" | "companies";
+type InternalNavKey = "today" | "commercial" | "companies" | "contacts";
 
 const navItems: Array<{ key: InternalNavKey; label: string; href: string }> = [
   { key: "today", label: "Hoje", href: "/interno" },
   { key: "commercial", label: "Comercial", href: "/interno/comercial" },
   { key: "companies", label: "Empresas", href: "/interno/empresas" },
+  { key: "contacts", label: "Contatos", href: "/interno/contatos" },
 ];
 
 export default function InternalTopbar({ user, active }: { user: string; active: InternalNavKey }) {
