@@ -11,6 +11,7 @@ import SystemOperationalSummary from "./SystemOperationalSummary";
 import styles from "../empresas.module.css";
 
 function text(value: unknown) { return typeof value === "string" ? value : ""; }
+function records(value: unknown) { return Array.isArray(value) ? value.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item)) : []; }
 
 function statusLabel(status: string) {
   return {
@@ -34,6 +35,17 @@ function authLabel(strategy: string) {
 
 function channelLabel(value: string) {
   return { whatsapp: "WhatsApp", email: "E-mail", phone: "Telefone", meeting: "Reunião", other: "Outro" }[value] ?? value;
+}
+
+function routeLabel(value: string) {
+  return {
+    R1: "R1 · Blinko executa",
+    R2: "R2 · Blinko + terceiros",
+    R3: "R3 · Parceiro coordenado",
+    R4: "R4 · Cliente com orientação",
+    R5: "R5 · Especialista externo",
+    R6: "R6 · Monitoramento",
+  }[value] ?? value;
 }
 
 function formatDate(value: unknown) {
@@ -85,6 +97,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
   const opportunities = company360?.schemaReady ? company360.opportunities : [];
   const diagnostics = company360?.schemaReady ? company360.diagnostics : [];
   const projects = company360?.schemaReady ? company360.projects : [];
+  const solutions = company360?.schemaReady ? company360.solutions : [];
   const activeOpportunities = opportunities.filter((item) => !text(item.outcome_status)).length;
 
   return (
@@ -107,7 +120,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
         {!company360?.schemaReady ? (
           <div className={styles.empty} style={{ marginBottom: 28 }}>
-            A visão 360 depende das migrações 028–029 no banco conectado. Os sistemas existentes continuam disponíveis abaixo, sem perda de compatibilidade.
+            A visão 360 depende das migrações 028–030 no banco conectado. Os sistemas existentes continuam disponíveis abaixo, sem perda de compatibilidade.
           </div>
         ) : <>
           <section className={styles.metricGrid} aria-label="Resumo da Empresa 360">
@@ -115,6 +128,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
             <article className={styles.metricCard}><strong>{activeOpportunities}</strong><span>oportunidades abertas</span></article>
             <article className={styles.metricCard}><strong>{diagnostics.length}</strong><span>diagnósticos</span></article>
             <article className={styles.metricCard}><strong>{projects.length}</strong><span>projetos / ciclos</span></article>
+            <article className={styles.metricCard}><strong>{solutions.length}</strong><span>soluções no histórico</span></article>
           </section>
 
           <div className={styles.sectionTitle}><h2>Contatos</h2><span>pessoas permanentes ligadas à empresa</span></div>
@@ -185,6 +199,29 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   <div className={styles.actions}><Link className={styles.primary} href={`/interno/diagnosticos/${text(diagnostic.id)}`}>Abrir diagnóstico</Link></div>
                 </article>
               ))}
+            </section>
+          )}
+
+          <div className={styles.sectionTitle}><h2>Soluções da relação</h2><span>histórico de soluções oficiais derivadas de diagnóstico/projeto</span></div>
+          {solutions.length === 0 ? <div className={styles.empty}>Nenhuma solução oficial vinculada ao histórico desta empresa.</div> : (
+            <section className={styles.systemGrid} aria-label="Soluções da empresa">
+              {solutions.map((solution) => {
+                const usages = records(solution.project_statuses);
+                return (
+                  <article className={styles.systemCard} key={text(solution.id)}>
+                    <div className={styles.systemTop}>
+                      <div><h3>{text(solution.solution_code)} · {text(solution.name)}</h3><p>{text(solution.official_status)}</p></div>
+                      <span className={styles.statusPill}>{text(solution.relationship_status) || "histórico"}</span>
+                    </div>
+                    <div className={styles.detailList}>
+                      <span><strong>Versão selecionada:</strong> {text(solution.selected_version) || "—"}</span>
+                      <span><strong>Usos em projetos:</strong> {usages.length}</span>
+                      {usages.length ? usages.map((usage, index) => <span key={`${text(usage.project_id)}-${index}`}><strong>Projeto:</strong> {text(usage.project_status)} · solução {text(usage.project_solution_status)} · {text(usage.selected_route) ? routeLabel(text(usage.selected_route)) : "rota não registrada"}</span>) : null}
+                    </div>
+                    <div className={styles.actions}><Link className={styles.secondary} href="/interno/solucoes">Abrir catálogo oficial</Link></div>
+                  </article>
+                );
+              })}
             </section>
           )}
 
