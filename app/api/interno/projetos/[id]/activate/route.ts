@@ -16,33 +16,34 @@ export async function POST(request: Request, context: Context) {
 
   const { id } = await context.params;
   if (!uuidPattern.test(id)) return NextResponse.json({ ok: false }, { status: 404 });
+  const onboardingUrl = (status: string) => new URL(`/interno/projetos/${id}/onboarding?status=${status}`, request.url);
 
   const form = await request.formData();
   if (String(form.get("activation_confirmed") ?? "") !== "yes") {
-    return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=activation_confirmation_required`, request.url), 303);
+    return NextResponse.redirect(onboardingUrl("activation_confirmation_required"), 303);
   }
 
   try {
     const workspace = await getProjectWorkspace(id);
     if (!workspace.schemaReady) {
-      return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=execution_schema_pending`, request.url), 303);
+      return NextResponse.redirect(onboardingUrl("execution_schema_pending"), 303);
     }
     if (!workspace.onboardingSchemaReady) {
-      return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=onboarding_schema_pending`, request.url), 303);
+      return NextResponse.redirect(onboardingUrl("onboarding_schema_pending"), 303);
     }
 
     const onboardingReady = workspace.onboardingReadiness?.ready_for_operation === true;
     if (workspace.project?.status !== "onboarding" || !workspace.tasks.length || !onboardingReady) {
-      return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=activation_onboarding_blocked`, request.url), 303);
+      return NextResponse.redirect(onboardingUrl("activation_onboarding_blocked"), 303);
     }
 
     await activateProject({ projectId: id, actorLabel: session.user });
-    return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=project_activated`, request.url), 303);
+    return NextResponse.redirect(onboardingUrl("project_activated"), 303);
   } catch (error) {
     if (isExecutionSchemaPending(error)) {
-      return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=onboarding_schema_pending`, request.url), 303);
+      return NextResponse.redirect(onboardingUrl("onboarding_schema_pending"), 303);
     }
     console.error("Blinko OS: falha ao ativar projeto", error);
-    return NextResponse.redirect(new URL(`/interno/projetos/${id}?status=activation_onboarding_blocked`, request.url), 303);
+    return NextResponse.redirect(onboardingUrl("activation_onboarding_blocked"), 303);
   }
 }
