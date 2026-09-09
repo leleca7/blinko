@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireInternalSession } from "../../lib/blinko/internal-auth";
 import { getCommercialTodayActions } from "../../lib/blinko/commercial-server";
+import { getChangeRequestTodayActions } from "../../lib/blinko/change-requests-today-server";
 import { normalizeBlinkoTodayQueue, type BlinkoTodayAction } from "../../lib/blinko/internal-queue";
 import { getBlinkoTodayQueue } from "../../lib/blinko/today-server";
 import InternalTopbar from "./InternalTopbar";
@@ -11,6 +12,7 @@ function labelPriority(priority: string) {
 }
 
 function actionHref(action: BlinkoTodayAction) {
+  if (action.source === "change_request" && action.project_id) return `/interno/projetos/${action.project_id}/alteracoes`;
   if (action.source === "commercial_opportunity" && action.pipeline_stage === "P13" && action.project_id) {
     return `/interno/projetos/${action.project_id}/onboarding`;
   }
@@ -22,6 +24,7 @@ function actionHref(action: BlinkoTodayAction) {
 
 function actionBadge(action: BlinkoTodayAction) {
   if (action.source === "commercial_opportunity") return action.pipeline_stage ? `${action.pipeline_stage} · Comercial` : "Comercial";
+  if (action.source === "change_request") return "Alteração";
   if (action.source === "approval") return "Aprovação";
   if (action.source === "finance") return "Financeiro";
   if (action.source === "project_closure") return "Encerramento";
@@ -31,6 +34,7 @@ function actionBadge(action: BlinkoTodayAction) {
 
 function actionMeta(action: BlinkoTodayAction) {
   if (action.source === "commercial_opportunity") return ["Próxima ação comercial", action.responsible_label ? `Responsável: ${action.responsible_label}` : ""].filter(Boolean).join(" · ");
+  if (action.source === "change_request") return ["Decisão/execução de alteração", action.responsible_label ? `Responsável: ${action.responsible_label}` : ""].filter(Boolean).join(" · ");
   if (action.source === "approval") return "Aprovação de cliente · projeto";
   if (action.source === "finance") return "Recebível · financeiro";
   if (action.source === "project_closure") return "Checklist final · projeto";
@@ -55,19 +59,30 @@ function ActionList({ actions, empty }: { actions: BlinkoTodayAction[]; empty: s
   </Link>)}</section>;
 }
 
-function mergeCommercialActions(base: unknown, commercialActions: Record<string, unknown>[]) {
+function asRecords(value: unknown) {
+  return Array.isArray(value) ? value.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item)) : [];
+}
+
+function mergeTodayActions(
+  base: unknown,
+  commercialActions: Record<string, unknown>[],
+  changeActions: unknown,
+  changeCounts: unknown,
+) {
   if (!base || typeof base !== "object" || Array.isArray(base)) return base;
   const source = base as Record<string, unknown>;
-  const baseActions = Array.isArray(source.actions) ? source.actions.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item)) : [];
+  const baseActions = asRecords(source.actions);
   const opportunityLeadIds = new Set(commercialActions.map((item) => typeof item.lead_id === "string" ? item.lead_id : "").filter(Boolean));
   const withoutMirroredCrm = baseActions.filter((item) => !(item.source === "crm" && typeof item.lead_id === "string" && opportunityLeadIds.has(item.lead_id)));
-  return { ...source, actions: [...commercialActions, ...withoutMirroredCrm] };
+  const counts = source.counts && typeof source.counts === "object" && !Array.isArray(source.counts) ? source.counts as Record<string, unknown> : {};
+  const extraCounts = changeCounts && typeof changeCounts === "object" && !Array.isArray(changeCounts) ? changeCounts as Record<string, unknown> : {};
+  return { ...source, counts: { ...counts, ...extraCounts }, actions: [...commercialActions, ...asRecords(changeActions), ...withoutMirroredCrm] };
 }
 
 export default async function InternalTodayPage() {
   const session = await requireInternalSession();
-  const [baseRaw, commercial] = await Promise.all([getBlinkoTodayQueue(), getCommercialTodayActions()]);
-  const queue = normalizeBlinkoTodayQueue(mergeCommercialActions(baseRaw, commercial.actions));
+  const [baseRaw, commercial, changes] = await Promise.all([getBlinkoTodayQueue(), getCommercialTodayActions(), getChangeRequestTodayActions()]);
+  const queue = normalizeBlinkoTodayQueue(mergeTodayActions(baseRaw, commercial.actions, changes.actions, changes.counts));
   const doNow = queue?.actions.filter((action) => action.bucket === "do_now") ?? [];
   const waitingClient = queue?.actions.filter((action) => action.bucket === "waiting_client") ?? [];
   const waitingPartner = queue?.actions.filter((action) => action.bucket === "waiting_partner") ?? [];
@@ -77,11 +92,12 @@ export default async function InternalTodayPage() {
 
   return <main className={styles.page}><div className={styles.shell}>
     <InternalTopbar user={session.user} active="today" />
-    <section className={styles.hero}><span className={styles.eyebrow}>OPERAÇÃO · AGORA</span><h1>Hoje na Blinko.</h1><p>Uma fila única para comercial, execução, aprovações, financeiro e encerramento. A próxima ação da Oportunidade é a fonte oficial do funil; ações antigas de CRM ficam como workflow de apoio.</p></section>
+    <section className={styles.hero}><span className={styles.eyebrow}>OPERAÇÃO · AGORA</span><h1>Hoje na Blinko.</h1><p>Uma fila única para comercial, execução, alterações, aprovações, financeiro e encerramento. A próxima ação da Oportunidade é a fonte oficial do funil; ações antigas de CRM ficam como workflow de apoio.</p></section>
     {!queue ? <div className={styles.empty}>A fila interna não pôde ser carregada com segurança.</div> : <>
       <section className={styles.counts} aria-label="Resumo de hoje">
         <article className={styles.countCard}><strong>{commercialActions.length}</strong><span>próximas ações comerciais</span></article>
         <article className={styles.countCard}><strong>{overdueCommercial}</strong><span>ações comerciais vencidas</span></article>
+        <article className={styles.countCard}><strong>{queue.counts.change_requests_pending_decision}</strong><span>alterações aguardando decisão</span></article>
         <article className={styles.countCard}><strong>{queue.counts.overdue_project_tasks}</strong><span>tarefas de projeto vencidas</span></article>
         <article className={styles.countCard}><strong>{queue.counts.pending_approvals}</strong><span>aprovações aguardando cliente</span></article>
         <article className={styles.countCard}><strong>{queue.counts.overdue_receivables}</strong><span>recebíveis vencidos</span></article>
