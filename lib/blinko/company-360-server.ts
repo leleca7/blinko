@@ -79,6 +79,7 @@ export type Company360 = {
   opportunities: Record<string, unknown>[];
   diagnostics: Record<string, unknown>[];
   projects: Record<string, unknown>[];
+  solutions: Record<string, unknown>[];
 };
 
 export async function getCompany360(companyId: string): Promise<Company360> {
@@ -124,6 +125,25 @@ export async function getCompany360(companyId: string): Promise<Company360> {
             'created_at',prj.created_at
           ) order by prj.created_at desc)
           from public.projects prj where prj.company_id=${companyId}::uuid
+        ),'[]'::jsonb),
+        'solutions',coalesce((
+          select jsonb_agg(jsonb_build_object(
+            'id',cs.id,'blueprint_id',b.id,'solution_code',b.official_code,'name',b.name,
+            'official_status',b.official_status,'catalog_status',b.catalog_status,
+            'relationship_status',cs.status,'selected_version',cs.selected_version,'selected_at',cs.selected_at,
+            'project_usage_count',(select count(*)::integer from public.project_solutions ps where ps.company_solution_id=cs.id),
+            'project_statuses',coalesce((
+              select jsonb_agg(jsonb_build_object(
+                'project_id',ps.project_id,'project_solution_status',ps.status,'selected_route',ps.selected_route,
+                'route_status',ps.route_status,'project_status',prj.status
+              ) order by ps.created_at)
+              from public.project_solutions ps join public.projects prj on prj.id=ps.project_id
+              where ps.company_solution_id=cs.id
+            ),'[]'::jsonb)
+          ) order by b.official_code)
+          from public.company_solutions cs
+          join public.solution_blueprints b on b.id=cs.blueprint_id
+          where cs.company_id=${companyId}::uuid and b.official_code is not null
         ),'[]'::jsonb)
       ) as result
     `;
@@ -134,9 +154,10 @@ export async function getCompany360(companyId: string): Promise<Company360> {
       opportunities: records(result.opportunities),
       diagnostics: records(result.diagnostics),
       projects: records(result.projects),
+      solutions: records(result.solutions),
     };
   } catch (error) {
-    if (isCompany360SchemaPending(error)) return { schemaReady: false, contacts: [], opportunities: [], diagnostics: [], projects: [] };
+    if (isCompany360SchemaPending(error)) return { schemaReady: false, contacts: [], opportunities: [], diagnostics: [], projects: [], solutions: [] };
     throw error;
   }
 }
