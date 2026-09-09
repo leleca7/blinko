@@ -15,7 +15,8 @@ function getSql() {
 /**
  * Fila operacional consolidada da Blinko.
  * Une ações comerciais/pré-diagnóstico e tarefas reais de projetos.
- * Mantém a consulta server-only e usa apenas o schema já disponível em produção.
+ * Os quatro buckets oficiais funcionam mesmo antes da migração 012: enquanto
+ * não existirem status waiting_partner/blocked, eles simplesmente ficam vazios.
  */
 export async function getBlinkoTodayQueue() {
   const sql = getSql();
@@ -65,7 +66,12 @@ export async function getBlinkoTodayQueue() {
     project_queue as (
       select jsonb_build_object(
         'source', 'project_task',
-        'bucket', case when t.status = 'waiting_client' then 'waiting_client' else 'do_now' end,
+        'bucket', case
+          when t.status = 'waiting_client' then 'waiting_client'
+          when t.status = 'waiting_partner' then 'waiting_partner'
+          when t.status = 'blocked' then 'blocked'
+          else 'do_now'
+        end,
         'action_id', t.id,
         'action_type', 'project_task',
         'status', t.status,
@@ -88,7 +94,7 @@ export async function getBlinkoTodayQueue() {
       from public.project_tasks t
       join public.projects p on p.id = t.project_id
       join public.companies c on c.id = p.company_id
-      where t.status in ('pending', 'in_progress', 'waiting_client')
+      where t.status in ('pending', 'in_progress', 'waiting_client', 'waiting_partner', 'blocked')
         and p.status in ('onboarding', 'active', 'waiting_client', 'at_risk')
     ),
     queue as (
@@ -137,11 +143,31 @@ export async function getBlinkoTodayQueue() {
           join public.projects p on p.id = t.project_id
           where t.status = 'waiting_client'
             and p.status in ('onboarding', 'active', 'waiting_client', 'at_risk')
+        ),
+        'waiting_partner_project_tasks', (
+          select count(*)
+          from public.project_tasks t
+          join public.projects p on p.id = t.project_id
+          where t.status = 'waiting_partner'
+            and p.status in ('onboarding', 'active', 'waiting_client', 'at_risk')
+        ),
+        'blocked_project_tasks', (
+          select count(*)
+          from public.project_tasks t
+          join public.projects p on p.id = t.project_id
+          where t.status = 'blocked'
+            and p.status in ('onboarding', 'active', 'waiting_client', 'at_risk')
         )
       ),
       'actions', coalesce((
         select jsonb_agg(action_row order by
-          case action_row->>'bucket' when 'do_now' then 0 else 1 end,
+          case action_row->>'bucket'
+            when 'do_now' then 0
+            when 'blocked' then 1
+            when 'waiting_client' then 2
+            when 'waiting_partner' then 3
+            else 4
+          end,
           case
             when nullif(action_row->>'due_at', '')::timestamptz < now() then 0
             else 1
