@@ -11,6 +11,9 @@ function labelPriority(priority: string) {
 }
 
 function actionHref(action: BlinkoTodayAction) {
+  if (action.source === "commercial_opportunity" && action.pipeline_stage === "P13" && action.project_id) {
+    return `/interno/projetos/${action.project_id}/onboarding`;
+  }
   if (action.opportunity_id) return `/interno/comercial/${action.opportunity_id}`;
   if (action.project_id) return `/interno/projetos/${action.project_id}`;
   if (action.pre_diagnostic_id) return `/interno/pre-diagnosticos/${action.pre_diagnostic_id}`;
