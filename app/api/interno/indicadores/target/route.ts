@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getInternalSession } from "../../../../../lib/blinko/internal-auth";
+import { requireInternalSession } from "../../../../../lib/blinko/internal-auth";
 import { isIndicatorsSchemaPending, setGlobalIndicatorTarget } from "../../../../../lib/blinko/indicators-server";
 
 const operators = new Set(["gte", "lte", "eq", "between"]);
@@ -7,9 +7,7 @@ const codePattern = /^[A-Z0-9_]{3,80}$/;
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 
 export async function POST(request: Request) {
-  const session = await getInternalSession();
-  if (!session) return NextResponse.redirect(new URL("/interno/login", request.url), 303);
-
+  const session = await requireInternalSession("indicators.configure");
   const form = await request.formData();
   const indicatorCode = String(form.get("indicator_code") ?? "").trim();
   const operator = String(form.get("target_operator") ?? "").trim();
@@ -38,17 +36,7 @@ export async function POST(request: Request) {
   if (invalid) return NextResponse.redirect(new URL("/interno/indicadores?status=target_invalid", request.url), 303);
 
   try {
-    await setGlobalIndicatorTarget({
-      indicatorCode,
-      operator,
-      targetValue,
-      targetValueMax,
-      validFrom: validFrom || null,
-      validUntil: validUntil || null,
-      evidenceReference,
-      notes,
-      actorLabel: session.user,
-    });
+    await setGlobalIndicatorTarget({ indicatorCode, operator, targetValue, targetValueMax, validFrom: validFrom || null, validUntil: validUntil || null, evidenceReference, notes, actorLabel: session.user });
     return NextResponse.redirect(new URL("/interno/indicadores?status=target_saved", request.url), 303);
   } catch (error) {
     if (isIndicatorsSchemaPending(error)) return NextResponse.redirect(new URL("/interno/indicadores?status=indicators_schema_pending", request.url), 303);
