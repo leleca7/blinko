@@ -1,245 +1,201 @@
-"use client";
-
-import { useEffect } from "react";
 import { BLINKO_LOGO_DARK_DATA_URI } from "../lib/blinko/brand-logo-data";
-import { BLINKO_FLOWER_DATA_URI } from "../lib/blinko/brand-flower-data";
+import styles from "./home-v2.module.css";
 
-const pillars = ["Marca", "Digital", "Financeiro", "Operação", "Atendimento", "Gestão", "Equipe"];
+const areas = ["Marca", "Digital", "Financeiro", "Operação", "Atendimento", "Gestão", "Equipe"];
 
-const interventionExamples = [
-  [
-    "01",
-    "Captação + atendimento",
-    "Quando o ponto validado está entre aquisição e resposta",
-    "Landing page, formulário, CRM e automação podem trabalhar juntos quando forem a intervenção certa.",
-  ],
-  [
-    "02",
-    "Operação + automação",
-    "Quando retrabalho e informação espalhada sustentam perdas",
-    "Processos, integrações, sistemas e IA podem reduzir atrito com controle humano.",
-  ],
-  [
-    "03",
-    "Marca + comunicação",
-    "Quando promessa, percepção e entrega não estão coerentes",
-    "Posicionamento, identidade, site e comunicação podem ser ajustados a partir do que foi validado.",
-  ],
-  [
-    "04",
-    "Gestão + indicadores",
-    "Quando falta clareza para decidir e acompanhar",
-    "Rotinas, responsabilidades, dashboards e indicadores podem transformar prioridade em acompanhamento.",
-  ],
+const steps = [
+  ["01", "Pré-diagnóstico", "Você mostra o objetivo, o contexto e os sinais que percebe hoje. A triagem inicial é gratuita."],
+  ["02", "Investigar", "A Blinko organiza informações, lacunas e hipóteses sem tratar percepção como causa confirmada."],
+  ["03", "Validar e priorizar", "Quando há evidência suficiente, o problema ganha prioridade e fica mais claro o que precisa mudar primeiro."],
+  ["04", "Executar", "A solução pode envolver marca, marketing, atendimento, operação, gestão, tecnologia, sistemas ou automação."],
+  ["05", "Acompanhar", "A implementação é acompanhada para entender o que mudou, o que precisa de ajuste e qual é o próximo passo."],
 ];
 
+const solutions = [
+  ["01", "Marca + comunicação", "Posicionamento, identidade, site e comunicação quando o problema validado passa por percepção e coerência."],
+  ["02", "Captação + atendimento", "Landing pages, formulários, CRM e fluxos de atendimento quando aquisição e resposta precisam trabalhar juntas."],
+  ["03", "Operação + processos", "Rotinas, responsabilidades e documentação quando retrabalho e informação espalhada sustentam perdas."],
+  ["04", "Tecnologia + automação", "Sistemas, integrações e IA quando a tecnologia consegue reduzir atrito com controle humano."],
+  ["05", "Gestão + indicadores", "Dashboards, indicadores e cadências quando falta clareza para decidir e acompanhar."],
+  ["06", "Experiência + relacionamento", "Jornada, comunicação e pontos de contato quando confiança e experiência precisam ser fortalecidas."],
+];
+
+const projects = [
+  { name: "Valtec", type: "Marca · site · conteúdo", text: "Presença técnica organizada em identidade, materiais, conteúdo e experiência digital.", url: "https://valtec-solucoes.vercel.app" },
+  { name: "Pint Services", type: "Sistema · operação · interface", text: "Estrutura digital para organizar informação operacional, prioridades e pontos de decisão.", url: "https://oficina-ia-demo.vercel.app" },
+  { name: "Plumareli", type: "Educação · plataforma · experiência", text: "Organização de uma proposta educacional em uma experiência digital clara, humana e navegável.", url: "https://plumarelieducacao.vercel.app/apresentacao" },
+];
+
+const faqs = [
+  ["O que é a Blinko?", "A Blinko é um estúdio estratégico de diagnóstico e execução. Começa entendendo o que está acontecendo na empresa, investiga hipóteses, define prioridades e só então estrutura as soluções que fizerem sentido."],
+  ["Para quem a Blinko faz sentido?", "Para empresas e negócios que percebem gargalos, riscos ou oportunidades, mas precisam entender melhor a causa, a prioridade e o caminho de execução antes de investir em soluções isoladas."],
+  ["Preciso saber qual serviço contratar?", "Não. A lógica da Blinko é justamente evitar começar pela solução. O processo começa pelos sinais e pelo contexto para descobrir o que realmente precisa ser tratado e em qual ordem."],
+  ["O pré-diagnóstico é gratuito?", "Sim. O pré-diagnóstico é uma triagem inicial gratuita. Ele ajuda a organizar o contexto e avaliar se existe algo que vale aprofundar. O Diagnóstico Blinko completo é uma etapa separada e paga."],
+  ["O que a Blinko analisa?", "A leitura conecta sete áreas: Marca, Digital, Financeiro, Operação, Atendimento, Gestão e Equipe. Também considera confiança, reputação, relação com públicos e coerência entre discurso e prática."],
+  ["A Blinko também executa as soluções?", "Sim. Depois da validação, a Blinko pode selecionar, adaptar ou construir intervenções e acompanhar a implementação. A solução pode combinar diferentes competências, dependendo do problema validado."],
+];
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://blinko-wine.vercel.app/#organization",
+      name: "Blinko",
+      url: "https://blinko-wine.vercel.app/",
+      description: "Estúdio estratégico de diagnóstico e execução para empresas, conectando marca, marketing, atendimento, operação, gestão e tecnologia.",
+      sameAs: ["https://www.instagram.com/blinko_studio/"],
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://blinko-wine.vercel.app/#website",
+      url: "https://blinko-wine.vercel.app/",
+      name: "Blinko",
+      publisher: { "@id": "https://blinko-wine.vercel.app/#organization" },
+      inLanguage: "pt-BR",
+    },
+    {
+      "@type": "Service",
+      name: "Diagnóstico empresarial e execução de soluções",
+      provider: { "@id": "https://blinko-wine.vercel.app/#organization" },
+      description: "Investigação de gargalos, validação de prioridades e execução de soluções sob medida em áreas conectadas da empresa.",
+      audience: { "@type": "Audience", audienceType: "Empresas e negócios com gargalos, riscos ou oportunidades a investigar" },
+    },
+    {
+      "@type": "FAQPage",
+      mainEntity: faqs.map(([question, answer]) => ({
+        "@type": "Question",
+        name: question,
+        acceptedAnswer: { "@type": "Answer", text: answer },
+      })),
+    },
+  ],
+};
+
 export default function Home() {
-  useEffect(() => {
-    const root = document.documentElement;
-    const rootStory = document.querySelector<HTMLElement>(".root-story");
-    let frame = 0;
-
-    const updatePointer = (event: PointerEvent) => {
-      root.style.setProperty("--mouse-x", `${event.clientX}px`);
-      root.style.setProperty("--mouse-y", `${event.clientY}px`);
-      root.style.setProperty("--mx", String(event.clientX / window.innerWidth - 0.5));
-      root.style.setProperty("--my", String(event.clientY / window.innerHeight - 0.5));
-      root.dataset.pointer = "active";
-    };
-
-    const updateScroll = () => {
-      frame = 0;
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      root.style.setProperty("--scroll", String(max > 0 ? window.scrollY / max : 0));
-
-      if (!rootStory) return;
-
-      const rect = rootStory.getBoundingClientRect();
-      const travel = Math.max(rootStory.offsetHeight - window.innerHeight, 1);
-      const progress = Math.min(1, Math.max(0, -rect.top / travel));
-      const scene = progress < 0.3 ? "surface" : progress < 0.64 ? "layers" : "root";
-
-      rootStory.style.setProperty("--root-progress", String(progress));
-      if (rootStory.dataset.scene !== scene) {
-        rootStory.dataset.scene = scene;
-      }
-    };
-
-    const scheduleScrollUpdate = () => {
-      if (!frame) frame = window.requestAnimationFrame(updateScroll);
-    };
-
-    window.addEventListener("pointermove", updatePointer, { passive: true });
-    window.addEventListener("scroll", scheduleScrollUpdate, { passive: true });
-    window.addEventListener("resize", scheduleScrollUpdate, { passive: true });
-    updateScroll();
-
-    return () => {
-      if (frame) window.cancelAnimationFrame(frame);
-      window.removeEventListener("pointermove", updatePointer);
-      window.removeEventListener("scroll", scheduleScrollUpdate);
-      window.removeEventListener("resize", scheduleScrollUpdate);
-      delete root.dataset.pointer;
-    };
-  }, []);
-
   return (
-    <main>
-      <div className="cursor-glow" aria-hidden="true" />
-      <div className="progress" aria-hidden="true" />
+    <main className={styles.page}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
 
-      <header
-        className="topbar"
-        style={{
-          background: "rgba(1,48,30,.56)",
-          border: "1px solid rgba(255,255,255,.2)",
-          backdropFilter: "blur(18px) saturate(120%)",
-          WebkitBackdropFilter: "blur(18px) saturate(120%)",
-          boxShadow: "0 20px 50px rgba(0,0,0,.12)",
-        }}
-      >
-        <a href="#top" aria-label="Blinko, início" className="logo-wrap">
+      <header className={styles.topbar}>
+        <a href="#top" aria-label="Blinko, início" className={styles.logo}>
           <img src={BLINKO_LOGO_DARK_DATA_URI} alt="Blinko" />
         </a>
-        <nav aria-label="Navegação principal">
-          <a href="#como">Como funciona</a>
-          <a href="#analise">Análise</a>
-          <a href="#cases">Intervenções</a>
-          <a href="/ellen-neri.html">Portfólio Ellen</a>
-          <a className="nav-cta" href="/diagnostico">Pré-diagnóstico</a>
+        <nav className={styles.nav} aria-label="Navegação principal">
+          <a href="#metodo">Como funciona</a>
+          <a href="#analise">O que analisamos</a>
+          <a href="#solucoes">Intervenções</a>
+          <a href="#projetos">Projetos</a>
+          <a href="#faq">FAQ</a>
+          <a className={styles.primaryNav} href="/diagnostico">Pré-diagnóstico</a>
         </nav>
       </header>
 
-      <section className="hero" id="top">
-        <div className="hero-content">
-          <p className="eyebrow">PRÉ-DIAGNÓSTICO · INVESTIGAÇÃO · EXECUÇÃO · ACOMPANHAMENTO</p>
-          <h1>O sinal <em>nem sempre</em> revela a causa.</h1>
-          <p className="hero-lede">
-            A Blinko organiza o que está acontecendo, investiga hipóteses e só transforma uma causa em prioridade quando existe base para validá-la. Depois, executa e acompanha as intervenções necessárias.
+      <section className={styles.hero} id="top">
+        <div className={styles.heroCopy}>
+          <p className={styles.eyebrow}>DIAGNÓSTICO EMPRESARIAL · ESTRATÉGIA · EXECUÇÃO</p>
+          <h1>Descubra o que mexer <em>primeiro.</em></h1>
+          <p className={styles.heroLede}>
+            A Blinko investiga os sinais da empresa, valida prioridades e executa soluções sob medida em marca, marketing, atendimento, operação, gestão e tecnologia — com acompanhamento do que acontece depois.
           </p>
-          <div className="actions">
-            <a className="button light" href="/diagnostico">Fazer pré-diagnóstico gratuito</a>
-            <a className="text-link" href="#como">entender o método ↓</a>
+          <div className={styles.actions}>
+            <a className={`${styles.button} ${styles.buttonLight}`} href="/diagnostico">Fazer pré-diagnóstico gratuito</a>
+            <a className={styles.secondaryLink} href="#metodo">Entender o método ↓</a>
           </div>
         </div>
-        <span className="side-note">ROLE PARA ENTRAR NA EMPRESA</span>
-      </section>
-
-      <section
-        className="enter"
-        id="como"
-        style={{ gridTemplateColumns: "1fr", minHeight: "100vh" }}
-      >
-        <div className="enter-copy" style={{ maxWidth: "920px" }}>
-          <span className="section-id">01 / ANTES DE PROPOR, INVESTIGAMOS.</span>
-          <h2>Você mostra o que está acontecendo. <em>A Blinko organiza os sinais e investiga o que ainda precisa ser validado.</em></h2>
-          <p>Não começamos escolhendo um serviço. Começamos entendendo a empresa, o contexto e quais hipóteses merecem investigação antes de definir uma prioridade.</p>
+        <div className={styles.heroVisual} aria-label="Direção visual editorial Blinko">
+          <div className={styles.photoFrame}><img src="/photos/notebook-2.webp" alt="Trabalho estratégico em notebook" /></div>
+          <div className={styles.photoCaption}><span>BLINKO / EM PROCESSO</span><span>Diagnosticar antes de prescrever</span></div>
         </div>
-        <span className="giant-word">INVESTIGAR</span>
       </section>
 
-      <section className="root-story" aria-label="Do sinal até a validação">
-        <div className="root-sticky">
-          <div className="root-organic" aria-hidden="true">
-            <div className="root-orbit root-orbit-a" />
-            <div className="root-orbit root-orbit-b" />
-            <div className="root-shape root-shape-a" />
-            <div className="root-shape root-shape-b" />
-            <div className="root-shape root-shape-c" />
-            <div className="root-core">
-              <span>VALIDAR</span>
-              <small>quando a hipótese ganha evidência</small>
-            </div>
-            <span className="root-caption">sinal → hipótese → validação</span>
-          </div>
+      <section className={styles.signalStrip} aria-label="Como a Blinko trabalha">
+        <div><strong>Entender</strong><span>o contexto</span></div>
+        <div><strong>Investigar</strong><span>as hipóteses</span></div>
+        <div><strong>Executar</strong><span>com prioridade</span></div>
+        <div><strong>Acompanhar</strong><span>o que mudou</span></div>
+      </section>
 
-          <div className="root-scenes">
-            <article className="scene s1">
-              <span>SINAL</span>
-              <h3>“Precisamos postar mais.”</h3>
-              <p>Pode ser uma necessidade. Mas primeiro precisamos entender por que esse sinal apareceu e o que ele realmente representa.</p>
-            </article>
-            <article className="scene s2">
-              <span>HIPÓTESES</span>
-              <h3>Comunicação. Atendimento. Operação.</h3>
-              <p>A leitura muda quando as áreas deixam de ser vistas isoladamente e as hipóteses são confrontadas com contexto.</p>
-            </article>
-            <article className="scene s3">
-              <span>VALIDAÇÃO</span>
-              <h3>Quando a evidência sustenta uma causa, ela pode virar prioridade.</h3>
-              <p>É só então que escolhemos a intervenção e a ordem certa de execução.</p>
-            </article>
+      <section className={styles.definition} id="sobre">
+        <span className={styles.sectionLabel}>01 / O QUE É A BLINKO</span>
+        <div>
+          <h2>Um estúdio estratégico que começa pelo <em>problema real.</em></h2>
+          <div className={styles.definitionText}>
+            <p>Você não precisa chegar sabendo se precisa de marketing, um sistema, um novo processo ou uma mudança de posicionamento.</p>
+            <p>A Blinko conecta diagnóstico e execução para transformar sinais dispersos em prioridades mais claras. Em vez de empilhar serviços, entende a empresa como um sistema e escolhe a intervenção a partir do que foi validado.</p>
+          </div>
+          <div className={styles.fitGrid} aria-label="Para quem a Blinko faz sentido">
+            <div className={styles.fitItem}><strong>Existem sinais, mas pouca clareza</strong><span>Algo não está funcionando como deveria, mas a causa ainda não está bem definida.</span></div>
+            <div className={styles.fitItem}><strong>Há decisões demais sem prioridade</strong><span>Marketing, operação, atendimento e tecnologia competem pela atenção e pelo investimento.</span></div>
+            <div className={styles.fitItem}><strong>Existe uma oportunidade relevante</strong><span>A empresa quer crescer ou mudar sem construir uma solução antes de entender o contexto.</span></div>
+            <div className={styles.fitItem}><strong>Existe disposição para implementar</strong><span>O diagnóstico vira valor quando a empresa está aberta a executar, medir e ajustar.</span></div>
           </div>
         </div>
       </section>
 
-      <section className="editorial">
-        <div className="editorial-photo"><img src="/photos/notebook-2.webp" alt="Profissional trabalhando em notebook em ambiente Blinko" /></div>
-        <div className="editorial-copy">
-          <span className="section-id">02 / MÉTODO BLINKO</span>
-          <p className="big-quote">“Você não precisa chegar sabendo qual solução contratar.”</p>
-          <p className="body-copy">Pré-diagnóstico antes de prescrição. Evidência antes de conclusão. Prioridade antes de volume. Execução com motivo e acompanhamento do que aconteceu depois.</p>
-          <div className="method-mini">
-            {[["01","Entender"],["02","Investigar"],["03","Validar"],["04","Implantar"],["05","Acompanhar"]].map(([n,t]) => <div key={n}><span>{n}</span><strong>{t}</strong></div>)}
-          </div>
+      <section className={styles.method} id="metodo">
+        <div className={styles.introBlock}>
+          <div><span className={styles.sectionLabel}>02 / MÉTODO BLINKO</span><h2>Investigar antes de prescrever.</h2></div>
+          <p>O método separa sinal, hipótese e causa validada. A solução entra depois — com motivo claro, prioridade e acompanhamento.</p>
+        </div>
+        <ol className={styles.steps}>
+          {steps.map(([number, title, text]) => <li className={styles.step} key={number}><span className={styles.stepNum}>{number}</span><h3>{title}</h3><p>{text}</p></li>)}
+        </ol>
+      </section>
+
+      <section className={styles.analysis} id="analise">
+        <div className={styles.analysisIntro}>
+          <span className={styles.sectionLabel}>03 / LEITURA CONECTADA</span>
+          <h2>Sete áreas. Uma empresa.</h2>
+          <p>Um sintoma pode aparecer em uma ponta e ter origem em outra. Por isso a leitura não separa áreas que, na prática, funcionam juntas.</p>
+        </div>
+        <div className={styles.areaList}>{areas.map((area, index) => <div className={styles.area} key={area}><span>{String(index + 1).padStart(2,"0")}</span><strong>{area}</strong></div>)}</div>
+      </section>
+
+      <section className={styles.solutions} id="solucoes">
+        <div className={styles.solutionsHead}>
+          <div><span className={styles.sectionLabel}>04 / INTERVENÇÕES</span><h2>A solução depende do que foi validado.</h2></div>
+          <p>A Blinko não vende um pacote pronto antes de entender o problema. Depois do diagnóstico, diferentes competências podem ser combinadas, adaptadas ou construídas para o contexto da empresa.</p>
+        </div>
+        <div className={styles.solutionGrid}>{solutions.map(([number,title,text]) => <article className={styles.solutionCard} key={number}><span>{number}</span><div><h3>{title}</h3><p>{text}</p></div></article>)}</div>
+      </section>
+
+      <section className={styles.proof} id="projetos">
+        <div className={styles.proofHeader}>
+          <div><span className={styles.sectionLabel}>05 / PROVA DE EXECUÇÃO</span><h2>Trabalho que já ganhou forma.</h2></div>
+          <p>Enquanto os depoimentos de clientes não entram de forma validada, a melhor prova é mostrar execução real. Estes são exemplos de frentes diferentes desenvolvidas no ecossistema Blinko.</p>
+        </div>
+        <div className={styles.projectGrid}>{projects.map(project => <a className={styles.projectCard} key={project.name} href={project.url} target="_blank" rel="noreferrer"><small>{project.type}</small><h3>{project.name}</h3><p>{project.text}</p><b>Ver projeto ↗</b></a>)}</div>
+      </section>
+
+      <section className={styles.benefits} id="beneficios">
+        <div className={styles.benefitsTop}><span className={styles.sectionLabel}>06 / O QUE VOCÊ GANHA</span><h2>Menos solução solta. Mais clareza para decidir.</h2></div>
+        <div className={styles.benefitGrid}>
+          <article className={styles.benefit}><span>01</span><h3>Clareza</h3><p>Separar percepção, hipótese e evidência antes de investir energia e dinheiro.</p></article>
+          <article className={styles.benefit}><span>02</span><h3>Prioridade</h3><p>Entender o que merece atenção primeiro e o que pode esperar.</p></article>
+          <article className={styles.benefit}><span>03</span><h3>Integração</h3><p>Conectar marca, processos, atendimento, gestão e tecnologia quando o problema atravessa áreas.</p></article>
+          <article className={styles.benefit}><span>04</span><h3>Acompanhamento</h3><p>Observar o que aconteceu depois da execução e ajustar o caminho quando necessário.</p></article>
         </div>
       </section>
 
-      <section className="pillars" id="analise">
-        <div className="pillars-head">
-          <span className="section-id">03 / UMA EMPRESA É UM SISTEMA VIVO</span>
-          <h2>Sete áreas. <em>Uma leitura conectada.</em></h2>
-          <p>
-            Um sinal pode aparecer em uma ponta e ter origem em outra. Por isso analisamos Marca, Digital, Financeiro, Operação, Atendimento, Gestão e Equipe de forma conectada. Também observamos confiança, reputação, relação com os públicos e coerência entre discurso e prática.
-          </p>
-        </div>
-        <div className="pillar-list">
-          {pillars.map((p, i) => <div className="pillar" key={p}><span>{String(i + 1).padStart(2,"0")}</span><strong>{p}</strong><i /></div>)}
+      <section className={styles.faq} id="faq">
+        <div><span className={styles.sectionLabel}>07 / PERGUNTAS FREQUENTES</span><h2>Sem complicar o que pode ser claro.</h2></div>
+        <div className={styles.faqList}>{faqs.map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div>
+      </section>
+
+      <section className={styles.finalCta} id="contato">
+        <div><span className={styles.microLabel}>08 / PRÓXIMO PASSO</span><h2>Conte o que está acontecendo. A gente começa pelos sinais.</h2></div>
+        <div className={styles.finalCopy}>
+          <p>O pré-diagnóstico gratuito organiza o contexto inicial e ajuda a entender se existe algo que vale aprofundar com a Blinko.</p>
+          <div className={styles.actions}><a className={`${styles.button} ${styles.buttonDark}`} href="/diagnostico">Começar pré-diagnóstico</a></div>
+          <div className={styles.contactLinks}><a href="https://www.instagram.com/blinko_studio/" target="_blank" rel="noreferrer">Instagram @blinko_studio ↗</a><a href="/bio">Conhecer a Blinko</a></div>
         </div>
       </section>
 
-      <section className="cases" id="cases">
-        <div className="cases-title">
-          <span className="section-id">04 / EXEMPLOS DE INTERVENÇÃO</span>
-          <h2>Problemas diferentes pedem <em>combinações diferentes.</em></h2>
-          <p>São exemplos do que a biblioteca da Blinko pode combinar depois da validação. Não são pacotes prontos nem uma prescrição automática.</p>
-        </div>
-        <div className="case-list">
-          {interventionExamples.map(([n,name,problem,answer]) => (
-            <article key={name}>
-              <span>{n}</span>
-              <h3>{name}</h3>
-              <p className="problem">{problem}</p>
-              <p>{answer}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="diagnostic" id="diagnostico">
-        <div className="diag-orbit" aria-hidden="true">
-          <i/><i/>
-          <img
-            className="diag-flower"
-            src={BLINKO_FLOWER_DATA_URI}
-            alt=""
-            style={{ width: "clamp(88px, 11vw, 150px)", height: "auto", top: "50%" }}
-          />
-        </div>
-        <div className="diag-copy">
-          <span className="section-id inverse">05 / COMECE PELO PONTO CERTO</span>
-          <h2>Organize os sinais antes de escolher a solução.</h2>
-          <p>O pré-diagnóstico gratuito é uma triagem inicial para entender contexto, sinais percebidos e se existe algo que vale aprofundar com a Blinko.</p>
-          <a className="button pink" href="/diagnostico">Fazer pré-diagnóstico gratuito</a>
-          <small>Esta etapa não confirma causas nem substitui o Diagnóstico Blinko profundo, que é separado e pago.</small>
-        </div>
-      </section>
-
-      <footer>
-        <img className="footer-logo" src={BLINKO_LOGO_DARK_DATA_URI} alt="Blinko" />
-        <p>Inovação aplicada ao problema real da empresa.</p>
-        <a href="/ellen-neri.html">Portfólio Ellen Neri →</a>
-        <a href="/bio">Conhecer a Blinko →</a>
+      <footer className={styles.footer}>
+        <img src={BLINKO_LOGO_DARK_DATA_URI} alt="Blinko" />
+        <p>Diagnóstico · estratégia · execução · acompanhamento</p>
+        <a href="/diagnostico">Pré-diagnóstico →</a>
       </footer>
     </main>
   );
