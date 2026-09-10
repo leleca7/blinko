@@ -3,7 +3,7 @@ import { getInternalSession, hasInternalPermission } from "../../lib/blinko/inte
 import InternalBrand from "./InternalBrand";
 import styles from "./internal-topbar.module.css";
 
-type InternalNavKey = "today" | "commercial" | "companies" | "contacts" | "solutions" | "partners" | "indicators" | "changes" | "settings" | "users";
+type InternalNavKey = "today" | "commercial" | "companies" | "contacts" | "solutions" | "partners" | "indicators" | "changes" | "recurrence" | "settings" | "users";
 
 const navItems: Array<{ key: InternalNavKey; label: string; href: string; permission: string }> = [
   { key: "today", label: "Hoje", href: "/interno", permission: "dashboard.view" },
@@ -14,6 +14,7 @@ const navItems: Array<{ key: InternalNavKey; label: string; href: string; permis
   { key: "partners", label: "Parceiros", href: "/interno/parceiros", permission: "partners.view" },
   { key: "indicators", label: "Indicadores", href: "/interno/indicadores", permission: "indicators.view" },
   { key: "changes", label: "Alterações", href: "/interno/alteracoes", permission: "changes.view" },
+  { key: "recurrence", label: "Recorrência", href: "/interno/recorrencia", permission: "projects.view" },
   { key: "settings", label: "Configurações", href: "/interno/configuracoes", permission: "settings.view" },
 ];
 
