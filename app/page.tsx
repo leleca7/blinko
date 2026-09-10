@@ -124,7 +124,8 @@ export default function Home() {
             <p>Você não precisa chegar sabendo se precisa de marketing, um sistema, um novo processo ou uma mudança de posicionamento.</p>
             <p>A Blinko conecta diagnóstico e execução para transformar sinais dispersos em prioridades mais claras. Em vez de empilhar serviços, entende a empresa como um sistema e escolhe a intervenção a partir do que foi validado.</p>
           </div>
-          <div className={styles.fitGrid} aria-label="Para quem a Blinko faz sentido">
+          <h3 className={styles.sectionLabel}>PARA QUEM A BLINKO FAZ SENTIDO</h3>
+          <div className={styles.fitGrid}>
             <div className={styles.fitItem}><strong>Existem sinais, mas pouca clareza</strong><span>Algo não está funcionando como deveria, mas a causa ainda não está bem definida.</span></div>
             <div className={styles.fitItem}><strong>Há decisões demais sem prioridade</strong><span>Marketing, operação, atendimento e tecnologia competem pela atenção e pelo investimento.</span></div>
             <div className={styles.fitItem}><strong>Existe uma oportunidade relevante</strong><span>A empresa quer crescer ou mudar sem construir uma solução antes de entender o contexto.</span></div>
@@ -163,7 +164,7 @@ export default function Home() {
       <section className={styles.proof} id="projetos">
         <div className={styles.proofHeader}>
           <div><span className={styles.sectionLabel}>05 / PROVA DE EXECUÇÃO</span><h2>Trabalho que já ganhou forma.</h2></div>
-          <p>Enquanto os depoimentos de clientes não entram de forma validada, a melhor prova é mostrar execução real. Estes são exemplos de frentes diferentes desenvolvidas no ecossistema Blinko.</p>
+          <p>Projetos em frentes diferentes mostram como estratégia e execução podem assumir formatos distintos quando partem do contexto certo — de marca e conteúdo a sistemas e experiência digital.</p>
         </div>
         <div className={styles.projectGrid}>{projects.map(project => <a className={styles.projectCard} key={project.name} href={project.url} target="_blank" rel="noreferrer"><small>{project.type}</small><h3>{project.name}</h3><p>{project.text}</p><b>Ver projeto ↗</b></a>)}</div>
       </section>
