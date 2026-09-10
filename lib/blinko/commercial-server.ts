@@ -111,6 +111,17 @@ export async function recordCommercialInteraction(input: { opportunityId: string
   return String(rows[0]?.result ?? "");
 }
 
+export async function setCommercialOpportunityEstimate(input: { opportunityId: string; estimatedValue: number; expectedCloseDate: string | null; actorLabel: string }) {
+  const sql = getSql();
+  const expectedCloseDate = input.expectedCloseDate || null;
+  const rows = await sql`
+    select public.set_commercial_opportunity_estimate(
+      ${input.opportunityId}::uuid,${input.estimatedValue}::numeric,${expectedCloseDate}::date,${input.actorLabel}
+    ) as result
+  `;
+  return String(rows[0]?.result ?? "");
+}
+
 export async function closeCommercialOpportunity(input: { opportunityId: string; outcome: string; lossReason: string | null; lossNotes: string; actorLabel: string }) {
   const sql = getSql();
   const rows = await sql`select public.close_commercial_opportunity(${input.opportunityId}::uuid,${input.outcome},${input.lossReason},${input.lossNotes},${input.actorLabel}) as result`;
