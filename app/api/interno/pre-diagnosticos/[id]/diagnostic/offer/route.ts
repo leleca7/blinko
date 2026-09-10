@@ -3,7 +3,7 @@ import {
   isDiagnosticSchemaPending,
   offerBlinkoDiagnostic,
 } from "../../../../../../../lib/blinko/diagnostic-commercial";
-import { getInternalSession } from "../../../../../../../lib/blinko/internal-auth";
+import { getInternalSession, hasInternalPermission } from "../../../../../../../lib/blinko/internal-auth";
 import { getPreDiagnosticReviewWorkspace } from "../../../../../../../lib/blinko/neon-server";
 import { normalizeReviewWorkspace } from "../../../../../../../lib/blinko/review-workspace";
 
@@ -14,6 +14,7 @@ type Context = { params: Promise<{ id: string }> };
 export async function POST(request: Request, context: Context) {
   const session = await getInternalSession();
   if (!session) return NextResponse.redirect(new URL("/interno/login", request.url), 303);
+  if (!hasInternalPermission(session, "commercial.manage")) return NextResponse.redirect(new URL("/interno?status=forbidden", request.url), 303);
 
   const { id } = await context.params;
   if (!uuidPattern.test(id)) return NextResponse.json({ ok: false }, { status: 404 });
