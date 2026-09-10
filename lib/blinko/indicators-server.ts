@@ -1,6 +1,7 @@
 import "server-only";
 
 import { neon } from "@neondatabase/serverless";
+import { getInternalSession, hasInternalPermission } from "./internal-auth";
 
 function getSql() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -45,11 +46,13 @@ const emptyDashboard: IndicatorsDashboard = {
   forecastWeights: null,
 };
 
-export async function getIndicatorsDashboard(canViewFinancial = false): Promise<IndicatorsDashboard> {
+export async function getIndicatorsDashboard(canViewFinancial?: boolean): Promise<IndicatorsDashboard> {
   const sql = getSql();
+  const session = canViewFinancial === undefined ? await getInternalSession() : null;
+  const financialAllowed = canViewFinancial ?? Boolean(session && hasInternalPermission(session, "finance.view"));
   try {
     const [indicatorRows, sourceRows, lossRows, blockRows, pillarRows, parameterRows] = await Promise.all([
-      canViewFinancial
+      financialAllowed
         ? sql`select to_jsonb(i) as result from public.blinko_indicator_snapshot_safe i order by i.display_order,i.indicator_code`
         : sql`select to_jsonb(i) as result from public.blinko_indicator_snapshot_safe i where i.domain <> 'financial' order by i.display_order,i.indicator_code`,
       sql`select to_jsonb(x) as result from public.blinko_leads_by_source x`,
@@ -61,7 +64,7 @@ export async function getIndicatorsDashboard(canViewFinancial = false): Promise<
 
     let financeByProject: Record<string, unknown>[] = [];
     let financeByCompany: Record<string, unknown>[] = [];
-    if (canViewFinancial) {
+    if (financialAllowed) {
       const [projectRows, companyRows] = await Promise.all([
         sql`select to_jsonb(x) as result from public.blinko_finance_by_project x order by x.company_name,x.project_id`,
         sql`select to_jsonb(x) as result from public.blinko_finance_by_company_safe x order by x.company_name`,
