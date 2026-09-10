@@ -1,0 +1,30 @@
+# Blinko
+
+A Blinko é um estúdio estratégico de diagnóstico e execução para empresas e negócios.
+
+## O que a Blinko faz
+A Blinko organiza sinais da empresa, investiga hipóteses, valida prioridades e executa soluções sob medida. As intervenções podem envolver marca, marketing, atendimento, operação, gestão, tecnologia, sistemas, automação e indicadores.
+
+## Como funciona
+1. Pré-diagnóstico gratuito: coleta objetivo, contexto e sinais percebidos.
+2. Investigação: organiza informações, lacunas e hipóteses.
+3. Validação e priorização: define o que merece atenção primeiro quando há evidência suficiente.
+4. Execução: seleciona, adapta ou constrói as intervenções necessárias.
+5. Acompanhamento: mede o que mudou e ajusta o caminho quando necessário.
+
+## O que é analisado
+Marca, Digital, Financeiro, Operação, Atendimento, Gestão e Equipe. A leitura também considera confiança, reputação, relação com públicos e coerência entre discurso e prática.
+
+## Para quem faz sentido
+Empresas e negócios com gargalos, riscos ou oportunidades que precisam ser entendidos antes de escolher uma solução.
+
+## Principal ação
+Pré-diagnóstico gratuito: https://blinko-wine.vercel.app/diagnostico
+
+## Páginas canônicas
+- Site: https://blinko-wine.vercel.app/
+- Sobre a Blinko: https://blinko-wine.vercel.app/bio
+- Pré-diagnóstico: https://blinko-wine.vercel.app/diagnostico
+
+## Canal oficial
+Instagram: https://www.instagram.com/blinko_studio/
