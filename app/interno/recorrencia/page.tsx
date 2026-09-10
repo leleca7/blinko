@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireInternalSession } from "../../../lib/blinko/internal-auth";
+import { hasInternalPermission, requireInternalSession } from "../../../lib/blinko/internal-auth";
 import { getRecurrenceOverview } from "../../../lib/blinko/recurrence-server";
 import InternalTopbar from "../InternalTopbar";
 import styles from "../interno.module.css";
@@ -21,12 +21,14 @@ function renewalLabel(value: unknown) {
 export default async function RecurrenceOverviewPage() {
   const session = await requireInternalSession("projects.view");
   const scopeAll = session.mode === "legacy" || session.accessScope === "global";
-  const overview = await getRecurrenceOverview({ scopeAll, userId: session.userId });
+  const canViewContracts = hasInternalPermission(session, "contracts.view");
+  const canViewDiagnostics = hasInternalPermission(session, "diagnostics.view");
+  const overview = await getRecurrenceOverview({ scopeAll, userId: session.userId, canViewContracts, canViewDiagnostics });
 
   const withPlan = overview.projects.filter((item) => object(item.plan));
   const withoutPlan = overview.projects.filter((item) => !object(item.plan));
   const activeCycles = overview.projects.filter((item) => ["planned","active"].includes(text(object(item.latest_cycle)?.status))).length;
-  const renewalActions = overview.projects.filter((item) => ["due_to_open","pending_decision","commercial_followup"].includes(text(object(item.renewal)?.queue_status))).length;
+  const renewalActions = canViewContracts ? overview.projects.filter((item) => ["due_to_open","pending_decision","commercial_followup"].includes(text(object(item.renewal)?.queue_status))).length : 0;
 
   return <main className={styles.page}><div className={styles.shell}>
     <InternalTopbar user={session.user} active="recurrence" />
@@ -40,8 +42,8 @@ export default async function RecurrenceOverviewPage() {
       <section className={styles.counts} aria-label="Resumo de recorrência">
         <article className={styles.countCard}><strong>{withPlan.length}</strong><span>projetos com plano recorrente</span></article>
         <article className={styles.countCard}><strong>{activeCycles}</strong><span>ciclos planejados ou ativos</span></article>
-        <article className={styles.countCard}><strong>{renewalActions}</strong><span>renovações com ação</span></article>
-        <article className={styles.countCard}><strong>{overview.reassessments.length}</strong><span>reavaliações abertas</span></article>
+        {canViewContracts ? <article className={styles.countCard}><strong>{renewalActions}</strong><span>renovações com ação</span></article> : null}
+        {canViewDiagnostics ? <article className={styles.countCard}><strong>{overview.reassessments.length}</strong><span>reavaliações abertas</span></article> : null}
       </section>
 
       <div className={styles.sectionTitle}><h2>Projetos recorrentes</h2><span>visão por contrato e ciclo</span></div>
@@ -53,7 +55,7 @@ export default async function RecurrenceOverviewPage() {
           <span className={styles.priority}>{text(plan.status) || "plano"}</span>
           <span><span className={styles.company}>{text(item.company_name)}</span><span className={styles.meta}>{text(item.objective)} · plano v{display(plan.version_number)} · {display(plan.cadence_count)} {text(plan.cadence_unit)}</span></span>
           <span className={styles.badge}>{cycle ? `Ciclo ${display(cycle.sequence_number)} · ${text(cycle.status)}` : "sem ciclo"}</span>
-          <span className={styles.score} style={{ fontFamily: "inherit", fontSize: 12, opacity: .7 }}>{renewalLabel(renewal?.queue_status)} · {when(renewal?.due_at)}</span>
+          <span className={styles.score} style={{ fontFamily: "inherit", fontSize: 12, opacity: .7 }}>{canViewContracts ? `${renewalLabel(renewal?.queue_status)} · ${when(renewal?.due_at)}` : "dados contratuais restritos"}</span>
         </Link>;
       })}</section> : <div className={styles.empty}>Nenhum projeto autorizado possui plano recorrente vigente.</div>}
 
@@ -64,15 +66,15 @@ export default async function RecurrenceOverviewPage() {
         <span className={styles.score} style={{ fontFamily: "inherit", fontSize: 12, opacity: .7 }}>Abrir workspace</span>
       </Link>)}</section></> : null}
 
-      <div className={styles.sectionTitle}><h2>Reavaliações abertas</h2><span>novo diagnóstico sem sobrescrever o anterior</span></div>
+      {canViewDiagnostics ? <><div className={styles.sectionTitle}><h2>Reavaliações abertas</h2><span>novo diagnóstico sem sobrescrever o anterior</span></div>
       {overview.reassessments.length ? <section className={styles.list}>{overview.reassessments.map((item) => <Link className={styles.action} href={`/interno/projetos/${text(item.project_id)}/recorrencia`} key={text(item.id)}>
         <span className={styles.priority}>{text(item.queue_status)}</span>
         <span><span className={styles.company}>{text(item.company_name)}</span><span className={styles.meta}>{text(item.reason)} · rota {text(item.route)}</span></span>
         <span className={styles.badge}>{text(item.status)}</span>
         <span className={styles.score} style={{ fontFamily: "inherit", fontSize: 12, opacity: .7 }}>{when(item.due_at)}</span>
-      </Link>)}</section> : <div className={styles.empty}>Nenhuma reavaliação aberta nos projetos autorizados.</div>}
+      </Link>)}</section> : <div className={styles.empty}>Nenhuma reavaliação aberta nos projetos autorizados.</div>}</> : null}
 
-      <div className={styles.notice} style={{ marginTop: 24 }}>Receita/custo por ciclo aparecem somente para papéis com acesso financeiro. Ausência de data de renovação continua como <strong>a definir</strong>; esta tela não cria prazos automáticos.</div>
+      <div className={styles.notice} style={{ marginTop: 24 }}>Valores financeiros, decisões contratuais e reavaliações só aparecem para papéis com as permissões correspondentes. Ausência de data de renovação continua como <strong>a definir</strong>; esta tela não cria prazos automáticos.</div>
     </>}
   </div></main>;
 }
