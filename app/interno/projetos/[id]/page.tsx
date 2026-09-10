@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireInternalSession } from "../../../../lib/blinko/internal-auth";
 import { getProjectWorkspace } from "../../../../lib/blinko/execution-server";
 import { getProjectExtensions } from "../../../../lib/blinko/project-extensions-server";
+import { getProjectPartnerContext } from "../../../../lib/blinko/partner-commercial-server";
 import InternalBrand from "../../InternalBrand";
 import styles from "../../interno.module.css";
 
@@ -12,8 +13,15 @@ type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ status?
 
 function text(value: unknown) { return typeof value === "string" ? value : ""; }
 function money(value: unknown) {
-  const numeric = typeof value === "number" ? value : Number(value ?? 0);
+  if (value === null || value === undefined || value === "") return "—";
+  const numeric = typeof value === "number" ? value : Number(value);
   return Number.isFinite(numeric) ? numeric.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—";
+}
+function when(value: unknown) {
+  const raw = text(value);
+  if (!raw) return "—";
+  const date = new Date(raw);
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("pt-BR", { timeZone: "America/Bahia" });
 }
 
 function notice(status?: string) {
@@ -44,8 +52,11 @@ export default async function ProjectPage({ params, searchParams }: Props) {
   const query = searchParams ? await searchParams : {};
   if (!uuidPattern.test(id)) notFound();
 
-  const workspace = await getProjectWorkspace(id);
-  const extensions = await getProjectExtensions(id);
+  const [workspace, extensions, partners] = await Promise.all([
+    getProjectWorkspace(id),
+    getProjectExtensions(id),
+    getProjectPartnerContext(id),
+  ]);
   const statusNotice = notice(query.status);
 
   if (!workspace.schemaReady) {
@@ -81,6 +92,23 @@ export default async function ProjectPage({ params, searchParams }: Props) {
           </section>
 
           <section className={styles.reviewCard}><span className={styles.eyebrow}>INTERVENÇÕES CONTRATADAS</span><h2>Escopo que originou este ciclo</h2>{workspace.interventions.length ? <div style={{ display: "grid", gap: 12, marginTop: 18 }}>{workspace.interventions.map((item) => <article key={text(item.id)} style={{ padding: 16, border: "1px solid rgba(1,48,30,.12)", borderRadius: 16, background: "rgba(255,255,255,.5)" }}><strong>{text(item.title)}</strong><p style={{ marginBottom: 0, opacity: .7 }}>{text(item.objective)}</p></article>)}</div> : <div className={styles.notice}>Nenhuma intervenção vinculada foi encontrada.</div>}</section>
+
+          {partners.schemaReady && partners.assignments.length ? <section className={styles.reviewCard} style={{ borderColor: "rgba(239,59,127,.2)" }}>
+            <span className={styles.eyebrow}>PARCEIROS DO PROJETO</span><h2>Terceiros herdados da contratação</h2>
+            <p style={{ opacity: .7, lineHeight: 1.5 }}>Estes vínculos nasceram dos compromissos aprovados na proposta. Custo de parceiro não pode ser criado por texto livre.</p>
+            <div style={{ display: "grid", gap: 14, marginTop: 18 }}>{partners.assignments.map((assignment) => {
+              const cost = assignment.cost && typeof assignment.cost === "object" && !Array.isArray(assignment.cost) ? assignment.cost as Record<string, unknown> : null;
+              return <article key={text(assignment.id)} style={{ padding: 17, border: "1px solid rgba(1,48,30,.12)", borderRadius: 16, background: "rgba(255,255,255,.52)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}><strong>{text(assignment.partner_code)} · {text(assignment.partner_name)}</strong><span className={styles.badge}>{text(assignment.solution_code)} · {text(assignment.execution_route)}</span></div>
+                <small style={{ display: "block", marginTop: 7 }}>Elegibilidade: {text(assignment.partner_eligibility)}</small>
+                <small style={{ display: "block", marginTop: 5 }}>Cotação: {text(assignment.quote_reference)} · emitida {when(assignment.quoted_at)} · válida até {when(assignment.quote_valid_until)}</small>
+                <small style={{ display: "block", marginTop: 5 }}>Papel da Blinko: {text(assignment.blinko_role)}</small>
+                <small style={{ display: "block", marginTop: 5 }}>Obrigação financeira Blinko: {assignment.blinko_payment_obligation === true ? money(assignment.committed_cost_to_blinko) : "não"}</small>
+                {cost ? <small style={{ display: "block", marginTop: 5 }}>Custo vinculado: {money(cost.amount)} · {text(cost.status)}{text(cost.payment_reference) ? ` · ref. ${text(cost.payment_reference)}` : ""}</small> : null}
+                {assignment.financial_rule_id ? <div className={styles.notice} style={{ marginTop: 10 }}>Regra financeira {text(assignment.financial_rule_model) || "registrada"} · status {text(assignment.financial_rule_status) || "—"} · cálculo automático <strong>{assignment.financial_rule_auto_calculable === true ? "LIBERADO" : "BLOQUEADO"}</strong>.</div> : <div className={styles.notice} style={{ marginTop: 10 }}>Este compromisso usa cotação específica e não possui regra financeira padronizada vinculada.</div>}
+              </article>;
+            })}</div>
+          </section> : partners.schemaReady ? null : <section className={styles.reviewCard}><span className={styles.eyebrow}>PARCEIROS</span><div className={styles.notice}>A governança de parceiros depende das migrações 037–039 no banco conectado.</div></section>}
 
           <section className={styles.reviewCard}>
             <span className={styles.eyebrow}>TAREFAS</span><h2>Ações da execução</h2>
