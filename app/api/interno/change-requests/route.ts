@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getInternalSession } from "../../../../lib/blinko/internal-auth";
+import { hasInternalProjectPermission, requireInternalSession } from "../../../../lib/blinko/internal-auth";
 import {
   closeProjectChangeRequest,
   createProjectChangeRequest,
@@ -23,13 +23,12 @@ function optionalUuid(raw:string){return uuidPattern.test(raw)?raw:null;}
 function redirect(request:Request,projectId:string,status:string){return NextResponse.redirect(new URL(`/interno/projetos/${projectId}/alteracoes?status=${status}`,request.url),303);}
 
 export async function POST(request:Request){
-  const session=await getInternalSession();
-  if(!session)return NextResponse.redirect(new URL("/interno/login",request.url),303);
-
+  const session=await requireInternalSession("changes.manage");
   const form=await request.formData();
   const action=value(form,"action",80);
   const projectId=value(form,"project_id",80);
   if(!uuidPattern.test(projectId))return NextResponse.json({ok:false},{status:404});
+  if(!(await hasInternalProjectPermission(session,projectId,"projects.view")))return NextResponse.json({ok:false,error:"forbidden"},{status:403});
 
   try{
     if(action==="create"){
@@ -40,25 +39,8 @@ export async function POST(request:Request){
       const description=value(form,"description",8000);
       const requesterLabel=value(form,"requester_label",300);
       const decisionOwnerLabel=value(form,"decision_owner_label",300);
-      if(!classificationValues.has(classification)||!requesterValues.has(requesterType)||!impactValues.has(deadlineImpactStatus)||!impactValues.has(financialImpactStatus)||!description||!requesterLabel||!decisionOwnerLabel){
-        return redirect(request,projectId,"change_request_invalid");
-      }
-      await createProjectChangeRequest({
-        projectId,
-        projectSolutionId:optionalUuid(value(form,"project_solution_id",80)),
-        requesterType,requesterLabel,description,classification,
-        affectedDeliverableKey:value(form,"affected_deliverable_key",500),
-        affectedVersionLabel:value(form,"affected_version_label",300),
-        scopeReference:value(form,"scope_reference",1000),
-        impactAnalysis:value(form,"impact_analysis",8000),
-        deadlineImpactStatus,
-        deadlineImpactDescription:value(form,"deadline_impact_description",5000),
-        proposedNewDueAt:value(form,"proposed_new_due_at",80)||null,
-        financialImpactStatus,
-        financialImpactDescription:value(form,"financial_impact_description",5000),
-        financialReference:value(form,"financial_reference",1000),
-        decisionOwnerLabel,actorLabel:session.user,
-      });
+      if(!classificationValues.has(classification)||!requesterValues.has(requesterType)||!impactValues.has(deadlineImpactStatus)||!impactValues.has(financialImpactStatus)||!description||!requesterLabel||!decisionOwnerLabel)return redirect(request,projectId,"change_request_invalid");
+      await createProjectChangeRequest({projectId,projectSolutionId:optionalUuid(value(form,"project_solution_id",80)),requesterType,requesterLabel,description,classification,affectedDeliverableKey:value(form,"affected_deliverable_key",500),affectedVersionLabel:value(form,"affected_version_label",300),scopeReference:value(form,"scope_reference",1000),impactAnalysis:value(form,"impact_analysis",8000),deadlineImpactStatus,deadlineImpactDescription:value(form,"deadline_impact_description",5000),proposedNewDueAt:value(form,"proposed_new_due_at",80)||null,financialImpactStatus,financialImpactDescription:value(form,"financial_impact_description",5000),financialReference:value(form,"financial_reference",1000),decisionOwnerLabel,actorLabel:session.user});
       return redirect(request,projectId,"change_request_created");
     }
 
@@ -70,26 +52,14 @@ export async function POST(request:Request){
       const financialImpactStatus=value(form,"financial_impact_status",40)||"none";
       const decisionOwnerLabel=value(form,"decision_owner_label",300);
       if(!impactValues.has(deadlineImpactStatus)||!impactValues.has(financialImpactStatus)||!decisionOwnerLabel)return redirect(request,projectId,"change_request_invalid");
-      await updateProjectChangeRequestAnalysis({
-        changeRequestId,
-        impactAnalysis:value(form,"impact_analysis",8000),
-        deadlineImpactStatus,deadlineImpactDescription:value(form,"deadline_impact_description",5000),
-        proposedNewDueAt:value(form,"proposed_new_due_at",80)||null,
-        financialImpactStatus,financialImpactDescription:value(form,"financial_impact_description",5000),
-        financialReference:value(form,"financial_reference",1000),decisionOwnerLabel,actorLabel:session.user,
-      });
+      await updateProjectChangeRequestAnalysis({changeRequestId,impactAnalysis:value(form,"impact_analysis",8000),deadlineImpactStatus,deadlineImpactDescription:value(form,"deadline_impact_description",5000),proposedNewDueAt:value(form,"proposed_new_due_at",80)||null,financialImpactStatus,financialImpactDescription:value(form,"financial_impact_description",5000),financialReference:value(form,"financial_reference",1000),decisionOwnerLabel,actorLabel:session.user});
       return redirect(request,projectId,"change_request_analysis_saved");
     }
 
     if(action==="decision"){
       const decision=value(form,"decision",40);
       if(!decisionValues.has(decision))return redirect(request,projectId,"change_request_invalid");
-      await decideProjectChangeRequest({
-        changeRequestId,decision,
-        decisionNotes:value(form,"decision_notes",5000),
-        approvalId:optionalUuid(value(form,"approval_id",80)),
-        approvalEvidence:value(form,"approval_evidence",3000),actorLabel:session.user,
-      });
+      await decideProjectChangeRequest({changeRequestId,decision,decisionNotes:value(form,"decision_notes",5000),approvalId:optionalUuid(value(form,"approval_id",80)),approvalEvidence:value(form,"approval_evidence",3000),actorLabel:session.user});
       return redirect(request,projectId,"change_request_decided");
     }
 
@@ -105,11 +75,7 @@ export async function POST(request:Request){
       const title=value(form,"title",300);
       const priority=value(form,"priority",40)||"normal";
       if(!title||!priorityValues.has(priority))return redirect(request,projectId,"change_request_invalid");
-      await recordChangeRequestTask({
-        changeRequestId,title,responsibleLabel:value(form,"responsible_label",300),
-        dueAt:value(form,"due_at",80)||null,priority,estimate:value(form,"estimate",500),
-        approvalRequired:value(form,"approval_required",20)==="yes",actorLabel:session.user,
-      });
+      await recordChangeRequestTask({changeRequestId,title,responsibleLabel:value(form,"responsible_label",300),dueAt:value(form,"due_at",80)||null,priority,estimate:value(form,"estimate",500),approvalRequired:value(form,"approval_required",20)==="yes",actorLabel:session.user});
       return redirect(request,projectId,"change_request_task_created");
     }
 
