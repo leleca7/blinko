@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getInternalSession } from "../../../../../../../lib/blinko/internal-auth";
+import { getInternalSession, hasInternalPermission } from "../../../../../../../lib/blinko/internal-auth";
 import {
   approvePreDiagnosticInitialReading,
   getPreDiagnosticReviewWorkspace,
@@ -19,6 +19,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 export async function POST(request: Request, context: Context) {
   const session = await getInternalSession();
   if (!session) return NextResponse.redirect(new URL("/interno/login", request.url), 303);
+  if (!hasInternalPermission(session, "commercial.manage")) return NextResponse.redirect(new URL("/interno?status=forbidden", request.url), 303);
 
   const { id } = await context.params;
   if (!uuidPattern.test(id)) return NextResponse.json({ ok: false }, { status: 404 });
@@ -48,7 +49,7 @@ export async function POST(request: Request, context: Context) {
     return NextResponse.redirect(new URL(`/interno/pre-diagnosticos/${id}?status=reading_not_current`, request.url), 303);
   }
 
-  if (!['draft', 'pending_approval'].includes(latestStatus)) {
+  if (!["draft", "pending_approval"].includes(latestStatus)) {
     return NextResponse.redirect(new URL(`/interno/pre-diagnosticos/${id}?status=reading_not_approvable`, request.url), 303);
   }
 
