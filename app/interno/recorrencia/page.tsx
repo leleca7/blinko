@@ -5,6 +5,7 @@ import InternalTopbar from "../InternalTopbar";
 import styles from "../interno.module.css";
 
 function text(value: unknown) { return typeof value === "string" ? value : ""; }
+function display(value: unknown) { return value === null || value === undefined || value === "" ? "—" : String(value); }
 function object(value: unknown) { return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null; }
 function when(value: unknown) {
   const raw = text(value);
@@ -12,14 +13,9 @@ function when(value: unknown) {
   const date = new Date(raw);
   return Number.isNaN(date.getTime()) ? raw : date.toLocaleString("pt-BR", { timeZone: "America/Bahia", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
-function dateOnly(value: unknown) {
-  const raw = text(value);
-  if (!raw) return "—";
-  const date = new Date(raw);
-  return Number.isNaN(date.getTime()) ? raw : date.toLocaleDateString("pt-BR", { timeZone: "UTC" });
-}
 function renewalLabel(value: unknown) {
-  return { not_scheduled: "Revisão a definir", scheduled: "Revisão agendada", due_to_open: "Abrir revisão", pending_decision: "Decisão pendente", commercial_followup: "Em renovação comercial", resolved: "Resolvida" }[text(value)] ?? text(value) || "Sem revisão";
+  const raw = text(value);
+  return ({ not_scheduled: "Revisão a definir", scheduled: "Revisão agendada", due_to_open: "Abrir revisão", pending_decision: "Decisão pendente", commercial_followup: "Em renovação comercial", resolved: "Resolvida" } as Record<string,string>)[raw] ?? (raw || "Sem revisão");
 }
 
 export default async function RecurrenceOverviewPage() {
@@ -55,8 +51,8 @@ export default async function RecurrenceOverviewPage() {
         const renewal = object(item.renewal);
         return <Link className={styles.action} href={`/interno/projetos/${text(item.project_id)}/recorrencia`} key={text(item.project_id)}>
           <span className={styles.priority}>{text(plan.status) || "plano"}</span>
-          <span><span className={styles.company}>{text(item.company_name)}</span><span className={styles.meta}>{text(item.objective)} · plano v{text(plan.version_number)} · {text(plan.cadence_count)} {text(plan.cadence_unit)}</span></span>
-          <span className={styles.badge}>{cycle ? `Ciclo ${text(cycle.sequence_number)} · ${text(cycle.status)}` : "sem ciclo"}</span>
+          <span><span className={styles.company}>{text(item.company_name)}</span><span className={styles.meta}>{text(item.objective)} · plano v{display(plan.version_number)} · {display(plan.cadence_count)} {text(plan.cadence_unit)}</span></span>
+          <span className={styles.badge}>{cycle ? `Ciclo ${display(cycle.sequence_number)} · ${text(cycle.status)}` : "sem ciclo"}</span>
           <span className={styles.score} style={{ fontFamily: "inherit", fontSize: 12, opacity: .7 }}>{renewalLabel(renewal?.queue_status)} · {when(renewal?.due_at)}</span>
         </Link>;
       })}</section> : <div className={styles.empty}>Nenhum projeto autorizado possui plano recorrente vigente.</div>}
