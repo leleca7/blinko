@@ -1,6 +1,7 @@
 import "server-only";
 
 import { neon } from "@neondatabase/serverless";
+import { getInternalSession, hasInternalPermission } from "./internal-auth";
 
 function getSql() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -108,17 +109,19 @@ export type ProjectRecurrenceContext = {
   eligibleDiagnostics: Record<string, unknown>[];
 };
 
-export async function getProjectRecurrenceContext(projectId: string, access: {
-  finance: boolean;
-  approvals: boolean;
-  contracts: boolean;
-  diagnostics: boolean;
-}): Promise<ProjectRecurrenceContext> {
+export async function getProjectRecurrenceContext(projectId: string, legacyCanViewFinance?: boolean): Promise<ProjectRecurrenceContext> {
   const sql = getSql();
+  const session = await getInternalSession();
+  const access = {
+    finance: session ? hasInternalPermission(session, "finance.view") : Boolean(legacyCanViewFinance),
+    approvals: Boolean(session && hasInternalPermission(session, "approvals.view")),
+    contracts: Boolean(session && hasInternalPermission(session, "contracts.view")),
+    diagnostics: Boolean(session && hasInternalPermission(session, "diagnostics.view")),
+  };
   try {
     const rows = await sql`
       select jsonb_build_object(
-        'project',to_jsonb(p),
+        'project',case when ${access.contracts} then to_jsonb(p) else to_jsonb(p)-'contract_reference' end,
         'company',to_jsonb(c),
         'current_plan',(select case when ${access.contracts} then to_jsonb(rp) else to_jsonb(rp)-'contract_id'-'contract_valid_until'-'renewal_review_at'-'source_reference'-'evidence_reference' end from public.recurring_service_plans rp where rp.project_id=p.id and rp.is_current limit 1),
         'cycles',coalesce((
