@@ -105,6 +105,7 @@ export default function Home() {
           <a href="#como">Como funciona</a>
           <a href="#analise">Análise</a>
           <a href="#cases">Intervenções</a>
+          <a href="/ellen-neri.html">Portfólio Ellen</a>
           <a className="nav-cta" href="/diagnostico">Pré-diagnóstico</a>
         </nav>
       </header>
@@ -237,6 +238,7 @@ export default function Home() {
       <footer>
         <img className="footer-logo" src={BLINKO_LOGO_DARK_DATA_URI} alt="Blinko" />
         <p>Inovação aplicada ao problema real da empresa.</p>
+        <a href="/ellen-neri.html">Portfólio Ellen Neri →</a>
         <a href="/bio">Conhecer a Blinko →</a>
       </footer>
     </main>
