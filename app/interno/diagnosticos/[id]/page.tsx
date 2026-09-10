@@ -9,6 +9,7 @@ import styles from "../../interno.module.css";
 import DiagnosticAnalysisSection from "./DiagnosticAnalysisSection";
 import DiagnosticStrategySection from "./DiagnosticStrategySection";
 import DiagnosticProposalSection from "./DiagnosticProposalSection";
+import ProposalPartnerSection from "./ProposalPartnerSection";
 import ProposalExecutionSection from "./ProposalExecutionSection";
 import DiagnosticStructuredSection from "./DiagnosticStructuredSection";
 
@@ -74,11 +75,18 @@ function notice(status?: string) {
   if (status === "proposal_review_blocked") return "A proposta atual não está em estado de rascunho para iniciar revisão.";
   if (status === "proposal_incomplete") return "Complete escopo, responsabilidades, prazo, investimento, condições e validade antes da revisão interna.";
   if (status === "proposal_approval_confirmation_required") return "Confirme explicitamente a revisão interna antes de aprovar a proposta.";
-  if (status === "proposal_approval_blocked") return "A proposta não está pronta para aprovação interna.";
+  if (status === "proposal_approval_blocked") return "A proposta não está pronta para aprovação interna. Revise também as rotas, parceiros e cotações aplicáveis.";
   if (status === "proposal_approved_internal") return "Proposta aprovada internamente. O envio externo continua bloqueado até uma decisão humana específica.";
+  if (status === "proposal_route_saved") return "Rota de execução da intervenção registrada. Se a rota envolver terceiros, valide parceiro e cotação antes da aprovação interna.";
+  if (status === "partner_commitment_saved") return "Compromisso/cotação do parceiro registrado. Ainda exige validação humana antes de liberar a proposta.";
+  if (status === "partner_commitment_approved") return "Compromisso do parceiro validado com evidência humana para esta proposta.";
+  if (status === "partner_quote_revalidated") return "Cotação do parceiro revalidada sem alterar parceiro, escopo ou custo da proposta.";
+  if (status === "partner_action_invalid") return "Revise os dados de rota, parceiro, cotação e confirmação antes de salvar.";
+  if (status === "partner_action_blocked") return "A ação de parceiro foi bloqueada por elegibilidade, capacidade, cotação, rota ou estado da proposta.";
+  if (status === "partner_schema_pending") return "A governança de parceiros depende das migrações 037–039 no banco conectado.";
   if (status === "proposal_external_recorded") return "Fato externo da proposta registrado no histórico. Nenhuma comunicação foi disparada pelo OS.";
   if (status === "proposal_external_invalid") return "Confirme o fato, informe data e uma referência verificável antes de registrar.";
-  if (status === "proposal_external_blocked") return "O fato externo não foi registrado porque a proposta não está no estado correto.";
+  if (status === "proposal_external_blocked") return "O fato externo não foi registrado porque a proposta, rota, parceiro ou cotação não está no estado correto.";
   if (status === "project_contract_invalid") return "Complete os dados e confirme a contratação real antes de criar o projeto.";
   if (status === "project_contract_blocked") return "O projeto só pode ser criado depois que a proposta estiver registrada como aceita.";
   return null;
@@ -221,6 +229,7 @@ export default async function DiagnosticPage({ params, searchParams }: Props) {
           <DiagnosticAnalysisSection diagnosticId={id} />
           <DiagnosticStrategySection diagnosticId={id} />
           <DiagnosticProposalSection diagnosticId={id} />
+          <ProposalPartnerSection diagnosticId={id} />
           <ProposalExecutionSection diagnosticId={id} />
         </div>
       </div>
