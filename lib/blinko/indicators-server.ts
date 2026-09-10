@@ -21,10 +21,6 @@ function record(value: unknown) {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
 }
 
-function records(value: unknown) {
-  return Array.isArray(value) ? value.map(record).filter(Boolean) as Record<string, unknown>[] : [];
-}
-
 export type IndicatorsDashboard = {
   schemaReady: boolean;
   indicators: Record<string, unknown>[];
@@ -53,12 +49,12 @@ export async function getIndicatorsDashboard(): Promise<IndicatorsDashboard> {
   const sql = getSql();
   try {
     const [indicatorRows, sourceRows, lossRows, blockRows, projectRows, companyRows, pillarRows, parameterRows] = await Promise.all([
-      sql`select to_jsonb(i) as result from public.blinko_indicator_snapshot i order by i.display_order,i.indicator_code`,
+      sql`select to_jsonb(i) as result from public.blinko_indicator_snapshot_safe i order by i.display_order,i.indicator_code`,
       sql`select to_jsonb(x) as result from public.blinko_leads_by_source x`,
       sql`select to_jsonb(x) as result from public.blinko_losses_by_reason x`,
       sql`select to_jsonb(x) as result from public.blinko_operational_block_breakdown x`,
       sql`select to_jsonb(x) as result from public.blinko_finance_by_project x order by x.company_name,x.project_id`,
-      sql`select to_jsonb(x) as result from public.blinko_finance_by_company x order by x.company_name`,
+      sql`select to_jsonb(x) as result from public.blinko_finance_by_company_safe x order by x.company_name`,
       sql`select to_jsonb(x) as result from public.blinko_diagnostic_by_pillar x`,
       sql`select public.current_indicator_parameter_json('COM_WEIGHTED_FORECAST','stage_weights') as result`,
     ]);
