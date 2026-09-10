@@ -7,7 +7,7 @@ export type BlinkoInternalRole =
 
 export type BlinkoPriority = "low" | "normal" | "high" | "urgent";
 export type BlinkoTodayBucket = "do_now" | "waiting_client" | "waiting_partner" | "blocked";
-export type BlinkoTodaySource = "crm" | "commercial_opportunity" | "project_task" | "approval" | "finance" | "project_closure" | "change_request";
+export type BlinkoTodaySource = "crm" | "commercial_opportunity" | "project_task" | "approval" | "finance" | "project_closure" | "change_request" | "renewal" | "reassessment";
 
 export type BlinkoTodayCounts = {
   pending_pre_diagnostic_reviews: number;
@@ -26,6 +26,8 @@ export type BlinkoTodayCounts = {
   projects_ready_to_close: number;
   change_requests_pending_decision: number;
   change_requests_ready_for_execution: number;
+  renewal_reviews_due: number;
+  reassessments_due: number;
 };
 
 export type BlinkoTodayAction = {
@@ -95,6 +97,8 @@ export function normalizeBlinkoTodayQueue(input: unknown): BlinkoTodayQueue | nu
     projects_ready_to_close: number(input.counts.projects_ready_to_close),
     change_requests_pending_decision: number(input.counts.change_requests_pending_decision),
     change_requests_ready_for_execution: number(input.counts.change_requests_ready_for_execution),
+    renewal_reviews_due: number(input.counts.renewal_reviews_due),
+    reassessments_due: number(input.counts.reassessments_due),
   };
 
   const actions = input.actions.flatMap((raw): BlinkoTodayAction[] => {
@@ -105,7 +109,7 @@ export function normalizeBlinkoTodayQueue(input: unknown): BlinkoTodayQueue | nu
     const status = text(raw.status) as BlinkoTodayAction["status"];
     const source = text(raw.source) as BlinkoTodaySource;
     const bucket = text(raw.bucket) as BlinkoTodayBucket;
-    if (!actionId || !title || !["low","normal","high","urgent"].includes(priority) || !["pending","in_progress","waiting_client","waiting_partner","blocked"].includes(status) || !["crm","commercial_opportunity","project_task","approval","finance","project_closure","change_request"].includes(source) || !["do_now","waiting_client","waiting_partner","blocked"].includes(bucket)) return [];
+    if (!actionId || !title || !["low","normal","high","urgent"].includes(priority) || !["pending","in_progress","waiting_client","waiting_partner","blocked"].includes(status) || !["crm","commercial_opportunity","project_task","approval","finance","project_closure","change_request","renewal","reassessment"].includes(source) || !["do_now","waiting_client","waiting_partner","blocked"].includes(bucket)) return [];
     return [{
       source,bucket,action_id:actionId,action_type:text(raw.action_type),status,priority,title,
       due_at:raw.due_at==null?null:text(raw.due_at),created_at:text(raw.created_at),
