@@ -23,7 +23,8 @@ import {
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const localDateTimePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
-const projectActions = new Set(["plan_save","cycle_first","cycle_start","cycle_close","cycle_next","renewal_open","renewal_resolve"]);
+const projectActions = new Set(["plan_save","cycle_first","cycle_start","cycle_close","cycle_next"]);
+const contractActions = new Set(["renewal_open","renewal_resolve"]);
 const taskActions = new Set(["cycle_task"]);
 const approvalActions = new Set(["cycle_approval"]);
 const financeActions = new Set(["cycle_receivable","cycle_cost"]);
@@ -44,7 +45,8 @@ export async function POST(request: Request) {
   if (!uuidPattern.test(projectId)) return NextResponse.json({ ok: false }, { status: 404 });
 
   let permission = "projects.manage";
-  if (taskActions.has(action)) permission = "tasks.manage";
+  if (contractActions.has(action)) permission = "contracts.manage";
+  else if (taskActions.has(action)) permission = "tasks.manage";
   else if (approvalActions.has(action)) permission = "approvals.manage";
   else if (financeActions.has(action)) permission = "finance.manage";
   else if (commercialActions.has(action)) permission = "commercial.manage";
