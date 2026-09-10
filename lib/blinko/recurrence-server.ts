@@ -31,7 +31,12 @@ export type RecurrenceOverview = {
   reassessments: Record<string, unknown>[];
 };
 
-export async function getRecurrenceOverview(input: { scopeAll: boolean; userId?: string | null }): Promise<RecurrenceOverview> {
+export async function getRecurrenceOverview(input: {
+  scopeAll: boolean;
+  userId?: string | null;
+  canViewContracts: boolean;
+  canViewDiagnostics: boolean;
+}): Promise<RecurrenceOverview> {
   const sql = getSql();
   const userId = input.userId || null;
   try {
@@ -44,14 +49,20 @@ export async function getRecurrenceOverview(input: { scopeAll: boolean; userId?:
             'objective',p.objective,
             'company_id',c.id,
             'company_name',c.name,
-            'plan',case when rp.id is null then null else to_jsonb(rp) end,
+            'plan',case when rp.id is null then null
+              when ${input.canViewContracts} then to_jsonb(rp)
+              else to_jsonb(rp)-'contract_id'-'contract_valid_until'-'renewal_review_at'-'source_reference'-'evidence_reference'
+            end,
             'latest_cycle',(
-              select to_jsonb(sc) from public.recurring_service_cycle_summary sc
+              select jsonb_build_object(
+                'id',sc.id,'sequence_number',sc.sequence_number,'period_start',sc.period_start,'period_end',sc.period_end,
+                'status',sc.status,'pending_items',sc.pending_items,'continuation_status',sc.continuation_status
+              ) from public.recurring_service_cycle_summary sc
               where sc.project_id=p.id order by sc.sequence_number desc limit 1
             ),
-            'renewal',(
+            'renewal',case when ${input.canViewContracts} then (
               select to_jsonb(rq) from public.recurring_renewal_queue rq where rq.project_id=p.id limit 1
-            )
+            ) else null end
           ) order by c.name,p.created_at desc)
           from public.projects p
           join public.companies c on c.id=p.company_id
@@ -59,7 +70,7 @@ export async function getRecurrenceOverview(input: { scopeAll: boolean; userId?:
           where p.status in ('onboarding','active','waiting_client','at_risk','paused')
             and (${input.scopeAll} or (${userId}::uuid is not null and public.internal_user_can_access_project(${userId}::uuid,p.id,'projects.view')))
         ),'[]'::jsonb),
-        'reassessments',coalesce((
+        'reassessments',case when ${input.canViewDiagnostics} then coalesce((
           select jsonb_agg(jsonb_build_object(
             'id',rq.id,'project_id',rq.project_id,'company_id',rq.company_id,'company_name',c.name,
             'source_diagnostic_id',rq.source_diagnostic_id,'new_diagnostic_id',rq.new_diagnostic_id,
@@ -71,7 +82,7 @@ export async function getRecurrenceOverview(input: { scopeAll: boolean; userId?:
           where rq.project_id is not null
             and rq.status not in ('completed','waived','cancelled')
             and (${input.scopeAll} or (${userId}::uuid is not null and public.internal_user_can_access_project(${userId}::uuid,rq.project_id,'projects.view')))
-        ),'[]'::jsonb)
+        ),'[]'::jsonb) else '[]'::jsonb end
       ) as result
     `;
     const result = record(rows[0]?.result);
@@ -97,46 +108,55 @@ export type ProjectRecurrenceContext = {
   eligibleDiagnostics: Record<string, unknown>[];
 };
 
-export async function getProjectRecurrenceContext(projectId: string, canViewFinance: boolean): Promise<ProjectRecurrenceContext> {
+export async function getProjectRecurrenceContext(projectId: string, access: {
+  finance: boolean;
+  approvals: boolean;
+  contracts: boolean;
+  diagnostics: boolean;
+}): Promise<ProjectRecurrenceContext> {
   const sql = getSql();
   try {
     const rows = await sql`
       select jsonb_build_object(
         'project',to_jsonb(p),
         'company',to_jsonb(c),
-        'current_plan',(select to_jsonb(rp) from public.recurring_service_plans rp where rp.project_id=p.id and rp.is_current limit 1),
+        'current_plan',(select case when ${access.contracts} then to_jsonb(rp) else to_jsonb(rp)-'contract_id'-'contract_valid_until'-'renewal_review_at'-'source_reference'-'evidence_reference' end from public.recurring_service_plans rp where rp.project_id=p.id and rp.is_current limit 1),
         'cycles',coalesce((
-          select jsonb_agg(case when ${canViewFinance} then to_jsonb(sc) else to_jsonb(sc)-'cycle_receivable_total'-'cycle_received_total'-'cycle_cost_total' end order by sc.sequence_number desc)
+          select jsonb_agg(
+            (case when ${access.finance} then to_jsonb(sc) else to_jsonb(sc)-'cycle_receivable_total'-'cycle_received_total'-'cycle_cost_total'-'finance_pending_note' end)
+            - case when ${access.contracts} then '__keep_contract__' else 'contract_id' end
+            order by sc.sequence_number desc
+          )
           from public.recurring_service_cycle_summary sc where sc.project_id=p.id
         ),'[]'::jsonb),
         'cycle_tasks',coalesce((
           select jsonb_agg(to_jsonb(t) order by t.created_at desc) from public.project_tasks t
           where t.project_id=p.id and t.service_cycle_id is not null
         ),'[]'::jsonb),
-        'cycle_approvals',coalesce((
+        'cycle_approvals',case when ${access.approvals} then coalesce((
           select jsonb_agg(to_jsonb(a) order by a.created_at desc) from public.approvals a
           where a.project_id=p.id and a.service_cycle_id is not null
-        ),'[]'::jsonb),
-        'cycle_receivables',case when ${canViewFinance} then coalesce((
+        ),'[]'::jsonb) else '[]'::jsonb end,
+        'cycle_receivables',case when ${access.finance} then coalesce((
           select jsonb_agg(to_jsonb(r) order by r.due_date desc,r.created_at desc) from public.receivables r
           where r.project_id=p.id and r.service_cycle_id is not null
         ),'[]'::jsonb) else '[]'::jsonb end,
-        'cycle_costs',case when ${canViewFinance} then coalesce((
+        'cycle_costs',case when ${access.finance} then coalesce((
           select jsonb_agg(to_jsonb(pc) order by pc.created_at desc) from public.project_costs pc
           where pc.project_id=p.id and pc.service_cycle_id is not null
         ),'[]'::jsonb) else '[]'::jsonb end,
-        'renewal',(select to_jsonb(rq) from public.recurring_renewal_queue rq where rq.project_id=p.id limit 1),
-        'reassessments',coalesce((
+        'renewal',case when ${access.contracts} then (select to_jsonb(rq) from public.recurring_renewal_queue rq where rq.project_id=p.id limit 1) else null end,
+        'reassessments',case when ${access.diagnostics} then coalesce((
           select jsonb_agg(to_jsonb(rq) order by rq.due_at desc) from public.diagnostic_reassessment_queue rq
           where rq.project_id=p.id
-        ),'[]'::jsonb),
-        'eligible_diagnostics',coalesce((
+        ),'[]'::jsonb) else '[]'::jsonb end,
+        'eligible_diagnostics',case when ${access.diagnostics} then coalesce((
           select jsonb_agg(jsonb_build_object(
             'id',d.id,'status',d.status,'methodology_version',d.methodology_version,'assessment_cycle_number',d.assessment_cycle_number,
             'offered_at',d.offered_at,'presentation_at',d.presentation_at
           ) order by d.assessment_cycle_number desc,d.offered_at desc)
           from public.diagnostics d where d.company_id=p.company_id and d.status in ('presented','completed')
-        ),'[]'::jsonb)
+        ),'[]'::jsonb) else '[]'::jsonb end
       ) as result
       from public.projects p join public.companies c on c.id=p.company_id
       where p.id=${projectId}::uuid limit 1
