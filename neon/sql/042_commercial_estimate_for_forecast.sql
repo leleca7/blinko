@@ -47,8 +47,9 @@ begin
     insert into public.commercial_opportunity_events(
       opportunity_id,event_type,summary,actor_label,payload
     ) values(
-      p_opportunity_id,'estimate_changed','Estimativa comercial atualizada',trim(p_actor_label),
+      p_opportunity_id,'note','Estimativa comercial atualizada',trim(p_actor_label),
       jsonb_build_object(
+        'note_type','estimate_changed',
         'previous_estimated_value',v_previous_value,
         'estimated_value',p_estimated_value,
         'previous_expected_close_date',v_previous_close,
