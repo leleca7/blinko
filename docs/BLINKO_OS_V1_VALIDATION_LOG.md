@@ -1,78 +1,46 @@
 # Blinko OS v1 — Log de validação
 
-Data-base: 10/09/2026
-Branch GitHub: `feat/blinko-os-v1-audit`
+Data inicial: 09/09/2026  
+Branch GitHub: `feat/blinko-os-v1-audit`  
 PR: #25
-Ambiente de schema/testes: `blinko-os-v1-sim`
-Produção/main: **NÃO ALTERADOS**
 
-Este log consolida o estado validado da evolução do Blinko OS v1. Os documentos de simulação específicos permanecem como evidência detalhada dos cenários.
+Este log consolida os pacotes validados do Blinko OS v1. As simulações detalhadas permanecem como evidência principal de cada frente. Nenhuma migração experimental descrita abaixo deve ser interpretada como promovida automaticamente para `main`/produção.
 
 ## Pacote 01 — Tela Hoje
 
 Status: **VALIDADO EM BUILD/PREVIEW**.
 
-- fila operacional consolidada;
-- separação `Preciso fazer`, `Aguardando cliente`, `Aguardando parceiro` e `Bloqueado`;
-- CRM, projetos, aprovações, financeiro, encerramento, Change Requests e próximas ações comerciais;
-- deduplicação entre próxima ação oficial da Oportunidade e ação CRM espelhada;
-- após RBAC, a fila passou a consultar/exibir cada domínio somente quando a sessão possui a permissão correspondente.
+Implementado:
+- fila server-only consolidando CRM + tarefas;
+- contadores de vencidos/hoje/aguardando cliente;
+- separação `Preciso fazer` x dependências;
+- links contextuais.
 
 ## Pacote 02 — Estados operacionais de tarefa
 
 Arquivo: `012_project_task_states.sql`.
 
-Status: **VALIDADO EM AMBIENTE ISOLADO; NÃO APLICADO À PRODUÇÃO**.
+Status: **VALIDADO EM AMBIENTE ISOLADO; NÃO PROMOVIDO**.
 
-Validações:
-- `waiting_partner` exige dependência + próxima checagem;
-- `blocked` exige motivo + responsável pelo desbloqueio + impacto + próxima checagem;
-- `done` exige evidência;
-- mudanças válidas geram auditoria.
+Guardas validados para `waiting_partner`, `blocked`, evidência de conclusão e auditoria.
 
-## Pacote 03 — Entrada comercial automática P01→P04
+## Pacotes 03–05 — Comercial, contrato e onboarding
 
-Arquivos:
+Arquivos principais:
 - `023_commercial_prediagnostic_sync.sql`;
 - `024_commercial_audit_actor_type.sql`;
+- `025_commercial_formalization_start_gate.sql`;
+- `026_project_onboarding_readiness.sql`;
 - `027_commercial_event_idempotency.sql`.
 
-Status: **VALIDADO EM `blinko-os-v1-sim`**.
+Status: **VALIDADO EM `blinko-os-v1-sim`; NÃO APLICADO À MAIN/PRODUÇÃO**.
 
-Cenário: `Café Aurora — SIMULAÇÃO 002`.
-
-- leitura inicial enviada → P01→P02;
-- revisão iniciada → P02→P03;
-- revisão concluída → P03→P04;
-- responsável/próxima ação/data permanecem obrigatórios;
-- auditoria diferencia `system`, `ai` e `human`;
-- evento `stage_changed` só ocorre quando a etapa realmente muda.
-
-## Pacote 04 — Descoberta do salto P10→P13
-
-Cenário: `Clínica Lume — SIMULAÇÃO 003`.
-
-Status: **FALHA ESTRUTURAL REPRODUZIDA E CORRIGIDA NOS PACOTES POSTERIORES**.
-
-Foi comprovado que um antigo `contract_reference` textual permitia nascer projeto sem formalização real. A falha motivou os gates 025–026.
-
-## Pacote 05 — Contrato + Condições de Início + Onboarding Modular
-
-Arquivos:
-- `025_commercial_formalization_start_gate.sql`;
-- `026_project_onboarding_readiness.sql`.
-
-Status: **VALIDADO PONTA A PONTA EM `blinko-os-v1-sim`**.
-
-Cenário: `Estúdio Nexo — SIMULAÇÃO 004`.
-
-- texto livre não substitui contrato válido;
-- contrato válido conduz P10→P11→P12;
-- condições de início aplicáveis precisam estar resolvidas;
-- projeto só nasce em P13 após `ready_for_onboarding=true`;
-- onboarding é modular, auditável e reutiliza dados existentes;
-- ativação direta ou por função com onboarding incompleto é bloqueada;
-- P13→P14/WON só ocorre após prontidão operacional real.
+Resultados:
+- P01→P04 sincronizado com trilha de auditoria;
+- classificação correta de atores `system`/`ai`/`human`;
+- salto indevido P10→P13 reproduzido e corrigido;
+- contrato válido + condições de início viraram gate real;
+- P13 onboarding modular e P14 operação só após prontidão.
 
 ## Pacote 06 — Contatos + Empresa 360
 
@@ -80,15 +48,15 @@ Arquivos:
 - `028_contacts_company_360.sql`;
 - `029_contact_company_reuse.sql`.
 
-Status: **VALIDADO EM `blinko-os-v1-sim`**.
+Status: **VALIDADO EM `blinko-os-v1-sim`; NÃO PROMOVIDO**.
 
-- Lead pode originar Contato permanente;
-- vínculo Contato→Empresa não é inferido por nome;
-- Empresa conhecida é reutilizada, evitando duplicação por nova demanda;
-- contato criado na Empresa 360 não fabrica Lead;
-- Central de Contatos e Empresa 360 implementadas.
+Resultados:
+- Contato permanente separado de Lead;
+- Empresa reaproveitada sem merge por nome;
+- vínculo explícito Contato→Empresa;
+- Empresa 360 com histórico operacional.
 
-## Pacote 07 — Catálogo oficial S01–S40 + gate por solução
+## Pacote 07 — Catálogo oficial S01–S40 + rotas R1–R6
 
 Arquivos:
 - `030_official_solution_catalog.sql`;
@@ -96,18 +64,15 @@ Arquivos:
 - `032_project_solution_gate_hardening.sql`;
 - `033_project_solution_route_control.sql`.
 
-Status: **VALIDADO EM `blinko-os-v1-sim`**.
+Status: **VALIDADO EM `blinko-os-v1-sim`; NÃO PROMOVIDO**.
 
-Fonte: Documento 04 — Catálogo de Soluções e Parceiros v1.0.
-
+Resultados:
 - 40/40 soluções oficiais;
-- rotas R1–R6 controladas por solução;
-- rota incompatível bloqueada;
-- solução piloto/consulta cria gate de viabilidade;
-- histórico não recebe rota retroativa inventada;
-- onboarding não pode fingir confirmação de rota.
+- rota incompatível recusada;
+- viabilidade e rota explícitas;
+- onboarding por solução sem inventar rota histórica.
 
-Documento detalhado: `docs/BLINKO_OS_V1_SIMULATION_008.md`.
+Detalhe: `docs/BLINKO_OS_V1_SIMULATION_008.md`.
 
 ## Pacote 08 — Change Requests
 
@@ -116,14 +81,15 @@ Arquivos:
 - `035_change_request_analysis.sql`;
 - `036_change_request_decision_immutability.sql`.
 
-Status: **VALIDADO EM `blinko-os-v1-sim`**.
+Status: **VALIDADO EM `blinko-os-v1-sim`; NÃO PROMOVIDO**.
 
-- diferencia correção, revisão no escopo, mudança de escopo e nova demanda;
-- impacto de prazo/financeiro é analisado antes da decisão;
-- decisão é imutável/auditável;
-- nova demanda pode ser roteada ao Comercial sem deformar o projeto existente.
+Resultados:
+- correção, revisão no escopo, mudança de escopo e nova demanda separados;
+- análise de impacto antes da decisão;
+- decisão humana imutável;
+- nova demanda retorna ao Comercial.
 
-Documento detalhado: `docs/BLINKO_OS_V1_SIMULATION_009_CHANGE_REQUEST.md`.
+Detalhe: `docs/BLINKO_OS_V1_SIMULATION_009_CHANGE_REQUEST.md`.
 
 ## Pacote 09 — Parceiros e compromissos financeiros
 
@@ -133,32 +99,33 @@ Arquivos:
 - `039_partner_project_inheritance.sql`;
 - `040_partner_payment_release.sql`.
 
-Status: **VALIDADO EM `blinko-os-v1-sim`**.
+Status: **VALIDADO EM `blinko-os-v1-sim`; NÃO PROMOVIDO**.
 
-- parceiro/capacidade separados de solução;
-- compromisso exige rota, evidência e validação humana;
-- nenhum percentual/base de repasse é inventado;
-- não existe 50% hardcodado;
-- parceiro pode ser herdado pelo projeto quando elegível;
-- pagamento possui gate próprio e auditoria.
+Resultados:
+- cadastro/capacidade separado da solução;
+- parceiro selecionado com evidência e rota;
+- regra financeira por parceria;
+- percentual de 50% da parceria gráfica armazenado sem cálculo automático enquanto a base estiver indefinida;
+- herança ao projeto e gate de pagamento.
 
-Documento detalhado: `docs/BLINKO_OS_V1_SIMULATION_010_PARTNERS.md`.
+Detalhe: `docs/BLINKO_OS_V1_SIMULATION_010_PARTNERS.md`.
 
-## Pacote 10 — Indicadores, metas e parâmetros de indicadores
+## Pacote 10 — Indicadores, metas e parâmetros financeiros
 
 Arquivos:
 - `041_indicators_targets_financial_settings.sql`;
 - `042_commercial_estimate_for_forecast.sql`;
 - `043_indicator_financial_coverage_guard.sql`.
 
-Status: **VALIDADO EM `blinko-os-v1-sim`**.
+Status: **VALIDADO EM `blinko-os-v1-sim`; NÃO PROMOVIDO**.
 
-- indicadores comerciais, operacionais, financeiros e diagnósticos;
-- metas e parâmetros específicos de indicadores versionados com evidência;
-- forecast usa estimativa explícita;
-- indicador financeiro não finge cobertura quando a base financeira é incompleta.
+Resultados:
+- indicadores financeiros, comerciais, operacionais, clientes e método;
+- metas/parâmetros versionados;
+- forecast baseado em estimativa explícita;
+- cobertura financeira não é simulada quando a base é insuficiente.
 
-Documentos:
+Detalhes:
 - `docs/BLINKO_OS_V1_SIMULATION_011_INDICATORS.md`;
 - `docs/BLINKO_OS_V1_VALIDATION_011_SUMMARY.md`.
 
@@ -168,91 +135,120 @@ Arquivos:
 - `044_internal_users_roles_permissions.sql`;
 - `045_internal_session_revocation.sql`.
 
-Status: **VALIDADO EM `blinko-os-v1-sim` + CI/PREVIEW**.
+Status: **VALIDADO EM `blinko-os-v1-sim` + CI; NÃO PROMOVIDO**.
 
-Fonte: Documento 08 — Sistema e Automação v1.0.
-
+Resultados:
 - usuários individuais;
-- papéis Admin, Estratégia/Consultoria, Operação, Financeiro, Parceiro e Cliente;
-- Parceiro sem login interno na V1 e escopo por projeto;
-- Cliente reservado para portal futuro;
-- menor privilégio por permissão;
-- senha com scrypt + salt;
-- login compartilhado apenas como bootstrap;
-- `session_version` revoga sessões anteriores após senha/papel/status;
-- proteção do último Admin;
-- dados financeiros mascarados/não consultados sem `finance.view`;
-- confirmação de pagamento exige `finance.manage`;
-- mutações de Diagnóstico, Comercial, Projeto, Contatos e Empresa 360 protegidas no endpoint;
-- Tela Hoje tornou-se permission-aware no servidor.
+- matriz V1 de papéis/permissões;
+- menor privilégio;
+- escopo por projeto;
+- senha `scrypt` com salt individual;
+- bootstrap compartilhado desativado após inicialização individual;
+- `session_version` revoga sessões anteriores;
+- proteções do último Admin/self-downgrade;
+- dados financeiros protegidos por permissão.
 
-Documento: `docs/BLINKO_OS_V1_SIMULATION_012_PERMISSIONS.md`.
+Detalhe: `docs/BLINKO_OS_V1_SIMULATION_012_PERMISSIONS.md`.
 
-Checkpoint `0df279ef9fca6fbb9ae5ac2a485240e352d7f7cc`:
-- GitHub CI: success;
-- TypeScript: success;
-- Next.js build: success;
-- Vercel: success.
-
-## Pacote 12 — Configurações, automações e templates versionados
+## Pacote 12 — Configurações governadas e A01–A25
 
 Arquivos:
 - `046_versioned_settings_automation_templates.sql`;
 - `047_automation_rule_idempotency_across_versions.sql`.
 
-Status: **VALIDADO EM `blinko-os-v1-sim` + GITHUB CI; PREVIEW VERCEL BLOQUEADO POR QUOTA EXTERNA**.
+Status: **VALIDADO EM `blinko-os-v1-sim` + GitHub CI; NÃO PROMOVIDO**.
 
-Fonte: Documento 08 — Sistema e Automação v1.0, seções 5.23, 6, 7.11, 11, 12, 16, 17, 18, 22–25.
+Resultados:
+- parâmetros gerais versionados com evidência;
+- catálogo A01–A25;
+- regras de automação com estado separado de runtime binding;
+- templates versionados apontando para Drive;
+- log de execução idempotente;
+- idempotência atravessa versões da mesma regra;
+- `/interno/configuracoes` protegido por permissões administrativas.
 
-Estrutura:
-- `settings.view` / `settings.manage`, somente Admin na V1;
-- parâmetros gerais de negócio com definição estável + versões;
-- A01–A25 como catálogo oficial sem ativação automática;
-- versões de regra com gatilho, condições, ações, exceções, responsável, resultado esperado, política de falha e evidência;
-- log de execução com idempotência;
-- 10 tipos oficiais de templates documentais;
-- templates versionados por metadados/referência, mantendo o conteúdo no Drive;
-- UI `/interno/configuracoes` e endpoints protegidos por `settings.manage`.
+Detalhe: `docs/BLINKO_OS_V1_SIMULATION_013_SETTINGS.md`.
 
-Simulação 013:
-1. estado inicial: 25 regras, 10 tipos de template, 0 parâmetros inventados, 0 versões ativas por seed;
-2. parâmetro sem evidência → recusado;
-3. parâmetro V1→V2 → V1 retired e V2 única current;
-4. valor textual em parâmetro `number` → recusado;
-5. automação determinística pilot/active sem runtime binding → recusada;
-6. A24 piloto/manual registrada apenas como fixture de governança;
-7. repetição da mesma chave de execução na mesma versão → recusada;
-8. 047 endureceu idempotência para `rule_id + idempotency_key`;
-9. mesma chave repetida após A24 V2 → recusada;
-10. template ativo sem `content_reference` → recusado;
-11. template V1→V2 preservou histórico;
-12. apenas Admin recebeu `settings.view/settings.manage`.
+Checkpoint funcional anterior `319c8f9359ab5eed5dba4b08a794bb216181ffa5`:
+- GitHub Actions / Blinko CI #338: success;
+- TypeScript: success;
+- Next.js build: success;
+- Vercel: não executou por `build-rate-limit`; não classificado como Preview validado.
 
-Os valores e versões usados na Simulação 013 são explicitamente fictícios e não representam política operacional real.
+## Pacote 13 — A23 Ciclos recorrentes + A24 Renovação + A25 Reavaliação
 
-Documento: `docs/BLINKO_OS_V1_SIMULATION_013_SETTINGS.md`.
+Arquivo:
+- `048_recurring_cycles_renewal_reassessment.sql`.
 
-Checkpoint de código `319c8f9359ab5eed5dba4b08a794bb216181ffa5`:
-- GitHub Actions / Blinko CI #338: **success**;
-- TypeScript: **success**;
-- Next.js build: **success**;
-- Vercel: **failure por `build-rate-limit`**, sem build executado; não classificar como regressão de código nem como Preview validado.
+Status de banco: **VALIDADO PONTA A PONTA EM `blinko-os-v1-sim`; NÃO PROMOVIDO**.
 
-## Regra de segurança vigente
+Fontes funcionais:
+- Documento 06 — Operação e Qualidade;
+- Documento 07 — Financeiro e Indicadores;
+- Documento 08 — Sistema e Automação.
 
-- Neon main/produção continua sem as migrações experimentais;
-- GitHub `main` continua sem promoção desta frente;
+Resultados principais:
+- contrato/projeto recorrente permanece estável;
+- cada período possui `service_cycle` próprio;
+- tarefas, aprovações, recebíveis e custos podem ser atribuídos ao ciclo;
+- ciclo com tarefa aberta não fecha;
+- pendência financeira exige nota de fechamento;
+- carry-over exige justificativa;
+- continuidade do ciclo e renovação contratual são decisões diferentes;
+- próximo ciclo é bloqueado quando revisão de renovação é exigível e não foi resolvida;
+- renovação gera nova oportunidade P01 reutilizando Lead, Contato e Empresa existentes;
+- oportunidade original permanece P14/WON;
+- reavaliação cria novo Diagnóstico com `assessment_cycle_number` e `previous_diagnostic_id`;
+- diagnóstico anterior não é sobrescrito;
+- reavaliação incluída no contrato não reabre nem altera a oportunidade comercial histórica.
+
+Simulação 014:
+- Ciclo 1: `fd1fc263-d887-4741-a535-8f59483845c1`, fechado;
+- recebível atribuído ao ciclo: R$ 1.200,00;
+- custo atribuído ao ciclo: R$ 300,00;
+- Ciclo 2: `bf74b7f4-2b10-4a92-b503-15cf4ff3a9d7`, criado somente após renovação;
+- review A24: `4c890ce3-3a65-47d4-b588-15c9caeb0461`;
+- oportunidade de renovação: `b080309e-76a7-4d81-acd6-6c323559185d`;
+- request A25: `bbf5c092-514d-489e-af9b-e107f89221a0`;
+- novo Diagnóstico ciclo 2: `5d4079fe-541f-467a-a569-ece871b6d016`.
+
+Interface implementada:
+- menu `Recorrência`;
+- `/interno/recorrencia`;
+- `/interno/projetos/[id]/recorrencia`;
+- A24/A25 incorporados à fila `Hoje` quando há ação real;
+- criação de tarefa/aprovação/recebível/custo com `service_cycle_id`;
+- nenhum cron automático ativado.
+
+Hardening de acesso:
+- ações de renovação `open/resolve` exigem `contracts.manage` no endpoint;
+- leitura de contrato/renovação exige `contracts.view`;
+- aprovação exige `approvals.view/manage`;
+- diagnóstico/reavaliação exige `diagnostics.view/manage`;
+- financeiro exige `finance.view/manage`;
+- campos restritos são mascarados na camada server-side, não apenas escondidos visualmente.
+
+Detalhe: `docs/BLINKO_OS_V1_SIMULATION_014_RECURRING_RENEWAL_REASSESSMENT.md`.
+
+Validação de CI do HEAD final: **a registrar após conclusão do workflow do commit documental final**.
+
+## Estado de segurança atual
+
+- Neon `main`/produção permanece sem as migrações experimentais 028–048;
+- GitHub `main` permanece sem promoção desta frente;
+- DDL e fixtures foram testados somente em `blinko-os-v1-sim`;
 - PR #25 permanece draft;
-- DDL/fixtures somente em `blinko-os-v1-sim`;
-- Drive continua repositório de arquivos; OS guarda estados, relações, referências e versões;
-- configuração não pode inventar preço, margem, repasse, prazo ou parâmetro sem evidência;
-- ativar estado de uma regra não publica código arbitrário;
-- automações determinísticas pilot/active exigem binding explícito;
-- promoção exige plano de migração, bootstrap, rollback e validação isolada.
+- nenhuma automação A23–A25 foi ativada como cron/runtime determinístico;
+- ausência de parâmetro/data continua representada como `A DEFINIR`;
+- promoção depende de plano explícito de bootstrap, sequência de migrações, smoke tests e rollback.
 
-## Próximas frentes reais
+## Próxima frente
 
-1. **A23 — Ciclos recorrentes**: modelar ciclo sem duplicar/reescrever projeto anterior;
-2. **A24 — Renovação**: alertar/abrir ação comercial antes da data definida, usando parâmetro real somente quando formalizado;
-3. **A25 — Reavaliação diagnóstica**: criar nova avaliação sem sobrescrever diagnóstico anterior;
-4. plano explícito de promoção/rollback das migrações após fechamento funcional da V1.
+Com o núcleo funcional A01–A25 coberto, a próxima etapa é **plano controlado de promoção e rollback**, sem executar promoção automaticamente:
+1. inventário e ordem de 012–048;
+2. classificação de risco por migração;
+3. pré-checks/backfills seguros;
+4. bootstrap do primeiro Admin sem lockout;
+5. smoke tests pós-migração;
+6. rollback/forward-fix por pacote;
+7. critérios de go/no-go para produção.
