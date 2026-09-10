@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/interno", "/api/"],
+        disallow: ["/interno", "/api/", "/ellen-neri.html"],
       },
     ],
     sitemap: "https://blinko-wine.vercel.app/sitemap.xml",
