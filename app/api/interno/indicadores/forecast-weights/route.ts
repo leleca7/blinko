@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-import { getInternalSession } from "../../../../../lib/blinko/internal-auth";
+import { requireInternalSession } from "../../../../../lib/blinko/internal-auth";
 import { isIndicatorsSchemaPending, setForecastStageWeights } from "../../../../../lib/blinko/indicators-server";
 
 const stages = Array.from({ length: 13 }, (_, index) => `P${String(index + 1).padStart(2, "0")}`);
 
 export async function POST(request: Request) {
-  const session = await getInternalSession();
-  if (!session) return NextResponse.redirect(new URL("/interno/login", request.url), 303);
-
+  const session = await requireInternalSession("indicators.configure");
   const form = await request.formData();
   const evidenceReference = String(form.get("evidence_reference") ?? "").trim().slice(0, 1000);
   const notes = String(form.get("notes") ?? "").trim().slice(0, 4000);
@@ -25,9 +23,7 @@ export async function POST(request: Request) {
     weights[stage] = percent / 100;
   }
 
-  if (invalid || Object.keys(weights).length !== stages.length) {
-    return NextResponse.redirect(new URL("/interno/indicadores?status=weights_invalid", request.url), 303);
-  }
+  if (invalid || Object.keys(weights).length !== stages.length) return NextResponse.redirect(new URL("/interno/indicadores?status=weights_invalid", request.url), 303);
 
   try {
     await setForecastStageWeights({ weights, evidenceReference, notes, actorLabel: session.user });
