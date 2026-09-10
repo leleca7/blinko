@@ -184,11 +184,11 @@ export default function Home() {
         <div className={styles.faqList}>{faqs.map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div>
       </section>
 
-      <section className={styles.finalCta} id="contato">
+      <section className={styles.finalCta} id="contato" style={{ background: "#01301e", color: "#f3efeb" }}>
         <div><span className={styles.microLabel}>08 / PRÓXIMO PASSO</span><h2>Conte o que está acontecendo. A gente começa pelos sinais.</h2></div>
         <div className={styles.finalCopy}>
           <p>O pré-diagnóstico gratuito organiza o contexto inicial e ajuda a entender se existe algo que vale aprofundar com a Blinko.</p>
-          <div className={styles.actions}><a className={`${styles.button} ${styles.buttonDark}`} href="/diagnostico">Começar pré-diagnóstico</a></div>
+          <div className={styles.actions}><a className={`${styles.button} ${styles.buttonPink}`} href="/diagnostico">Começar pré-diagnóstico</a></div>
           <div className={styles.contactLinks}><a href="https://www.instagram.com/blinko_studio/" target="_blank" rel="noreferrer">Instagram @blinko_studio ↗</a><a href="/bio">Conhecer a Blinko</a></div>
         </div>
       </section>
