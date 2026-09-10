@@ -18,6 +18,7 @@ type InternalSessionPayload = {
   mode: SessionMode;
   user: string;
   userId?: string;
+  sessionVersion?: number;
   exp: number;
 };
 
@@ -33,6 +34,7 @@ type AuthIdentity = {
   mode: SessionMode;
   user: string;
   userId?: string;
+  sessionVersion?: number;
   displayName: string;
   roleCode: string;
   roleName: string;
@@ -149,7 +151,7 @@ async function loadIndividualIdentityById(userId: string, expectedUsername?: str
   const sql = getSql();
   try {
     const rows = await sql`
-      select id,username,display_name,role_code,role_name,access_scope,login_enabled,status,permissions
+      select id,username,display_name,role_code,role_name,access_scope,login_enabled,status,permissions,session_version
       from public.internal_user_access
       where id=${userId}::uuid
       limit 1
@@ -157,11 +159,13 @@ async function loadIndividualIdentityById(userId: string, expectedUsername?: str
     const row = rows[0];
     if (!row || row.status !== "active" || row.login_enabled !== true) return null;
     const username = String(row.username ?? "");
-    if (!username || (expectedUsername && username !== expectedUsername)) return null;
+    const sessionVersion = Number(row.session_version);
+    if (!username || !Number.isInteger(sessionVersion) || sessionVersion < 1 || (expectedUsername && username !== expectedUsername)) return null;
     return {
       mode: "individual",
       user: username,
       userId: String(row.id),
+      sessionVersion,
       displayName: String(row.display_name ?? username),
       roleCode: String(row.role_code ?? ""),
       roleName: String(row.role_name ?? ""),
@@ -178,8 +182,8 @@ async function authenticateIndividual(user: string, password: string): Promise<A
   const sql = getSql();
   try {
     const rows = await sql`
-      select u.id,u.username,u.display_name,u.password_hash,u.status,r.code as role_code,r.name as role_name,
-             r.access_scope,r.login_enabled,
+      select u.id,u.username,u.display_name,u.password_hash,u.status,u.session_version,
+             r.code as role_code,r.name as role_name,r.access_scope,r.login_enabled,
              coalesce(array_agg(rp.permission_code order by rp.permission_code) filter (where rp.permission_code is not null),array[]::text[]) as permissions
       from public.internal_users u
       join public.internal_roles r on r.code=u.role_code and r.status='active'
@@ -191,11 +195,14 @@ async function authenticateIndividual(user: string, password: string): Promise<A
     const row = rows[0];
     if (!row || row.status !== "active" || row.login_enabled !== true) return null;
     if (!verifyInternalPassword(password, String(row.password_hash ?? ""))) return null;
+    const sessionVersion = Number(row.session_version);
+    if (!Number.isInteger(sessionVersion) || sessionVersion < 1) return null;
     await sql`select public.record_internal_login(${String(row.id)}::uuid)`;
     return {
       mode: "individual",
       user: String(row.username),
       userId: String(row.id),
+      sessionVersion,
       displayName: String(row.display_name ?? row.username),
       roleCode: String(row.role_code ?? ""),
       roleName: String(row.role_name ?? ""),
@@ -229,10 +236,12 @@ export async function authenticateInternalCredentials(user: string, password: st
 export function createInternalSessionToken(identity: AuthIdentity) {
   const { secret } = env();
   if (!secretConfigured()) throw new Error("internal_access_not_configured");
+  if (identity.mode === "individual" && (!identity.userId || !Number.isInteger(identity.sessionVersion))) throw new Error("invalid_individual_session_identity");
   const payload: InternalSessionPayload = {
     mode: identity.mode,
     user: identity.user,
     userId: identity.userId,
+    sessionVersion: identity.sessionVersion,
     exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
   };
   const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
@@ -249,7 +258,7 @@ export function verifyInternalSessionToken(token: string | undefined | null) {
   try {
     const payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")) as InternalSessionPayload;
     if (!payload.mode || !payload.user || !payload.exp || payload.exp <= Math.floor(Date.now() / 1000)) return null;
-    if (payload.mode === "individual" && !payload.userId) return null;
+    if (payload.mode === "individual" && (!payload.userId || !Number.isInteger(payload.sessionVersion) || Number(payload.sessionVersion) < 1)) return null;
     return payload;
   } catch {
     return null;
@@ -263,7 +272,8 @@ export async function getInternalSession(): Promise<InternalSession | null> {
 
   if (payload.mode === "individual") {
     const identity = await loadIndividualIdentityById(String(payload.userId), payload.user);
-    return identity ? { ...identity, exp: payload.exp } : null;
+    if (!identity || identity.sessionVersion !== payload.sessionVersion) return null;
+    return { ...identity, exp: payload.exp };
   }
 
   // Uma vez inicializado o auth individual, sessões bootstrap compartilhadas deixam de ser válidas.
