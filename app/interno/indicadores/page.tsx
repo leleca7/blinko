@@ -5,6 +5,7 @@ import styles from "../empresas/empresas.module.css";
 
 function text(value: unknown) { return typeof value === "string" ? value : ""; }
 function number(value: unknown) {
+  if (value === null || value === undefined || value === "") return null;
   const parsed = typeof value === "number" ? value : Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
@@ -58,7 +59,7 @@ export default async function IndicatorsPage({ searchParams }: Props) {
   const dashboard = await getIndicatorsDashboard();
   const statusNotice = notice(query.status);
   const calculated = dashboard.indicators.filter((item) => text(item.calculation_status) === "calculated").length;
-  const blocked = dashboard.indicators.filter((item) => ["parameter_not_configured", "source_not_available"].includes(text(item.calculation_status))).length;
+  const unavailable = dashboard.indicators.filter((item) => text(item.calculation_status) !== "calculated").length;
   const targetsConfigured = dashboard.indicators.filter((item) => text(item.target_status) === "configured").length;
   const targetsMissing = dashboard.indicators.filter((item) => text(item.target_status) === "not_configured").length;
   const grouped = new Map<string, Record<string, unknown>[]>();
@@ -77,11 +78,11 @@ export default async function IndicatorsPage({ searchParams }: Props) {
       </section>
       {statusNotice ? <div className={styles.empty} style={{ marginBottom: 22 }}>{statusNotice}</div> : null}
 
-      {!dashboard.schemaReady ? <div className={styles.empty}>Esta tela depende da migração 041 no banco conectado. Nenhum indicador será inferido a partir de números soltos.</div> : <>
+      {!dashboard.schemaReady ? <div className={styles.empty}>Esta tela depende das migrações 041–043 no banco conectado. Nenhum indicador será inferido a partir de números soltos.</div> : <>
         <section className={styles.metricGrid} aria-label="Resumo dos indicadores">
           <article className={styles.metricCard}><strong>{dashboard.indicators.length}</strong><span>indicadores catalogados</span></article>
-          <article className={styles.metricCard}><strong>{calculated}</strong><span>com cálculo disponível agora</span></article>
-          <article className={styles.metricCard}><strong>{blocked}</strong><span>bloqueados por fonte/parâmetro</span></article>
+          <article className={styles.metricCard}><strong>{calculated}</strong><span>com cálculo confiável agora</span></article>
+          <article className={styles.metricCard}><strong>{unavailable}</strong><span>sem cálculo confiável agora</span></article>
           <article className={styles.metricCard}><strong>{targetsConfigured}</strong><span>metas configuradas</span></article>
           <article className={styles.metricCard}><strong>{targetsMissing}</strong><span>metas ainda não configuradas</span></article>
         </section>
@@ -161,7 +162,7 @@ export default async function IndicatorsPage({ searchParams }: Props) {
 
         <section style={{ marginTop: 38 }}>
           <div className={styles.sectionTitle}><h2>Rentabilidade por cliente</h2><span>receita e custo só quando registrados</span></div>
-          <div className={styles.systemGrid}>{dashboard.financeByCompany.map((row) => <article className={styles.systemCard} key={text(row.company_id)}><h3>{text(row.company_name)}</h3><div className={styles.detailList}><span><strong>Receita líquida:</strong> {formatValue(row.net_revenue,"currency")}</span><span><strong>Custo realizado:</strong> {formatValue(row.realized_cost,"currency")}</span><span><strong>Contribuição:</strong> {formatValue(row.realized_contribution,"currency")}</span><span><strong>Margem:</strong> {formatValue(row.realized_margin_pct,"percentage")}</span><span><strong>Caixa líquido:</strong> {formatValue(row.net_cash,"currency")}</span><span><strong>Recebíveis abertos:</strong> {formatValue(row.open_receivables,"currency")}</span></div></article>)}{!dashboard.financeByCompany.length ? <div className={styles.empty}>Nenhum cliente possui dados financeiros normalizados.</div> : null}</div>
+          <div className={styles.systemGrid}>{dashboard.financeByCompany.map((row) => <article className={styles.systemCard} key={text(row.company_id)}><div className={styles.systemTop}><h3>{text(row.company_name)}</h3><span className={styles.statusPill} data-status={text(row.financial_coverage_status) === "covered" ? "healthy" : "degraded"}>{text(row.financial_coverage_status) === "covered" ? "Cobertura financeira completa" : "Cobertura financeira incompleta"}</span></div><div className={styles.detailList}><span><strong>Receita líquida:</strong> {formatValue(row.net_revenue,"currency")}</span><span><strong>Custo realizado:</strong> {formatValue(row.realized_cost,"currency")}</span><span><strong>Contribuição:</strong> {formatValue(row.realized_contribution,"currency")}</span><span><strong>Margem:</strong> {formatValue(row.realized_margin_pct,"percentage")}</span><span><strong>Caixa líquido:</strong> {formatValue(row.net_cash,"currency")}</span><span><strong>Recebíveis abertos:</strong> {formatValue(row.open_receivables,"currency")}</span>{text(row.financial_coverage_status) === "incomplete" ? <span><strong>Por que contribuição/margem estão bloqueadas:</strong> {number(row.cost_projects_without_financial_plan)?.toLocaleString("pt-BR") ?? "0"} projeto(s) possuem custo realizado sem plano financeiro correspondente.</span> : null}</div></article>)}{!dashboard.financeByCompany.length ? <div className={styles.empty}>Nenhum cliente possui dados financeiros normalizados.</div> : null}</div>
         </section>
 
         <section style={{ marginTop: 38 }}>
