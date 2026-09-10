@@ -1,14 +1,27 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
-const title = "Blinko | Inovação aplicada ao problema real";
-const description = "A Blinko organiza sinais, investiga hipóteses, valida prioridades e executa intervenções com acompanhamento.";
+const title = "Blinko | Diagnóstico empresarial, estratégia e execução";
+const description = "A Blinko investiga gargalos, valida prioridades e executa soluções sob medida em marca, marketing, atendimento, operação, gestão e tecnologia — com acompanhamento.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://blinko-wine.vercel.app"),
   title,
   description,
   applicationName: "Blinko",
+  keywords: [
+    "diagnóstico empresarial",
+    "estratégia empresarial",
+    "consultoria de negócios",
+    "marketing e branding",
+    "processos e operação",
+    "automação e IA",
+    "gestão e indicadores",
+    "experiência do cliente",
+  ],
+  alternates: {
+    canonical: "/",
+  },
   manifest: "/manifest.webmanifest",
   robots: {
     index: true,
@@ -17,6 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     title,
     description,
+    url: "/",
     siteName: "Blinko",
     locale: "pt_BR",
     type: "website",
