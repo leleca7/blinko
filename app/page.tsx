@@ -1,39 +1,39 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BLINKO_LOGO_DARK_DATA_URI } from "../lib/blinko/brand-logo-data";
 import { BLINKO_FLOWER_DATA_URI } from "../lib/blinko/brand-flower-data";
+import styles from "./home-v2.module.css";
 
 const pillars = ["Marca", "Digital", "Financeiro", "Operação", "Atendimento", "Gestão", "Equipe"];
 
+const fitSignals = [
+  ["01", "Cresceu.", "A operação ficou difícil de enxergar."],
+  ["02", "Retrabalho.", "Algo consome energia mais de uma vez."],
+  ["03", "Desconexão.", "Áreas importantes não funcionam como um sistema."],
+  ["04", "Prioridade incerta.", "Existem caminhos, mas falta saber por onde começar."],
+];
+
+const methodWords = ["ENTENDER", "INVESTIGAR", "VALIDAR", "IMPLANTAR", "ACOMPANHAR"];
+
 const interventionExamples = [
-  [
-    "01",
-    "Captação + atendimento",
-    "Quando o ponto validado está entre aquisição e resposta",
-    "Landing page, formulário, CRM e automação podem trabalhar juntos quando forem a intervenção certa.",
-  ],
-  [
-    "02",
-    "Operação + automação",
-    "Quando retrabalho e informação espalhada sustentam perdas",
-    "Processos, integrações, sistemas e IA podem reduzir atrito com controle humano.",
-  ],
-  [
-    "03",
-    "Marca + comunicação",
-    "Quando promessa, percepção e entrega não estão coerentes",
-    "Posicionamento, identidade, site e comunicação podem ser ajustados a partir do que foi validado.",
-  ],
-  [
-    "04",
-    "Gestão + indicadores",
-    "Quando falta clareza para decidir e acompanhar",
-    "Rotinas, responsabilidades, dashboards e indicadores podem transformar prioridade em acompanhamento.",
-  ],
+  ["01", "Captação + atendimento", "Aquisição sem resposta consistente", "Landing page + CRM + automação"],
+  ["02", "Operação + automação", "Retrabalho sustentando perdas", "Processos + integração + IA"],
+  ["03", "Marca + comunicação", "Promessa e entrega desalinhadas", "Posicionamento + identidade + experiência"],
+];
+
+const faq = [
+  ["O pré-diagnóstico é gratuito?", "Sim. É uma triagem inicial, não um diagnóstico completo."],
+  ["O Diagnóstico Blinko é pago?", "Sim. É uma etapa profunda e separada do pré-diagnóstico."],
+  ["A Blinko também executa?", "Quando fizer sentido, sim. A execução é decidida depois da validação."],
+  ["Preciso contratar a execução?", "Não. O diagnóstico pode existir como uma etapa própria."],
+  ["A IA decide sozinha?", "Não. IA apoia a leitura; decisões relevantes passam por revisão humana."],
 ];
 
 export default function Home() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
   useEffect(() => {
     const root = document.documentElement;
     const rootStory = document.querySelector<HTMLElement>(".root-story");
@@ -60,28 +60,39 @@ export default function Home() {
       const scene = progress < 0.3 ? "surface" : progress < 0.64 ? "layers" : "root";
 
       rootStory.style.setProperty("--root-progress", String(progress));
-      if (rootStory.dataset.scene !== scene) {
-        rootStory.dataset.scene = scene;
-      }
+      if (rootStory.dataset.scene !== scene) rootStory.dataset.scene = scene;
     };
 
     const scheduleScrollUpdate = () => {
       if (!frame) frame = window.requestAnimationFrame(updateScroll);
     };
 
+    const closeMobileNavOnDesktop = () => {
+      if (window.innerWidth > 980) setMobileNavOpen(false);
+      scheduleScrollUpdate();
+    };
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileNavOpen(false);
+    };
+
     window.addEventListener("pointermove", updatePointer, { passive: true });
     window.addEventListener("scroll", scheduleScrollUpdate, { passive: true });
-    window.addEventListener("resize", scheduleScrollUpdate, { passive: true });
+    window.addEventListener("resize", closeMobileNavOnDesktop, { passive: true });
+    window.addEventListener("keydown", closeOnEscape);
     updateScroll();
 
     return () => {
       if (frame) window.cancelAnimationFrame(frame);
       window.removeEventListener("pointermove", updatePointer);
       window.removeEventListener("scroll", scheduleScrollUpdate);
-      window.removeEventListener("resize", scheduleScrollUpdate);
+      window.removeEventListener("resize", closeMobileNavOnDesktop);
+      window.removeEventListener("keydown", closeOnEscape);
       delete root.dataset.pointer;
     };
   }, []);
+
+  const closeMobileNav = () => setMobileNavOpen(false);
 
   return (
     <main>
@@ -98,43 +109,74 @@ export default function Home() {
           boxShadow: "0 20px 50px rgba(0,0,0,.12)",
         }}
       >
-        <a href="#top" aria-label="Blinko, início" className="logo-wrap">
+        <a href="#top" aria-label="Blinko, início" className="logo-wrap" onClick={closeMobileNav}>
           <img src={BLINKO_LOGO_DARK_DATA_URI} alt="Blinko" />
         </a>
-        <nav aria-label="Navegação principal">
-          <a href="#como">Como funciona</a>
+        <nav className={styles.desktopNav} aria-label="Navegação principal">
+          <a href="#como">Método</a>
+          <a href="#para-quem">Para quem</a>
           <a href="#analise">Análise</a>
-          <a href="#cases">Intervenções</a>
+          <a href="#faq">FAQ</a>
           <a className="nav-cta" href="/diagnostico">Pré-diagnóstico</a>
         </nav>
+        <button
+          className={styles.menuButton}
+          type="button"
+          aria-expanded={mobileNavOpen}
+          aria-controls="mobile-main-nav"
+          onClick={() => setMobileNavOpen((current) => !current)}
+        >
+          {mobileNavOpen ? "Fechar" : "Menu"}
+        </button>
       </header>
+
+      {mobileNavOpen ? (
+        <nav className={styles.mobileNav} id="mobile-main-nav" aria-label="Navegação principal mobile">
+          <a href="#como" onClick={closeMobileNav}>Método <span>01</span></a>
+          <a href="#para-quem" onClick={closeMobileNav}>Para quem <span>02</span></a>
+          <a href="#analise" onClick={closeMobileNav}>Análise <span>03</span></a>
+          <a href="#faq" onClick={closeMobileNav}>FAQ <span>04</span></a>
+          <a className={styles.mobileNavCta} href="/diagnostico" onClick={closeMobileNav}>Pré-diagnóstico gratuito</a>
+        </nav>
+      ) : null}
 
       <section className="hero" id="top">
         <div className="hero-content">
-          <p className="eyebrow">PRÉ-DIAGNÓSTICO · INVESTIGAÇÃO · EXECUÇÃO · ACOMPANHAMENTO</p>
+          <p className="eyebrow">DIAGNÓSTICO · EXECUÇÃO · ACOMPANHAMENTO</p>
           <h1>O sinal <em>nem sempre</em> revela a causa.</h1>
-          <p className="hero-lede">
-            A Blinko organiza o que está acontecendo, investiga hipóteses e só transforma uma causa em prioridade quando existe base para validá-la. Depois, executa e acompanha as intervenções necessárias.
-          </p>
+          <p className="hero-lede">Organizamos sinais, investigamos hipóteses e priorizamos o que encontra evidência.</p>
           <div className="actions">
             <a className="button light" href="/diagnostico">Fazer pré-diagnóstico gratuito</a>
-            <a className="text-link" href="#como">entender o método ↓</a>
+            <a className="text-link" href="#como">entrar no método ↓</a>
           </div>
         </div>
         <span className="side-note">ROLE PARA ENTRAR NA EMPRESA</span>
       </section>
 
-      <section
-        className="enter"
-        id="como"
-        style={{ gridTemplateColumns: "1fr", minHeight: "100vh" }}
-      >
+      <section className="enter" id="como" style={{ gridTemplateColumns: "1fr", minHeight: "100vh" }}>
         <div className="enter-copy" style={{ maxWidth: "920px" }}>
-          <span className="section-id">01 / ANTES DE PROPOR, INVESTIGAMOS.</span>
-          <h2>Você mostra o que está acontecendo. <em>A Blinko organiza os sinais e investiga o que ainda precisa ser validado.</em></h2>
-          <p>Não começamos escolhendo um serviço. Começamos entendendo a empresa, o contexto e quais hipóteses merecem investigação antes de definir uma prioridade.</p>
+          <span className="section-id">01 / ANTES DE PROPOR</span>
+          <h2>O que parece óbvio <em>quase nunca é o ponto de partida.</em></h2>
+          <p>Primeiro entendemos. Depois investigamos. Só então escolhemos onde mexer.</p>
         </div>
         <span className="giant-word">INVESTIGAR</span>
+      </section>
+
+      <section className={styles.fit} id="para-quem">
+        <div className={styles.fitIntro}>
+          <span>02 / QUANDO A BLINKO ENTRA</span>
+          <h2>Você sente que algo trava. <em>A causa ainda não está clara.</em></h2>
+        </div>
+        <div className={styles.signalGrid}>
+          {fitSignals.map(([number, title, text]) => (
+            <article key={number}>
+              <span>{number}</span>
+              <strong>{title}</strong>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+        <p className={styles.fitNote}>Se a única necessidade é uma entrega fechada, sem investigação, talvez a Blinko não seja o melhor ponto de partida.</p>
       </section>
 
       <section className="root-story" aria-label="Do sinal até a validação">
@@ -156,17 +198,17 @@ export default function Home() {
             <article className="scene s1">
               <span>SINAL</span>
               <h3>“Precisamos postar mais.”</h3>
-              <p>Pode ser uma necessidade. Mas primeiro precisamos entender por que esse sinal apareceu e o que ele realmente representa.</p>
+              <p>Talvez. Mas isso ainda é só o que apareceu na superfície.</p>
             </article>
             <article className="scene s2">
               <span>HIPÓTESES</span>
               <h3>Comunicação. Atendimento. Operação.</h3>
-              <p>A leitura muda quando as áreas deixam de ser vistas isoladamente e as hipóteses são confrontadas com contexto.</p>
+              <p>O mesmo sinal pode nascer em lugares diferentes.</p>
             </article>
             <article className="scene s3">
               <span>VALIDAÇÃO</span>
-              <h3>Quando a evidência sustenta uma causa, ela pode virar prioridade.</h3>
-              <p>É só então que escolhemos a intervenção e a ordem certa de execução.</p>
+              <h3>Evidência muda a prioridade.</h3>
+              <p>É aqui que a intervenção deixa de ser palpite.</p>
             </article>
           </div>
         </div>
@@ -175,22 +217,32 @@ export default function Home() {
       <section className="editorial">
         <div className="editorial-photo"><img src="/photos/notebook-2.webp" alt="Profissional trabalhando em notebook em ambiente Blinko" /></div>
         <div className="editorial-copy">
-          <span className="section-id">02 / MÉTODO BLINKO</span>
+          <span className="section-id">03 / MÉTODO BLINKO</span>
           <p className="big-quote">“Você não precisa chegar sabendo qual solução contratar.”</p>
-          <p className="body-copy">Pré-diagnóstico antes de prescrição. Evidência antes de conclusão. Prioridade antes de volume. Execução com motivo e acompanhamento do que aconteceu depois.</p>
-          <div className="method-mini">
-            {[["01","Entender"],["02","Investigar"],["03","Validar"],["04","Implantar"],["05","Acompanhar"]].map(([n,t]) => <div key={n}><span>{n}</span><strong>{t}</strong></div>)}
-          </div>
+          <p className="body-copy">A solução entra depois da prioridade, não antes dela.</p>
+          <a className={styles.inlineLink} href="/diagnostico-blinko">Entender o diagnóstico profundo →</a>
         </div>
+      </section>
+
+      <section className={styles.flow} aria-label="Fluxo do método Blinko">
+        <span className={styles.flowLabel}>04 / O CAMINHO</span>
+        <div className={styles.flowWords}>
+          {methodWords.map((word, index) => (
+            <div key={word}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <strong>{word}</strong>
+              {index < methodWords.length - 1 ? <i>→</i> : null}
+            </div>
+          ))}
+        </div>
+        <p>Pré-diagnóstico → conversa → diagnóstico → intervenção → acompanhamento.</p>
       </section>
 
       <section className="pillars" id="analise">
         <div className="pillars-head">
-          <span className="section-id">03 / UMA EMPRESA É UM SISTEMA VIVO</span>
+          <span className="section-id">05 / UMA EMPRESA É UM SISTEMA</span>
           <h2>Sete áreas. <em>Uma leitura conectada.</em></h2>
-          <p>
-            Um sinal pode aparecer em uma ponta e ter origem em outra. Por isso analisamos Marca, Digital, Financeiro, Operação, Atendimento, Gestão e Equipe de forma conectada. Também observamos confiança, reputação, relação com os públicos e coerência entre discurso e prática.
-          </p>
+          <p>O problema pode aparecer em uma área e começar em outra.</p>
         </div>
         <div className="pillar-list">
           {pillars.map((p, i) => <div className="pillar" key={p}><span>{String(i + 1).padStart(2,"0")}</span><strong>{p}</strong><i /></div>)}
@@ -199,18 +251,53 @@ export default function Home() {
 
       <section className="cases" id="cases">
         <div className="cases-title">
-          <span className="section-id">04 / EXEMPLOS DE INTERVENÇÃO</span>
-          <h2>Problemas diferentes pedem <em>combinações diferentes.</em></h2>
-          <p>São exemplos do que a biblioteca da Blinko pode combinar depois da validação. Não são pacotes prontos nem uma prescrição automática.</p>
+          <span className="section-id">06 / DEPOIS DA VALIDAÇÃO</span>
+          <h2>A intervenção pode combinar <em>competências diferentes.</em></h2>
+          <p>Não são pacotes. São exemplos de composição.</p>
         </div>
         <div className="case-list">
-          {interventionExamples.map(([n,name,problem,answer]) => (
+          {interventionExamples.map(([number, name, signal, answer]) => (
             <article key={name}>
-              <span>{n}</span>
+              <span>{number}</span>
               <h3>{name}</h3>
-              <p className="problem">{problem}</p>
+              <p className="problem">{signal}</p>
               <p>{answer}</p>
             </article>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.trust}>
+        <div className={styles.trustStatement}>
+          <span>07 / A LENTE</span>
+          <h2>Relações Públicas orientam a leitura. <em>Tecnologia e operação viabilizam a intervenção.</em></h2>
+          <a className={styles.inlineLink} href="/bio">Conhecer a Blinko →</a>
+        </div>
+        <div className={styles.trustPrinciples}>
+          <article><span>01</span><strong>Hipótese não é causa.</strong></article>
+          <article><span>02</span><strong>IA não substitui decisão.</strong></article>
+          <article><span>03</span><strong>Intervenção não é catálogo.</strong></article>
+        </div>
+      </section>
+
+      <section className={styles.faq} id="faq">
+        <div className={styles.faqHead}>
+          <span>08 / SEM LETRA MIÚDA</span>
+          <h2>Perguntas antes de <em>começar.</em></h2>
+        </div>
+        <div className={styles.faqList}>
+          {faq.map(([question, answer], index) => (
+            <details key={question} open={openFaq === index}>
+              <summary
+                onClick={(event) => {
+                  event.preventDefault();
+                  setOpenFaq((current) => current === index ? null : index);
+                }}
+              >
+                {question}<span>+</span>
+              </summary>
+              <p>{answer}</p>
+            </details>
           ))}
         </div>
       </section>
@@ -226,18 +313,24 @@ export default function Home() {
           />
         </div>
         <div className="diag-copy">
-          <span className="section-id inverse">05 / COMECE PELO PONTO CERTO</span>
-          <h2>Organize os sinais antes de escolher a solução.</h2>
-          <p>O pré-diagnóstico gratuito é uma triagem inicial para entender contexto, sinais percebidos e se existe algo que vale aprofundar com a Blinko.</p>
-          <a className="button pink" href="/diagnostico">Fazer pré-diagnóstico gratuito</a>
-          <small>Esta etapa não confirma causas nem substitui o Diagnóstico Blinko profundo, que é separado e pago.</small>
+          <span className="section-id inverse">09 / COMECE PELO SINAL</span>
+          <h2>O que está acontecendo na sua empresa?</h2>
+          <p>Conte o contexto. A Blinko organiza a primeira leitura.</p>
+          <div className={styles.diagActions}>
+            <a className="button pink" href="/diagnostico">Fazer pré-diagnóstico gratuito</a>
+            <a className={styles.inverseLink} href="/diagnostico-blinko">Conhecer o diagnóstico profundo →</a>
+          </div>
         </div>
       </section>
 
       <footer>
         <img className="footer-logo" src={BLINKO_LOGO_DARK_DATA_URI} alt="Blinko" />
         <p>Inovação aplicada ao problema real da empresa.</p>
-        <a href="/bio">Conhecer a Blinko →</a>
+        <div className={styles.footerLinks}>
+          <a href="/bio">Blinko →</a>
+          <a href="/diagnostico-blinko">Diagnóstico →</a>
+          <a href="/privacidade">Privacidade →</a>
+        </div>
       </footer>
     </main>
   );
