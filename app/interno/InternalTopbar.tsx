@@ -2,7 +2,7 @@ import Link from "next/link";
 import InternalBrand from "./InternalBrand";
 import styles from "./internal-topbar.module.css";
 
-type InternalNavKey = "today" | "commercial" | "companies" | "contacts" | "solutions" | "changes";
+type InternalNavKey = "today" | "commercial" | "companies" | "contacts" | "solutions" | "partners" | "changes";
 
 const navItems: Array<{ key: InternalNavKey; label: string; href: string }> = [
   { key: "today", label: "Hoje", href: "/interno" },
@@ -10,6 +10,7 @@ const navItems: Array<{ key: InternalNavKey; label: string; href: string }> = [
   { key: "companies", label: "Empresas", href: "/interno/empresas" },
   { key: "contacts", label: "Contatos", href: "/interno/contatos" },
   { key: "solutions", label: "Soluções", href: "/interno/solucoes" },
+  { key: "partners", label: "Parceiros", href: "/interno/parceiros" },
   { key: "changes", label: "Alterações", href: "/interno/alteracoes" },
 ];
 
