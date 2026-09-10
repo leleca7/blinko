@@ -26,6 +26,13 @@ function statusLabel(value: string) {
   return labels[value] || value;
 }
 
+function automaticGateMessage(code: string) {
+  if (code === "contract_valid") return "Este item é controlado automaticamente pelo contrato/aceite válido.";
+  if (code === "execution_routes") return "Este item é controlado automaticamente pelas rotas R1–R6 registradas nas intervenções da proposta.";
+  if (code === "partner_validation") return "Este item é controlado automaticamente pelos compromissos de parceiro, elegibilidade e cotações vigentes da proposta.";
+  return "Este item é controlado automaticamente pela fonte oficial correspondente.";
+}
+
 const controlStyle = {
   border: "1px solid rgba(1,48,30,.18)",
   background: "rgba(255,255,255,.78)",
@@ -119,7 +126,7 @@ export default async function ProposalExecutionSection({ diagnosticId }: { diagn
       {proposalStatus === "accepted" && !context.formalizationSchemaReady ? (
         <div className={styles.notice} style={{ marginTop: 24 }}>
           <strong>Formalização bloqueada por schema.</strong>
-          <p>Contrato e condições de início exigem as migrações 025–027. O sistema não volta ao modelo antigo de confirmação por texto livre.</p>
+          <p>Contrato e condições de início exigem as migrações de formalização e governança aplicáveis. O sistema não volta ao modelo antigo de confirmação por texto livre.</p>
         </div>
       ) : null}
 
@@ -162,7 +169,7 @@ export default async function ProposalExecutionSection({ diagnosticId }: { diagn
               <div style={{ display: "grid", gap: 14 }}>
                 {context.startConditions.map((condition) => {
                   const code = text(condition.condition_code);
-                  const automatic = code === "contract_valid";
+                  const automatic = ["contract_valid", "execution_routes", "partner_validation"].includes(code);
                   return (
                     <article key={text(condition.id)} style={{ padding: 16, border: "1px solid rgba(1,48,30,.12)", borderRadius: 16, background: "rgba(255,255,255,.48)" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
@@ -170,7 +177,7 @@ export default async function ProposalExecutionSection({ diagnosticId }: { diagn
                         <span className={styles.badge}>{statusLabel(text(condition.requirement))} · {statusLabel(text(condition.status))}</span>
                       </div>
                       {text(condition.evidence) ? <small style={{ display: "block", marginTop: 7, opacity: .7 }}>Evidência: {text(condition.evidence)}</small> : null}
-                      {automatic ? <div className={styles.notice} style={{ marginTop: 12 }}>Este item é controlado automaticamente pelo contrato válido.</div> : (
+                      {automatic ? <div className={styles.notice} style={{ marginTop: 12 }}>{automaticGateMessage(code)}</div> : (
                         <form action={`/api/interno/diagnosticos/${diagnosticId}/proposal/start-condition`} method="post" className={styles.form} style={{ marginTop: 14 }}>
                           <input type="hidden" name="condition_code" value={code} />
                           <label>Aplicabilidade<select name="requirement" defaultValue={text(condition.requirement) || "to_define"} style={controlStyle}><option value="required">Obrigatória</option><option value="not_required">Não necessária</option><option value="to_define">A definir</option></select></label>
@@ -193,7 +200,7 @@ export default async function ProposalExecutionSection({ diagnosticId }: { diagn
           {startGateReady ? (
             <form action={`/api/interno/diagnosticos/${diagnosticId}/proposal/create-project`} method="post" className={styles.form} style={{ marginTop: 28, maxWidth: 820 }}>
               <strong>Criar projeto e iniciar onboarding</strong>
-              <div className={styles.notice}>Contrato válido e condições de início estão resolvidos. O projeto nascerá em P13 e ainda precisará concluir o onboarding antes da operação.</div>
+              <div className={styles.notice}>Contrato válido, rotas, parceiros aplicáveis e demais condições de início estão resolvidos. O projeto nascerá em P13 e ainda precisará concluir o onboarding antes da operação.</div>
               <label>Objetivo do ciclo<textarea name="objective" rows={5} required maxLength={5000} style={controlStyle} /></label>
               <label>Data inicial<input name="start_date" type="date" required style={controlStyle} /></label>
               <label>Prazo ou janela prevista<input name="target_timeframe" required maxLength={1000} style={controlStyle} /></label>
@@ -202,7 +209,7 @@ export default async function ProposalExecutionSection({ diagnosticId }: { diagn
               <button className={styles.button} type="submit">Criar projeto em onboarding</button>
             </form>
           ) : (
-            <div className={styles.notice} style={{ marginTop: 24 }}><strong>BLOQUEADO PARA INÍCIO.</strong><p>Resolva contrato, aplicabilidade e condições obrigatórias antes de criar o projeto.</p></div>
+            <div className={styles.notice} style={{ marginTop: 24 }}><strong>BLOQUEADO PARA INÍCIO.</strong><p>Resolva contrato, rotas, parceiros/cotações aplicáveis e demais condições obrigatórias antes de criar o projeto.</p></div>
           )}
         </>
       ) : null}
