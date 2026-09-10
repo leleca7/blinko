@@ -6,7 +6,7 @@ import {
   getBlinkoAiModel,
   getBlinkoAiProvider,
 } from "../../../../../../lib/blinko/ai-server";
-import { getInternalSession } from "../../../../../../lib/blinko/internal-auth";
+import { getInternalSession, hasInternalPermission } from "../../../../../../lib/blinko/internal-auth";
 import {
   getPreDiagnosticReviewWorkspace,
   recordPreDiagnosticAnalysis,
@@ -24,6 +24,9 @@ export async function POST(request: Request, context: Context) {
   const session = await getInternalSession();
   if (!session) {
     return NextResponse.redirect(new URL("/interno/login", request.url), 303);
+  }
+  if (!hasInternalPermission(session, "commercial.manage")) {
+    return NextResponse.redirect(new URL("/interno?status=forbidden", request.url), 303);
   }
 
   const { id } = await context.params;
