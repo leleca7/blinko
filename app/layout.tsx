@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   keywords: [
     "diagnóstico empresarial",
     "estratégia empresarial",
-    "consultoria de negócios",
+    "diagnóstico e execução",
     "marketing e branding",
     "processos e operação",
     "automação e IA",
