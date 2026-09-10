@@ -2,6 +2,13 @@ import "server-only";
 
 import { neon } from "@neondatabase/serverless";
 
+export type BlinkoTodayAccess = {
+  commercial: boolean;
+  projects: boolean;
+  approvals: boolean;
+  finance: boolean;
+};
+
 function getDatabaseUrl() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) throw new Error("neon_not_configured");
@@ -32,13 +39,16 @@ function numeric(value: unknown) {
 }
 
 /**
- * Fila operacional consolidada da Blinko.
- * O núcleo (CRM + tarefas) funciona no schema antigo. Aprovações, financeiro e
- * encerramento são carregados como extensões: se as migrações 014/016/018 ainda
- * não existirem no ambiente, a tela continua funcionando com contadores zerados.
+ * Fila operacional consolidada da Blinko, sempre escopada pelas permissões
+ * efetivas da sessão. Domínios não autorizados recebem predicado falso no banco
+ * e retornam contadores zerados/nenhuma ação, evitando expor dados pelo agregador.
  */
-export async function getBlinkoTodayQueue() {
+export async function getBlinkoTodayQueue(access: BlinkoTodayAccess) {
   const sql = getSql();
+  const includeCommercial = access.commercial === true;
+  const includeProjects = access.projects === true;
+  const includeApprovals = access.approvals === true;
+  const includeFinance = access.finance === true;
 
   const baseRows = await sql`
     with crm_queue as (
@@ -55,7 +65,8 @@ export async function getBlinkoTodayQueue() {
       from public.crm_actions a
       join public.leads l on l.id = a.lead_id
       left join public.pre_diagnostics pd on pd.id = a.pre_diagnostic_id
-      where a.status in ('pending', 'in_progress')
+      where ${includeCommercial}
+        and a.status in ('pending', 'in_progress')
         and not (a.action_type = 'review_pre_diagnostic' and pd.human_review_status = 'reviewed')
         and not (
           a.action_type = 'review_initial_reading'
@@ -80,7 +91,8 @@ export async function getBlinkoTodayQueue() {
       from public.project_tasks t
       join public.projects p on p.id=t.project_id
       join public.companies c on c.id=p.company_id
-      where t.status in ('pending','in_progress','waiting_client','waiting_partner','blocked')
+      where ${includeProjects}
+        and t.status in ('pending','in_progress','waiting_client','waiting_partner','blocked')
         and p.status in ('onboarding','active','waiting_client','at_risk')
     ),
     queue as (
@@ -89,15 +101,15 @@ export async function getBlinkoTodayQueue() {
     select jsonb_build_object(
       'generated_at', now(),
       'counts', jsonb_build_object(
-        'pending_pre_diagnostic_reviews',(select count(*) from public.pre_diagnostics where human_review_status in ('pending','reviewing')),
-        'initial_readings_waiting_approval',(select count(*) from public.pre_diagnostic_initial_readings where status in ('draft','pending_approval')),
-        'priority_leads',(select count(*) from public.leads where commercial_score>=8 and status not in ('won','lost','archived')),
-        'ai_ready_waiting_human',(select count(*) from public.pre_diagnostics where ai_analysis_status='ready' and human_review_status<>'reviewed'),
-        'overdue_project_tasks',(select count(*) from public.project_tasks t join public.projects p on p.id=t.project_id where t.status in ('pending','in_progress') and p.status in ('onboarding','active','waiting_client','at_risk') and t.due_at<now()),
-        'project_tasks_due_today',(select count(*) from public.project_tasks t join public.projects p on p.id=t.project_id where t.status in ('pending','in_progress') and p.status in ('onboarding','active','waiting_client','at_risk') and (t.due_at at time zone 'America/Bahia')::date=(now() at time zone 'America/Bahia')::date),
-        'waiting_client_project_tasks',(select count(*) from public.project_tasks t join public.projects p on p.id=t.project_id where t.status='waiting_client' and p.status in ('onboarding','active','waiting_client','at_risk')),
-        'waiting_partner_project_tasks',(select count(*) from public.project_tasks t join public.projects p on p.id=t.project_id where t.status='waiting_partner' and p.status in ('onboarding','active','waiting_client','at_risk')),
-        'blocked_project_tasks',(select count(*) from public.project_tasks t join public.projects p on p.id=t.project_id where t.status='blocked' and p.status in ('onboarding','active','waiting_client','at_risk'))
+        'pending_pre_diagnostic_reviews',case when ${includeCommercial} then (select count(*) from public.pre_diagnostics where human_review_status in ('pending','reviewing')) else 0 end,
+        'initial_readings_waiting_approval',case when ${includeCommercial} then (select count(*) from public.pre_diagnostic_initial_readings where status in ('draft','pending_approval')) else 0 end,
+        'priority_leads',case when ${includeCommercial} then (select count(*) from public.leads where commercial_score>=8 and status not in ('won','lost','archived')) else 0 end,
+        'ai_ready_waiting_human',case when ${includeCommercial} then (select count(*) from public.pre_diagnostics where ai_analysis_status='ready' and human_review_status<>'reviewed') else 0 end,
+        'overdue_project_tasks',case when ${includeProjects} then (select count(*) from public.project_tasks t join public.projects p on p.id=t.project_id where t.status in ('pending','in_progress') and p.status in ('onboarding','active','waiting_client','at_risk') and t.due_at<now()) else 0 end,
+        'project_tasks_due_today',case when ${includeProjects} then (select count(*) from public.project_tasks t join public.projects p on p.id=t.project_id where t.status in ('pending','in_progress') and p.status in ('onboarding','active','waiting_client','at_risk') and (t.due_at at time zone 'America/Bahia')::date=(now() at time zone 'America/Bahia')::date) else 0 end,
+        'waiting_client_project_tasks',case when ${includeProjects} then (select count(*) from public.project_tasks t join public.projects p on p.id=t.project_id where t.status='waiting_client' and p.status in ('onboarding','active','waiting_client','at_risk')) else 0 end,
+        'waiting_partner_project_tasks',case when ${includeProjects} then (select count(*) from public.project_tasks t join public.projects p on p.id=t.project_id where t.status='waiting_partner' and p.status in ('onboarding','active','waiting_client','at_risk')) else 0 end,
+        'blocked_project_tasks',case when ${includeProjects} then (select count(*) from public.project_tasks t join public.projects p on p.id=t.project_id where t.status='blocked' and p.status in ('onboarding','active','waiting_client','at_risk')) else 0 end
       ),
       'actions',coalesce((select jsonb_agg(action_row order by case action_row->>'bucket' when 'do_now' then 0 when 'blocked' then 1 when 'waiting_client' then 2 when 'waiting_partner' then 3 else 4 end,case when nullif(action_row->>'due_at','')::timestamptz<now() then 0 else 1 end,case action_row->>'priority' when 'urgent' then 0 when 'high' then 1 when 'normal' then 2 else 3 end,nullif(action_row->>'due_at','')::timestamptz nulls last,(action_row->>'created_at')::timestamptz) from queue),'[]'::jsonb)
     ) as result
@@ -123,7 +135,8 @@ export async function getBlinkoTodayQueue() {
         from public.approvals a
         join public.projects p on p.id=a.project_id
         join public.companies c on c.id=p.company_id
-        where a.status in ('pending','changes_requested') and p.status in ('onboarding','active','waiting_client','at_risk','completed')
+        where ${includeApprovals}
+          and a.status in ('pending','changes_requested') and p.status in ('onboarding','active','waiting_client','at_risk','completed')
       ),
       finance_queue as (
         select jsonb_build_object(
@@ -137,7 +150,8 @@ export async function getBlinkoTodayQueue() {
         from public.receivables r
         join public.projects p on p.id=r.project_id
         join public.companies c on c.id=p.company_id
-        where r.status in ('pending','overdue') and r.due_date <= (now() at time zone 'America/Bahia')::date
+        where ${includeFinance}
+          and r.status in ('pending','overdue') and r.due_date <= (now() at time zone 'America/Bahia')::date
       ),
       closure_queue as (
         select jsonb_build_object(
@@ -147,7 +161,8 @@ export async function getBlinkoTodayQueue() {
           'project_id',p.id,'project_status',p.status,'responsible_label','Operação'
         ) as action_row
         from public.projects p join public.companies c on c.id=p.company_id
-        where p.status in ('active','waiting_client','at_risk')
+        where ${includeProjects}
+          and p.status in ('active','waiting_client','at_risk')
           and not exists(select 1 from public.project_tasks t where t.project_id=p.id and t.status not in ('done','cancelled'))
           and not exists(select 1 from public.approvals a where a.project_id=p.id and a.status in ('draft','pending','changes_requested'))
           and exists(select 1 from public.project_financial_plans fp where fp.project_id=p.id)
@@ -157,11 +172,11 @@ export async function getBlinkoTodayQueue() {
       )
       select jsonb_build_object(
         'counts',jsonb_build_object(
-          'pending_approvals',(select count(*) from public.approvals where status='pending'),
-          'approvals_changes_requested',(select count(*) from public.approvals where status='changes_requested'),
-          'overdue_receivables',(select count(*) from public.receivables where status='overdue' or (status='pending' and due_date<(now() at time zone 'America/Bahia')::date)),
-          'receivables_due_today',(select count(*) from public.receivables where status='pending' and due_date=(now() at time zone 'America/Bahia')::date),
-          'projects_ready_to_close',(select count(*) from public.projects p where p.status in ('active','waiting_client','at_risk') and not exists(select 1 from public.project_tasks t where t.project_id=p.id and t.status not in ('done','cancelled')) and not exists(select 1 from public.approvals a where a.project_id=p.id and a.status in ('draft','pending','changes_requested')) and exists(select 1 from public.project_financial_plans fp where fp.project_id=p.id))
+          'pending_approvals',case when ${includeApprovals} then (select count(*) from public.approvals where status='pending') else 0 end,
+          'approvals_changes_requested',case when ${includeApprovals} then (select count(*) from public.approvals where status='changes_requested') else 0 end,
+          'overdue_receivables',case when ${includeFinance} then (select count(*) from public.receivables where status='overdue' or (status='pending' and due_date<(now() at time zone 'America/Bahia')::date)) else 0 end,
+          'receivables_due_today',case when ${includeFinance} then (select count(*) from public.receivables where status='pending' and due_date=(now() at time zone 'America/Bahia')::date) else 0 end,
+          'projects_ready_to_close',case when ${includeProjects} then (select count(*) from public.projects p where p.status in ('active','waiting_client','at_risk') and not exists(select 1 from public.project_tasks t where t.project_id=p.id and t.status not in ('done','cancelled')) and not exists(select 1 from public.approvals a where a.project_id=p.id and a.status in ('draft','pending','changes_requested')) and exists(select 1 from public.project_financial_plans fp where fp.project_id=p.id)) else 0 end
         ),
         'actions',coalesce((select jsonb_agg(action_row) from queue),'[]'::jsonb)
       ) as result
