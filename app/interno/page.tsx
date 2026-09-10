@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireInternalSession } from "../../lib/blinko/internal-auth";
+import { hasInternalPermission, requireInternalSession } from "../../lib/blinko/internal-auth";
 import { getCommercialTodayActions } from "../../lib/blinko/commercial-server";
 import { getChangeRequestTodayActions } from "../../lib/blinko/change-requests-today-server";
 import { normalizeBlinkoTodayQueue, type BlinkoTodayAction } from "../../lib/blinko/internal-queue";
@@ -80,8 +80,18 @@ function mergeTodayActions(
 }
 
 export default async function InternalTodayPage() {
-  const session = await requireInternalSession();
-  const [baseRaw, commercial, changes] = await Promise.all([getBlinkoTodayQueue(), getCommercialTodayActions(), getChangeRequestTodayActions()]);
+  const session = await requireInternalSession("dashboard.view");
+  const canCommercial = hasInternalPermission(session, "commercial.view");
+  const canProjects = hasInternalPermission(session, "projects.view");
+  const canApprovals = hasInternalPermission(session, "approvals.view");
+  const canFinance = hasInternalPermission(session, "finance.view");
+  const canChanges = hasInternalPermission(session, "changes.view");
+
+  const [baseRaw, commercial, changes] = await Promise.all([
+    getBlinkoTodayQueue({ commercial: canCommercial, projects: canProjects, approvals: canApprovals, finance: canFinance }),
+    canCommercial ? getCommercialTodayActions() : Promise.resolve({ schemaReady: true, actions: [] as Record<string, unknown>[] }),
+    canChanges ? getChangeRequestTodayActions() : Promise.resolve({ counts: { change_requests_pending_decision: 0, change_requests_ready_for_execution: 0 }, actions: [] }),
+  ]);
   const queue = normalizeBlinkoTodayQueue(mergeTodayActions(baseRaw, commercial.actions, changes.actions, changes.counts));
   const doNow = queue?.actions.filter((action) => action.bucket === "do_now") ?? [];
   const waitingClient = queue?.actions.filter((action) => action.bucket === "waiting_client") ?? [];
@@ -92,23 +102,20 @@ export default async function InternalTodayPage() {
 
   return <main className={styles.page}><div className={styles.shell}>
     <InternalTopbar user={session.user} active="today" />
-    <section className={styles.hero}><span className={styles.eyebrow}>OPERAÇÃO · AGORA</span><h1>Hoje na Blinko.</h1><p>Uma fila única para comercial, execução, alterações, aprovações, financeiro e encerramento. A próxima ação da Oportunidade é a fonte oficial do funil; ações antigas de CRM ficam como workflow de apoio.</p></section>
+    <section className={styles.hero}><span className={styles.eyebrow}>OPERAÇÃO · AGORA</span><h1>Hoje na Blinko.</h1><p>Sua fila consolidada respeita o papel e as permissões atuais. Cada usuário recebe apenas os domínios operacionais que pode consultar.</p></section>
     {!queue ? <div className={styles.empty}>A fila interna não pôde ser carregada com segurança.</div> : <>
       <section className={styles.counts} aria-label="Resumo de hoje">
-        <article className={styles.countCard}><strong>{commercialActions.length}</strong><span>próximas ações comerciais</span></article>
-        <article className={styles.countCard}><strong>{overdueCommercial}</strong><span>ações comerciais vencidas</span></article>
-        <article className={styles.countCard}><strong>{queue.counts.change_requests_pending_decision}</strong><span>alterações aguardando decisão</span></article>
-        <article className={styles.countCard}><strong>{queue.counts.overdue_project_tasks}</strong><span>tarefas de projeto vencidas</span></article>
-        <article className={styles.countCard}><strong>{queue.counts.pending_approvals}</strong><span>aprovações aguardando cliente</span></article>
-        <article className={styles.countCard}><strong>{queue.counts.overdue_receivables}</strong><span>recebíveis vencidos</span></article>
-        <article className={styles.countCard}><strong>{queue.counts.projects_ready_to_close}</strong><span>projetos prontos para encerrar</span></article>
-        <article className={styles.countCard}><strong>{queue.counts.waiting_partner_project_tasks}</strong><span>aguardando parceiro</span></article>
-        <article className={styles.countCard}><strong>{queue.counts.blocked_project_tasks}</strong><span>tarefas bloqueadas</span></article>
+        {canCommercial ? <><article className={styles.countCard}><strong>{commercialActions.length}</strong><span>próximas ações comerciais</span></article><article className={styles.countCard}><strong>{overdueCommercial}</strong><span>ações comerciais vencidas</span></article></> : null}
+        {canChanges ? <article className={styles.countCard}><strong>{queue.counts.change_requests_pending_decision}</strong><span>alterações aguardando decisão</span></article> : null}
+        {canProjects ? <article className={styles.countCard}><strong>{queue.counts.overdue_project_tasks}</strong><span>tarefas de projeto vencidas</span></article> : null}
+        {canApprovals ? <article className={styles.countCard}><strong>{queue.counts.pending_approvals}</strong><span>aprovações aguardando cliente</span></article> : null}
+        {canFinance ? <article className={styles.countCard}><strong>{queue.counts.overdue_receivables}</strong><span>recebíveis vencidos</span></article> : null}
+        {canProjects ? <><article className={styles.countCard}><strong>{queue.counts.projects_ready_to_close}</strong><span>projetos prontos para encerrar</span></article><article className={styles.countCard}><strong>{queue.counts.waiting_partner_project_tasks}</strong><span>aguardando parceiro</span></article><article className={styles.countCard}><strong>{queue.counts.blocked_project_tasks}</strong><span>tarefas bloqueadas</span></article></> : null}
       </section>
-      <div className={styles.sectionTitle}><h2>Preciso fazer</h2><span>atualizada em {new Date(queue.generated_at).toLocaleString("pt-BR", { timeZone: "America/Bahia" })}</span></div><ActionList actions={doNow} empty="Nenhuma ação executável pendente neste momento." />
-      <div className={styles.sectionTitle}><h2>Aguardando cliente</h2><span>inclui materiais, respostas e aprovações pendentes</span></div><ActionList actions={waitingClient} empty="Nenhuma tarefa ou aprovação está aguardando cliente neste momento." />
-      <div className={styles.sectionTitle}><h2>Aguardando parceiro</h2><span>depende de fornecedor, especialista ou parceiro coordenado</span></div><ActionList actions={waitingPartner} empty="Nenhuma tarefa está aguardando parceiro neste momento." />
-      <div className={styles.sectionTitle}><h2>Bloqueado</h2><span>exige ação de desbloqueio e próxima checagem definida</span></div><ActionList actions={blocked} empty="Nenhuma tarefa está bloqueada neste momento." />
+      <div className={styles.sectionTitle}><h2>Preciso fazer</h2><span>atualizada em {new Date(queue.generated_at).toLocaleString("pt-BR", { timeZone: "America/Bahia" })}</span></div><ActionList actions={doNow} empty="Nenhuma ação executável permitida para seu papel neste momento." />
+      <div className={styles.sectionTitle}><h2>Aguardando cliente</h2><span>itens visíveis conforme suas permissões</span></div><ActionList actions={waitingClient} empty="Nenhum item permitido está aguardando cliente neste momento." />
+      <div className={styles.sectionTitle}><h2>Aguardando parceiro</h2><span>itens visíveis conforme suas permissões</span></div><ActionList actions={waitingPartner} empty="Nenhum item permitido está aguardando parceiro neste momento." />
+      <div className={styles.sectionTitle}><h2>Bloqueado</h2><span>itens visíveis conforme suas permissões</span></div><ActionList actions={blocked} empty="Nenhum item permitido está bloqueado neste momento." />
     </>}
   </div></main>;
 }
