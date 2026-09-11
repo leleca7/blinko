@@ -3,12 +3,15 @@ import { notFound } from "next/navigation";
 import { requireInternalSession } from "../../../../lib/blinko/internal-auth";
 import { BLINKO_DIAGNOSTIC_PILLARS } from "../../../../lib/blinko/diagnostic-collection";
 import { getDiagnosticWorkspace } from "../../../../lib/blinko/diagnostic-collection-server";
+import { getStructuredDiagnosticWorkspace } from "../../../../lib/blinko/diagnostic-structured-server";
 import InternalBrand from "../../InternalBrand";
 import styles from "../../interno.module.css";
 import DiagnosticAnalysisSection from "./DiagnosticAnalysisSection";
 import DiagnosticStrategySection from "./DiagnosticStrategySection";
 import DiagnosticProposalSection from "./DiagnosticProposalSection";
+import ProposalPartnerSection from "./ProposalPartnerSection";
 import ProposalExecutionSection from "./ProposalExecutionSection";
+import DiagnosticStructuredSection from "./DiagnosticStructuredSection";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -32,10 +35,16 @@ function list(value: unknown) {
 }
 
 function notice(status?: string) {
-  if (status === "collection_saved") return "Nova versão da coleta registrada. A versão anterior foi preservada.";
-  if (status === "collection_incomplete") return "Revise os 7 pilares. Pilar coletado precisa de evidência ou lacuna registrada; pilar insuficiente precisa explicar o que falta.";
+  if (status === "collection_saved") return "Nova versão da coleta registrada e preservada. Quando o diagnóstico estruturado estiver disponível, os 114 itens desta versão já nascem como NV.";
+  if (status === "collection_incomplete") return "Revise a coleta narrativa. Pilar coletado precisa de evidência ou lacuna registrada; pilar insuficiente precisa explicar o que falta.";
   if (status === "collection_failed") return "A coleta não foi salva. Nenhum dado anterior foi apagado.";
-  if (status === "diagnostic_schema_pending") return "A estrutura do Diagnóstico Blinko ainda aguarda aplicação das migrações no Neon principal.";
+  if (status === "diagnostic_schema_pending") return "A estrutura-base do Diagnóstico Blinko ainda aguarda aplicação das migrações no Neon principal.";
+  if (status === "structured_initialized") return "Os 114 itens oficiais foram inicializados como NV para a versão atual.";
+  if (status === "structured_item_saved") return "Item do Diagnóstico Blinko atualizado. Pontuação, completude e alertas foram recalculados automaticamente.";
+  if (status === "structured_item_invalid") return "O item estruturado não foi salvo porque os dados ou a versão da coleta são inválidos.";
+  if (status === "structured_item_locked") return "A pontuação estruturada está bloqueada porque o diagnóstico já saiu das etapas de coleta/análise.";
+  if (status === "structured_item_failed") return "O item estruturado não foi salvo. Nenhum dado anterior foi apagado.";
+  if (status === "structured_schema_pending") return "O ambiente conectado ainda não possui as migrações 019–020 do diagnóstico estruturado.";
   if (status === "analysis_ready") return "Coleta encerrada como etapa atual. O diagnóstico avançou para análise.";
   if (status === "analysis_blocked") return "Salve ao menos uma versão válida da coleta antes de avançar para análise.";
   if (status === "deep_analysis_ready") return "A Blinko AI concluiu o rascunho analítico profundo. Agora ele precisa de revisão humana.";
@@ -66,11 +75,18 @@ function notice(status?: string) {
   if (status === "proposal_review_blocked") return "A proposta atual não está em estado de rascunho para iniciar revisão.";
   if (status === "proposal_incomplete") return "Complete escopo, responsabilidades, prazo, investimento, condições e validade antes da revisão interna.";
   if (status === "proposal_approval_confirmation_required") return "Confirme explicitamente a revisão interna antes de aprovar a proposta.";
-  if (status === "proposal_approval_blocked") return "A proposta não está pronta para aprovação interna.";
+  if (status === "proposal_approval_blocked") return "A proposta não está pronta para aprovação interna. Revise também as rotas, parceiros e cotações aplicáveis.";
   if (status === "proposal_approved_internal") return "Proposta aprovada internamente. O envio externo continua bloqueado até uma decisão humana específica.";
+  if (status === "proposal_route_saved") return "Rota de execução da intervenção registrada. Se a rota envolver terceiros, valide parceiro e cotação antes da aprovação interna.";
+  if (status === "partner_commitment_saved") return "Compromisso/cotação do parceiro registrado. Ainda exige validação humana antes de liberar a proposta.";
+  if (status === "partner_commitment_approved") return "Compromisso do parceiro validado com evidência humana para esta proposta.";
+  if (status === "partner_quote_revalidated") return "Cotação do parceiro revalidada sem alterar parceiro, escopo ou custo da proposta.";
+  if (status === "partner_action_invalid") return "Revise os dados de rota, parceiro, cotação e confirmação antes de salvar.";
+  if (status === "partner_action_blocked") return "A ação de parceiro foi bloqueada por elegibilidade, capacidade, cotação, rota ou estado da proposta.";
+  if (status === "partner_schema_pending") return "A governança de parceiros depende das migrações 037–039 no banco conectado.";
   if (status === "proposal_external_recorded") return "Fato externo da proposta registrado no histórico. Nenhuma comunicação foi disparada pelo OS.";
   if (status === "proposal_external_invalid") return "Confirme o fato, informe data e uma referência verificável antes de registrar.";
-  if (status === "proposal_external_blocked") return "O fato externo não foi registrado porque a proposta não está no estado correto.";
+  if (status === "proposal_external_blocked") return "O fato externo não foi registrado porque a proposta, rota, parceiro ou cotação não está no estado correto.";
   if (status === "project_contract_invalid") return "Complete os dados e confirme a contratação real antes de criar o projeto.";
   if (status === "project_contract_blocked") return "O projeto só pode ser criado depois que a proposta estiver registrada como aceita.";
   return null;
@@ -82,7 +98,10 @@ export default async function DiagnosticPage({ params, searchParams }: Props) {
   const query = searchParams ? await searchParams : {};
   if (!uuidPattern.test(id)) notFound();
 
-  const workspace = await getDiagnosticWorkspace(id);
+  const [workspace, structured] = await Promise.all([
+    getDiagnosticWorkspace(id),
+    getStructuredDiagnosticWorkspace(id),
+  ]);
   const statusNotice = notice(query.status);
 
   if (!workspace.schemaReady) {
@@ -96,8 +115,8 @@ export default async function DiagnosticPage({ params, searchParams }: Props) {
           <div className={styles.reviewShell}>
             <section className={styles.reviewCard}>
               <span className={styles.eyebrow}>DIAGNÓSTICO BLINKO</span>
-              <h1>Coleta dos 7 pilares</h1>
-              <div className={styles.notice}>A interface está pronta, mas as migrações 003 a 008 ainda não foram aplicadas ao Neon principal. Nenhum dado será simulado.</div>
+              <h1>Coleta do diagnóstico</h1>
+              <div className={styles.notice}>A interface está pronta, mas as migrações-base do Diagnóstico Blinko ainda não foram aplicadas ao banco conectado.</div>
             </section>
           </div>
         </div>
@@ -137,7 +156,7 @@ export default async function DiagnosticPage({ params, searchParams }: Props) {
             <span className={styles.eyebrow}>DIAGNÓSTICO BLINKO · COLETA</span>
             <h1 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 42, fontWeight: 500, marginBottom: 8 }}>{companyName}</h1>
             <p style={{ opacity: .7, maxWidth: 900, lineHeight: 1.55 }}>
-              Registre o que existe de evidência, os sinais percebidos e o que ainda precisa ser validado. Coleta não confirma causa e não escolhe intervenção.
+              A coleta narrativa preserva contexto; a camada oficial abaixo transforma as 114 perguntas do Documento 03 em pontuação, completude, evidência e achados rastreáveis.
             </p>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 16 }}>
               <span className={styles.badge}>Status: {diagnosticStatus}</span>
@@ -146,59 +165,58 @@ export default async function DiagnosticPage({ params, searchParams }: Props) {
             </div>
           </section>
 
-          <form action={`/api/interno/diagnosticos/${id}/collection`} method="post" style={{ display: "grid", gap: 18 }}>
-            <section className={styles.reviewCard}>
-              <span className={styles.eyebrow}>CONTEXTO DA EMPRESA</span>
-              <h2>Base para interpretar os pilares</h2>
-              <div className={styles.form}>
-                <label>Modelo de negócio<textarea name="business_model" rows={4} defaultValue={text(companyContext.business_model)} /></label>
-                <label>Público principal<textarea name="target_public" rows={4} defaultValue={text(companyContext.target_public)} /></label>
-                <label>Oferta principal<textarea name="main_offer" rows={4} defaultValue={text(companyContext.main_offer)} /></label>
-                <label>Objetivo atual<textarea name="current_goal" rows={4} defaultValue={text(companyContext.current_goal) || text(workspace.company?.objective) || text(workspace.lead?.objective)} /></label>
-                <label>Restrições e contexto relevante<textarea name="constraints" rows={5} defaultValue={text(companyContext.constraints)} /></label>
-              </div>
-            </section>
+          <DiagnosticStructuredSection diagnosticId={id} canEdit={canEdit} structured={structured} />
 
-            {BLINKO_DIAGNOSTIC_PILLARS.map((pillar, index) => {
-              const current = record(pillarValues[pillar.key]) ?? {};
-              const currentStatus = text(current.status) === "insufficient" ? "insufficient" : "collected";
-              return (
-                <section key={pillar.key} className={styles.reviewCard}>
-                  <span className={styles.eyebrow}>PILAR {index + 1} DE 7</span>
-                  <h2 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 34, fontWeight: 500 }}>{pillar.label}</h2>
-                  <div className={styles.form}>
-                    <label>
-                      Estado da coleta
-                      <select name={`${pillar.key}_status`} defaultValue={currentStatus}>
-                        <option value="collected">Coletado</option>
-                        <option value="insufficient">Informação insuficiente</option>
-                      </select>
-                    </label>
-                    <label>Evidências e fatos observáveis<textarea name={`${pillar.key}_evidence`} rows={6} defaultValue={text(current.evidence)} placeholder="Dados, documentos, processos observados, exemplos verificáveis." /></label>
-                    <label>Sinais percebidos<textarea name={`${pillar.key}_signals`} rows={5} defaultValue={text(current.signals)} placeholder="Sinais que merecem investigação. Não registrar como causa confirmada." /></label>
-                    <label>O que ainda falta validar<textarea name={`${pillar.key}_missing`} rows={5} defaultValue={text(current.missing)} placeholder="Informações, documentos ou pessoas que ainda precisamos consultar." /></label>
-                    <label>Perguntas de validação<textarea name={`${pillar.key}_questions`} rows={5} defaultValue={text(current.validation_questions)} /></label>
-                  </div>
-                </section>
-              );
-            })}
+          <details style={{ border: "1px solid rgba(1,48,30,.12)", borderRadius: 18, padding: 16, background: "rgba(255,255,255,.5)" }}>
+            <summary style={{ cursor: "pointer", fontWeight: 700 }}>Coleta narrativa de apoio / compatibilidade</summary>
+            <form action={`/api/interno/diagnosticos/${id}/collection`} method="post" style={{ display: "grid", gap: 18, marginTop: 18 }}>
+              <section className={styles.reviewCard}>
+                <span className={styles.eyebrow}>CONTEXTO DA EMPRESA</span>
+                <h2>Base para interpretar os itens</h2>
+                <div className={styles.form}>
+                  <label>Modelo de negócio<textarea name="business_model" rows={4} defaultValue={text(companyContext.business_model)} /></label>
+                  <label>Público principal<textarea name="target_public" rows={4} defaultValue={text(companyContext.target_public)} /></label>
+                  <label>Oferta principal<textarea name="main_offer" rows={4} defaultValue={text(companyContext.main_offer)} /></label>
+                  <label>Objetivo atual<textarea name="current_goal" rows={4} defaultValue={text(companyContext.current_goal) || text(workspace.company?.objective) || text(workspace.lead?.objective)} /></label>
+                  <label>Restrições e contexto relevante<textarea name="constraints" rows={5} defaultValue={text(companyContext.constraints)} /></label>
+                </div>
+              </section>
 
-            <section className={styles.reviewCard}>
-              <span className={styles.eyebrow}>EVIDÊNCIAS E LACUNAS GERAIS</span>
-              <div className={styles.form}>
-                <label>Referências de evidência, uma por linha<textarea name="general_evidence" rows={6} defaultValue={list(collection?.general_evidence).join("\n")} placeholder="Ex.: Relatório financeiro jan-jun; pasta Drive /Cliente/Financeiro; entrevista com responsável operacional." /></label>
-                <label>Informações ainda pendentes, uma por linha<textarea name="missing_information" rows={6} defaultValue={list(collection?.missing_information).join("\n")} /></label>
-                <label>Notas de reunião e contexto<textarea name="meeting_notes" rows={8} defaultValue={text(collection?.meeting_notes)} /></label>
-                <div className={styles.notice}>Salvar cria uma nova versão. A versão anterior não é sobrescrita.</div>
-                <button className={styles.button} type="submit" disabled={!canEdit}>Salvar nova versão da coleta</button>
-              </div>
-            </section>
-          </form>
+              {BLINKO_DIAGNOSTIC_PILLARS.map((pillar, index) => {
+                const current = record(pillarValues[pillar.key]) ?? {};
+                const currentStatus = text(current.status) === "insufficient" ? "insufficient" : "collected";
+                return (
+                  <section key={pillar.key} className={styles.reviewCard}>
+                    <span className={styles.eyebrow}>BLOCO NARRATIVO {index + 1} DE 7</span>
+                    <h2 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 34, fontWeight: 500 }}>{pillar.label}</h2>
+                    <div className={styles.form}>
+                      <label>Estado da coleta<select name={`${pillar.key}_status`} defaultValue={currentStatus}><option value="collected">Coletado</option><option value="insufficient">Informação insuficiente</option></select></label>
+                      <label>Evidências e fatos observáveis<textarea name={`${pillar.key}_evidence`} rows={6} defaultValue={text(current.evidence)} placeholder="Dados, documentos, processos observados, exemplos verificáveis." /></label>
+                      <label>Sinais percebidos<textarea name={`${pillar.key}_signals`} rows={5} defaultValue={text(current.signals)} placeholder="Sinais que merecem investigação. Não registrar como causa confirmada." /></label>
+                      <label>O que ainda falta validar<textarea name={`${pillar.key}_missing`} rows={5} defaultValue={text(current.missing)} placeholder="Informações, documentos ou pessoas que ainda precisamos consultar." /></label>
+                      <label>Perguntas de validação<textarea name={`${pillar.key}_questions`} rows={5} defaultValue={text(current.validation_questions)} /></label>
+                    </div>
+                  </section>
+                );
+              })}
+
+              <section className={styles.reviewCard}>
+                <span className={styles.eyebrow}>EVIDÊNCIAS E LACUNAS GERAIS</span>
+                <div className={styles.form}>
+                  <label>Referências de evidência, uma por linha<textarea name="general_evidence" rows={6} defaultValue={list(collection?.general_evidence).join("\n")} /></label>
+                  <label>Informações ainda pendentes, uma por linha<textarea name="missing_information" rows={6} defaultValue={list(collection?.missing_information).join("\n")} /></label>
+                  <label>Notas de reunião e contexto<textarea name="meeting_notes" rows={8} defaultValue={text(collection?.meeting_notes)} /></label>
+                  <div className={styles.notice}>Salvar cria nova versão. A anterior não é sobrescrita; a nova versão estruturada inicia com 114 NV quando 019–020 estiverem disponíveis.</div>
+                  <button className={styles.button} type="submit" disabled={!canEdit}>Salvar nova versão da coleta</button>
+                </div>
+              </section>
+            </form>
+          </details>
 
           <section className={styles.reviewCard} style={{ borderColor: "rgba(1,48,30,.24)", background: "rgba(1,48,30,.035)" }}>
             <span className={styles.eyebrow}>PRÓXIMA ETAPA</span>
             <h2>Análise do Diagnóstico Blinko</h2>
-            <p style={{ opacity: .7, lineHeight: 1.55, maxWidth: 860 }}>Só avance quando os sete pilares tiverem sido percorridos. “Informação insuficiente” é uma resposta válida quando a lacuna estiver explicitamente registrada.</p>
+            <p style={{ opacity: .7, lineHeight: 1.55, maxWidth: 860 }}>Antes de avançar, revise a completude dos dez pilares oficiais. Pilares com mais de 20% de NV ficam inconclusivos automaticamente.</p>
             {diagnosticStatus === "collection" ? (
               <form action={`/api/interno/diagnosticos/${id}/advance-analysis`} method="post">
                 <button className={styles.button} type="submit" disabled={!currentVersion}>Encerrar coleta atual e avançar para análise</button>
@@ -211,6 +229,7 @@ export default async function DiagnosticPage({ params, searchParams }: Props) {
           <DiagnosticAnalysisSection diagnosticId={id} />
           <DiagnosticStrategySection diagnosticId={id} />
           <DiagnosticProposalSection diagnosticId={id} />
+          <ProposalPartnerSection diagnosticId={id} />
           <ProposalExecutionSection diagnosticId={id} />
         </div>
       </div>

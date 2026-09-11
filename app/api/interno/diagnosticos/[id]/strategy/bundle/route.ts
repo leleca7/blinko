@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
-import { getInternalSession } from "../../../../../../../lib/blinko/internal-auth";
+import { requireInternalSession } from "../../../../../../../lib/blinko/internal-auth";
 import { BLINKO_DIAGNOSTIC_PILLARS } from "../../../../../../../lib/blinko/diagnostic-collection";
-import {
-  getDiagnosticStrategyContext,
-  isDiagnosticStrategySchemaPending,
-  recordDiagnosticStrategyBundle,
-} from "../../../../../../../lib/blinko/diagnostic-strategy-server";
+import { getDiagnosticStrategyContext, isDiagnosticStrategySchemaPending, recordDiagnosticStrategyBundle } from "../../../../../../../lib/blinko/diagnostic-strategy-server";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const pillarKeys = new Set(BLINKO_DIAGNOSTIC_PILLARS.map((item) => item.key));
@@ -17,29 +13,13 @@ const effortValues = new Set(["low", "medium", "high"]);
 const riskValues = new Set(["low", "medium", "high"]);
 const priorityStatusValues = new Set(["proposed", "selected", "deferred", "done"]);
 const interventionStatusValues = new Set(["candidate", "selected", "approved_for_proposal", "discarded"]);
-
 type Context = { params: Promise<{ id: string }> };
-
-function field(form: FormData, name: string, max = 7000) {
-  return String(form.get(name) ?? "").trim().slice(0, max);
-}
-
-function lines(form: FormData, name: string, maxItems = 40) {
-  return field(form, name, 14000)
-    .split(/\r?\n/)
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .slice(0, maxItems);
-}
-
-function allowed(value: string, values: Set<string>, fallback: string) {
-  return values.has(value) ? value : fallback;
-}
+function field(form: FormData, name: string, max = 7000) { return String(form.get(name) ?? "").trim().slice(0, max); }
+function lines(form: FormData, name: string, maxItems = 40) { return field(form, name, 14000).split(/\r?\n/).map((item) => item.trim()).filter(Boolean).slice(0, maxItems); }
+function allowed(value: string, values: Set<string>, fallback: string) { return values.has(value) ? value : fallback; }
 
 export async function POST(request: Request, context: Context) {
-  const session = await getInternalSession();
-  if (!session) return NextResponse.redirect(new URL("/interno/login", request.url), 303);
-
+  const session = await requireInternalSession("diagnostics.manage");
   const { id } = await context.params;
   if (!uuidPattern.test(id)) return NextResponse.json({ ok: false }, { status: 404 });
 
@@ -48,11 +28,9 @@ export async function POST(request: Request, context: Context) {
   const problemDescription = field(form, "problem_description", 5000);
   const problemEvidence = lines(form, "problem_evidence", 30);
   const problemStatus = allowed(field(form, "problem_status", 40), problemStatusValues, "candidate");
-
   const causeDescription = field(form, "cause_description", 5000);
   const causeEvidence = lines(form, "cause_evidence", 30);
   const causeStatus = allowed(field(form, "cause_status", 40), causeStatusValues, "hypothesis");
-
   const priorityRationale = field(form, "priority_rationale", 5000);
   const interventionTitle = field(form, "intervention_title", 240);
   const interventionObjective = field(form, "intervention_objective", 5000);
@@ -64,22 +42,14 @@ export async function POST(request: Request, context: Context) {
   const invalidCauseConfirmation = causeStatus === "confirmed" && causeEvidence.length === 0;
   const interventionIncomplete = Boolean(interventionTitle) && (!interventionObjective || !interventionScope);
   const selectedInterventionWithoutPriority = ["selected", "approved_for_proposal"].includes(interventionStatus) && !priorityRationale;
-
-  if (!problemTitle || !problemDescription || invalidConfirmation || invalidCauseConfirmation || interventionIncomplete || selectedInterventionWithoutPriority) {
-    return NextResponse.redirect(new URL(`/interno/diagnosticos/${id}?status=strategy_invalid`, request.url), 303);
-  }
+  if (!problemTitle || !problemDescription || invalidConfirmation || invalidCauseConfirmation || interventionIncomplete || selectedInterventionWithoutPriority) return NextResponse.redirect(new URL(`/interno/diagnosticos/${id}?status=strategy_invalid`, request.url), 303);
 
   try {
     const strategyContext = await getDiagnosticStrategyContext(id);
-    if (!strategyContext.schemaReady) {
-      return NextResponse.redirect(new URL(`/interno/diagnosticos/${id}?status=diagnostic_schema_pending`, request.url), 303);
-    }
-
+    if (!strategyContext.schemaReady) return NextResponse.redirect(new URL(`/interno/diagnosticos/${id}?status=diagnostic_schema_pending`, request.url), 303);
     const diagnosticStatus = typeof strategyContext.diagnostic?.status === "string" ? strategyContext.diagnostic.status : "";
     const reviewId = typeof strategyContext.currentReview?.id === "string" ? strategyContext.currentReview.id : "";
-    if (diagnosticStatus !== "review" || !uuidPattern.test(reviewId)) {
-      return NextResponse.redirect(new URL(`/interno/diagnosticos/${id}?status=strategy_review_required`, request.url), 303);
-    }
+    if (diagnosticStatus !== "review" || !uuidPattern.test(reviewId)) return NextResponse.redirect(new URL(`/interno/diagnosticos/${id}?status=strategy_review_required`, request.url), 303);
 
     const primaryPillarRaw = field(form, "problem_primary_pillar", 60);
     const relatedPillars = lines(form, "problem_related_pillars", 7).filter((item) => pillarKeys.has(item as never));
@@ -135,12 +105,9 @@ export async function POST(request: Request, context: Context) {
         status: interventionStatus,
       },
     });
-
     return NextResponse.redirect(new URL(`/interno/diagnosticos/${id}?status=strategy_saved`, request.url), 303);
   } catch (error) {
-    if (isDiagnosticStrategySchemaPending(error)) {
-      return NextResponse.redirect(new URL(`/interno/diagnosticos/${id}?status=diagnostic_schema_pending`, request.url), 303);
-    }
+    if (isDiagnosticStrategySchemaPending(error)) return NextResponse.redirect(new URL(`/interno/diagnosticos/${id}?status=diagnostic_schema_pending`, request.url), 303);
     console.error("Blinko OS: falha ao registrar estrutura estratégica", error);
     return NextResponse.redirect(new URL(`/interno/diagnosticos/${id}?status=strategy_failed`, request.url), 303);
   }

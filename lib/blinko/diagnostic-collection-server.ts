@@ -110,7 +110,20 @@ export async function recordDiagnosticCollectionVersion(input: {
       ${input.payload.meeting_notes}
     ) as result
   `;
-  return rows[0]?.result as string;
+  const collectionVersionId = rows[0]?.result as string;
+
+  // Compatibilidade progressiva: quando 019–020 estiverem disponíveis,
+  // toda nova versão já nasce com os 114 itens em NV. Antes disso, a
+  // coleta narrativa continua funcionando normalmente.
+  if (collectionVersionId) {
+    try {
+      await sql`select public.initialize_diagnostic_structured_collection(${collectionVersionId}::uuid,${input.actorLabel})`;
+    } catch (error) {
+      if (!["42P01", "42703", "42883"].includes(errorCode(error))) throw error;
+    }
+  }
+
+  return collectionVersionId;
 }
 
 export async function advanceDiagnosticToAnalysis(input: {

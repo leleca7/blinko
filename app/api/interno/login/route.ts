@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import {
   BLINKO_INTERNAL_COOKIE,
+  authenticateInternalCredentials,
   createInternalSessionToken,
-  isInternalAccessConfigured,
-  verifyInternalCredentials,
+  getInternalAccessMode,
 } from "../../../../lib/blinko/internal-auth";
 
 function safeNext(value: FormDataEntryValue | null) {
@@ -17,16 +17,18 @@ export async function POST(request: Request) {
   const password = typeof form.get("password") === "string" ? String(form.get("password")) : "";
   const next = safeNext(form.get("next"));
 
-  if (!isInternalAccessConfigured()) {
+  const mode = await getInternalAccessMode();
+  if (mode === "unconfigured") {
     return NextResponse.redirect(new URL("/interno/login?status=setup", request.url), 303);
   }
 
-  if (!verifyInternalCredentials(user, password)) {
+  const identity = await authenticateInternalCredentials(user, password);
+  if (!identity) {
     return NextResponse.redirect(new URL(`/interno/login?status=invalid&next=${encodeURIComponent(next)}`, request.url), 303);
   }
 
   const response = NextResponse.redirect(new URL(next, request.url), 303);
-  response.cookies.set(BLINKO_INTERNAL_COOKIE, createInternalSessionToken(user.trim()), {
+  response.cookies.set(BLINKO_INTERNAL_COOKIE, createInternalSessionToken(identity), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
