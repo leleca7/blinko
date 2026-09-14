@@ -165,6 +165,38 @@ export async function getWhatsAppConversationWorkspace(conversationId: string): 
   }
 }
 
+export async function recordWhatsAppInboundMessage(input: {
+  provider: string;
+  providerAccountId: string;
+  providerConversationId?: string | null;
+  providerMessageId: string;
+  phone: string;
+  contactName?: string | null;
+  messageType: string;
+  body?: string | null;
+  media?: Record<string, unknown>;
+  occurredAt: string;
+  metadata?: Record<string, unknown>;
+}) {
+  const sql = getSql();
+  const rows = await sql`
+    select public.record_whatsapp_inbound_message(
+      ${input.provider},
+      ${input.providerAccountId},
+      ${input.providerConversationId ?? ""},
+      ${input.providerMessageId},
+      ${input.phone},
+      ${input.contactName ?? ""},
+      ${input.messageType},
+      ${input.body ?? ""},
+      ${JSON.stringify(input.media ?? {})}::jsonb,
+      ${input.occurredAt}::timestamptz,
+      ${JSON.stringify(input.metadata ?? {})}::jsonb
+    ) as result
+  `;
+  return rows[0]?.result as Record<string, unknown>;
+}
+
 export async function linkWhatsAppConversation(input: {
   conversationId: string;
   leadId?: string | null;
@@ -222,10 +254,50 @@ export async function approveWhatsAppOutboundDraft(input: { messageId: string; a
   return rows[0]?.result as string;
 }
 
+export async function getWhatsAppOutboundMessageForSend(input: { conversationId: string; messageId: string }) {
+  const sql = getSql();
+  const rows = await sql`
+    select
+      m.id,
+      m.conversation_id,
+      m.message_type,
+      m.body,
+      m.media,
+      m.status,
+      c.phone_e164,
+      c.provider,
+      c.provider_account_id,
+      c.status as conversation_status
+    from public.whatsapp_messages m
+    join public.whatsapp_conversations c on c.id = m.conversation_id
+    where m.id = ${input.messageId}::uuid
+      and m.conversation_id = ${input.conversationId}::uuid
+      and m.direction = 'outbound'
+      and m.status = 'approved'
+      and c.status <> 'archived'
+    limit 1
+  `;
+  return record(rows[0]) ?? null;
+}
+
+export async function findWhatsAppMessageByProviderId(providerMessageId: string) {
+  const sql = getSql();
+  const rows = await sql`
+    select id, conversation_id, status
+    from public.whatsapp_messages
+    where provider_message_id = ${providerMessageId}
+    order by created_at desc
+    limit 2
+  `;
+  if (rows.length !== 1) return null;
+  return record(rows[0]);
+}
+
 export async function recordWhatsAppOutboundSent(input: {
   messageId: string;
   providerMessageId?: string;
   actorLabel: string;
+  metadata?: Record<string, unknown>;
 }) {
   const sql = getSql();
   const rows = await sql`
@@ -234,7 +306,29 @@ export async function recordWhatsAppOutboundSent(input: {
       ${input.providerMessageId ?? ""},
       ${input.actorLabel},
       now(),
-      '{}'::jsonb
+      ${JSON.stringify(input.metadata ?? {})}::jsonb
+    ) as result
+  `;
+  return rows[0]?.result as string;
+}
+
+export async function recordWhatsAppDeliveryStatus(input: {
+  messageId: string;
+  status: "queued" | "sent" | "delivered" | "read" | "failed";
+  providerEventId?: string | null;
+  occurredAt: string;
+  errorDetail?: string | null;
+  metadata?: Record<string, unknown>;
+}) {
+  const sql = getSql();
+  const rows = await sql`
+    select public.record_whatsapp_delivery_status(
+      ${input.messageId}::uuid,
+      ${input.status},
+      ${input.providerEventId ?? ""},
+      ${input.occurredAt}::timestamptz,
+      ${input.errorDetail ?? ""},
+      ${JSON.stringify(input.metadata ?? {})}::jsonb
     ) as result
   `;
   return rows[0]?.result as string;
