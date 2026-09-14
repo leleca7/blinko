@@ -24,7 +24,7 @@ function notice(status?: string) {
   if (status === "activation_confirmation_required") return "Confirme explicitamente a revisão do onboarding antes de ativar o projeto.";
   if (status === "activation_blocked") return "O projeto precisa estar em onboarding e ter ao menos uma tarefa inicial antes da ativação.";
   if (status === "project_activated") return "Projeto ativado. A execução inicial está oficialmente em andamento no Blinko OS.";
-  if (status === "execution_schema_pending") return "A estrutura da execução ainda aguarda aplicação da migração 008 no Neon.";
+  if (status === "execution_schema_pending") return "A estrutura da execução ainda aguarda aplicação das migrações mais recentes no Neon.";
   return null;
 }
 
@@ -48,7 +48,7 @@ export default async function ProjectPage({ params, searchParams }: Props) {
 
   if (!workspace.schemaReady) {
     return (
-      <main className={styles.page}><div className={styles.shell}><header className={styles.topbar}><InternalBrand /><nav className={styles.nav}><span className={styles.link}>{session.user}</span></nav></header><div className={styles.reviewShell}><section className={styles.reviewCard}><span className={styles.eyebrow}>PROJETO BLINKO</span><h1>Execução inicial</h1><div className={styles.notice}>A interface está pronta, mas a migração 008 ainda não foi aplicada ao Neon. Nenhum projeto será simulado.</div></section></div></div></main>
+      <main className={styles.page}><div className={styles.shell}><header className={styles.topbar}><InternalBrand /><nav className={styles.nav}><span className={styles.link}>{session.user}</span></nav></header><div className={styles.reviewShell}><section className={styles.reviewCard}><span className={styles.eyebrow}>PROJETO BLINKO</span><h1>Execução inicial</h1><div className={styles.notice}>A interface está pronta, mas a estrutura mais recente da execução ainda não foi aplicada ao Neon. Nenhum projeto será simulado.</div></section></div></div></main>
     );
   }
 
@@ -58,6 +58,11 @@ export default async function ProjectPage({ params, searchParams }: Props) {
   const projectStatus = text(project.status);
   const companyName = text(workspace.company?.name) || "Empresa";
   const diagnosticId = text(workspace.diagnostic?.id);
+  const directOpportunity = workspace.directOpportunity;
+  const directOpportunityId = text(directOpportunity?.id);
+  const opportunityType = text(directOpportunity?.opportunity_type);
+  const productCode = text(directOpportunity?.product_code);
+  const source = text(directOpportunity?.source);
   const canAddTask = ["onboarding", "active", "waiting_client", "at_risk"].includes(projectStatus);
   const canActivate = projectStatus === "onboarding" && workspace.tasks.length > 0;
 
@@ -84,18 +89,33 @@ export default async function ProjectPage({ params, searchParams }: Props) {
               <span className={styles.badge}>Início: {text(project.start_date)}</span>
               <span className={styles.badge}>Janela: {text(project.target_timeframe)}</span>
               <span className={styles.badge}>Tarefas: {workspace.tasks.length}</span>
+              {directOpportunityId ? <span className={styles.badge}>Origem: venda direta</span> : null}
+              {productCode ? <span className={styles.badge}>Produto: {productCode}</span> : null}
             </div>
           </section>
 
-          <section className={styles.reviewCard}>
-            <span className={styles.eyebrow}>INTERVENÇÕES CONTRATADAS</span>
-            <h2>Escopo que originou este ciclo</h2>
-            {workspace.interventions.length ? (
+          {directOpportunityId ? (
+            <section className={styles.reviewCard}>
+              <span className={styles.eyebrow}>VENDA DIRETA</span>
+              <h2>Produto que originou este ciclo</h2>
               <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
-                {workspace.interventions.map((item) => <article key={text(item.id)} style={{ padding: 16, border: "1px solid rgba(1,48,30,.12)", borderRadius: 16, background: "rgba(255,255,255,.5)" }}><strong>{text(item.title)}</strong><p style={{ marginBottom: 0, opacity: .7 }}>{text(item.objective)}</p></article>)}
+                <article style={{ padding: 16, border: "1px solid rgba(1,48,30,.12)", borderRadius: 16, background: "rgba(255,255,255,.5)" }}>
+                  <strong>{productCode || "Produto direto"}</strong>
+                  <p style={{ marginBottom: 0, opacity: .7 }}>Tipo: {opportunityType || "venda direta"}{source ? ` · Origem: ${source}` : ""}</p>
+                </article>
               </div>
-            ) : <div className={styles.notice}>Nenhuma intervenção vinculada foi encontrada.</div>}
-          </section>
+            </section>
+          ) : (
+            <section className={styles.reviewCard}>
+              <span className={styles.eyebrow}>INTERVENÇÕES CONTRATADAS</span>
+              <h2>Escopo que originou este ciclo</h2>
+              {workspace.interventions.length ? (
+                <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
+                  {workspace.interventions.map((item) => <article key={text(item.id)} style={{ padding: 16, border: "1px solid rgba(1,48,30,.12)", borderRadius: 16, background: "rgba(255,255,255,.5)" }}><strong>{text(item.title)}</strong><p style={{ marginBottom: 0, opacity: .7 }}>{text(item.objective)}</p></article>)}
+                </div>
+              ) : <div className={styles.notice}>Nenhuma intervenção vinculada foi encontrada.</div>}
+            </section>
+          )}
 
           <section className={styles.reviewCard}>
             <span className={styles.eyebrow}>TAREFAS INICIAIS</span>
@@ -137,7 +157,7 @@ export default async function ProjectPage({ params, searchParams }: Props) {
             </section>
           ) : null}
 
-          {projectStatus === "active" ? <section className={styles.reviewCard}><span className={styles.eyebrow}>V1 CONCLUÍDA</span><h2>Execução inicial ativa</h2><div className={styles.notice}>O fluxo central da V1 chegou à execução inicial com histórico preservado desde o pré-diagnóstico.</div></section> : null}
+          {projectStatus === "active" ? <section className={styles.reviewCard}><span className={styles.eyebrow}>V1 CONCLUÍDA</span><h2>Execução inicial ativa</h2><div className={styles.notice}>O fluxo central chegou à execução inicial com histórico preservado desde a origem comercial.</div></section> : null}
         </div>
       </div>
     </main>

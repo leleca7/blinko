@@ -130,12 +130,38 @@ export async function createProjectFromAcceptedProposal(input: {
   return rows[0]?.result as string;
 }
 
+export async function createProjectFromPaidDirectOpportunity(input: {
+  opportunityId: string;
+  actorLabel: string;
+  objective: string;
+  startDate: string;
+  targetTimeframe: string;
+  contractReference: string;
+  nextReviewAt?: string | null;
+}) {
+  const sql = getSql();
+  const nextReview = input.nextReviewAt || null;
+  const rows = await sql`
+    select public.create_project_from_paid_direct_opportunity(
+      ${input.opportunityId}::uuid,
+      ${input.actorLabel},
+      ${input.objective},
+      ${input.startDate}::date,
+      ${input.targetTimeframe},
+      ${input.contractReference},
+      ${nextReview}::timestamptz
+    ) as result
+  `;
+  return rows[0]?.result as string;
+}
+
 export type ProjectWorkspace = {
   schemaReady: boolean;
   project: Record<string, unknown> | null;
   company: Record<string, unknown> | null;
   proposal: Record<string, unknown> | null;
   diagnostic: Record<string, unknown> | null;
+  directOpportunity: Record<string, unknown> | null;
   interventions: Record<string, unknown>[];
   tasks: Record<string, unknown>[];
 };
@@ -147,8 +173,9 @@ export async function getProjectWorkspace(projectId: string): Promise<ProjectWor
       select jsonb_build_object(
         'project', to_jsonb(prj),
         'company', to_jsonb(c),
-        'proposal', to_jsonb(p),
-        'diagnostic', to_jsonb(d),
+        'proposal', case when p.id is null then null else to_jsonb(p) end,
+        'diagnostic', case when d.id is null then null else to_jsonb(d) end,
+        'direct_opportunity', case when direct_o.id is null then null else to_jsonb(direct_o) end,
         'interventions', coalesce((
           select jsonb_agg(jsonb_build_object('id', i.id, 'title', i.title, 'objective', i.objective) order by i.created_at)
           from public.diagnostic_interventions i
@@ -161,8 +188,9 @@ export async function getProjectWorkspace(projectId: string): Promise<ProjectWor
       ) as result
       from public.projects prj
       join public.companies c on c.id = prj.company_id
-      join public.proposals p on p.id = prj.proposal_id
-      join public.diagnostics d on d.id = p.diagnostic_id
+      left join public.proposals p on p.id = prj.proposal_id
+      left join public.diagnostics d on d.id = p.diagnostic_id
+      left join public.direct_opportunities direct_o on direct_o.id = prj.direct_opportunity_id
       where prj.id = ${projectId}::uuid
       limit 1
     `;
@@ -173,12 +201,13 @@ export async function getProjectWorkspace(projectId: string): Promise<ProjectWor
       company: record(result?.company),
       proposal: record(result?.proposal),
       diagnostic: record(result?.diagnostic),
+      directOpportunity: record(result?.direct_opportunity),
       interventions: records(result?.interventions),
       tasks: records(result?.tasks),
     };
   } catch (error) {
     if (isExecutionSchemaPending(error)) {
-      return { schemaReady: false, project: null, company: null, proposal: null, diagnostic: null, interventions: [], tasks: [] };
+      return { schemaReady: false, project: null, company: null, proposal: null, diagnostic: null, directOpportunity: null, interventions: [], tasks: [] };
     }
     throw error;
   }

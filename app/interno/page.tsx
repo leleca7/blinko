@@ -44,7 +44,11 @@ export default async function InternalTodayPage() {
               {queue.actions.length === 0 ? (
                 <div className={styles.empty}>Nenhuma ação pendente neste momento.</div>
               ) : queue.actions.map((action) => {
-                const href = action.pre_diagnostic_id ? `/interno/pre-diagnosticos/${action.pre_diagnostic_id}` : "/interno";
+                const href = action.pre_diagnostic_id
+                  ? `/interno/pre-diagnosticos/${action.pre_diagnostic_id}`
+                  : action.action_type.startsWith("direct_opportunity_") || action.action_type === "project_onboarding"
+                    ? "/interno/oportunidades-diretas"
+                    : "/interno";
                 return (
                   <Link className={styles.action} href={href} key={action.action_id}>
                     <span className={styles.priority}>{labelPriority(action.priority)}</span>
