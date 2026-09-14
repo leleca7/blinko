@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireInternalSession } from "../../../../lib/blinko/internal-auth";
+import { getMetaWhatsAppConfigurationState } from "../../../../lib/blinko/whatsapp-meta";
 import { getWhatsAppConversationWorkspace } from "../../../../lib/blinko/whatsapp-server";
 import InternalTopbar from "../../InternalTopbar";
 import styles from "../../interno.module.css";
@@ -37,7 +38,7 @@ function messageStatusLabel(status: string) {
     received: "recebida",
     draft: "rascunho",
     approved: "aprovada",
-    queued: "na fila",
+    queued: "em envio",
     sent: "enviada",
     delivered: "entregue",
     read: "lida",
@@ -45,12 +46,19 @@ function messageStatusLabel(status: string) {
   }[status] ?? status;
 }
 
-function notice(status?: string) {
+function notice(status?: string, metaConfigured?: boolean) {
   if (status === "linked") return "Conversa vinculada ao CRM.";
   if (status === "read") return "Conversa marcada como lida.";
   if (status === "draft_created") return "Rascunho criado. Ele ainda não foi enviado.";
-  if (status === "draft_approved") return "Rascunho aprovado. O envio automático ainda não está conectado.";
+  if (status === "draft_approved") return metaConfigured
+    ? "Rascunho aprovado. Ele está pronto para envio pelo WhatsApp."
+    : "Rascunho aprovado. O provedor oficial ainda precisa ser configurado para envio direto.";
   if (status === "sent_recorded") return "Envio registrado no histórico.";
+  if (status === "sent_via_provider") return "Mensagem enviada pelo WhatsApp e registrada no histórico.";
+  if (status === "provider_not_configured") return "O envio oficial ainda não está configurado neste ambiente.";
+  if (status === "provider_send_blocked") return "O envio foi bloqueado porque a conversa ou a mensagem não está pronta para este provedor.";
+  if (status === "provider_send_failed") return "O provedor não aceitou o envio. A mensagem continua aprovada para uma nova tentativa.";
+  if (status === "provider_reconciliation_required") return "O provedor aceitou a mensagem, mas o registro local precisa de reconciliação. Não reenvie para evitar duplicidade.";
   if (status === "invalid") return "Revise os dados antes de continuar.";
   if (status === "blocked") return "A ação não é permitida no estágio atual.";
   if (status === "schema_pending") return "A estrutura do WhatsApp ainda precisa ser aplicada ao Neon.";
@@ -72,7 +80,10 @@ export default async function WhatsAppConversationPage({ params, searchParams }:
   const query = searchParams ? await searchParams : {};
   if (!uuidPattern.test(id)) notFound();
 
-  const workspace = await getWhatsAppConversationWorkspace(id);
+  const [workspace, metaState] = await Promise.all([
+    getWhatsAppConversationWorkspace(id),
+    Promise.resolve(getMetaWhatsAppConfigurationState()),
+  ]);
   if (!workspace.schemaReady) {
     return (
       <main className={styles.page}><div className={styles.shell}><InternalTopbar user={session.user} active="whatsapp" /><section className={styles.reviewCard}><span className={styles.eyebrow}>WHATSAPP</span><h1>Estrutura pendente</h1><div className={styles.notice}>A migration de WhatsApp ainda precisa ser aplicada ao Neon deste ambiente.</div></section></div></main>
@@ -86,7 +97,9 @@ export default async function WhatsAppConversationPage({ params, searchParams }:
   const currentLeadId = text(conversation.lead_id);
   const currentOpportunityId = text(conversation.direct_opportunity_id);
   const unread = number(conversation.unread_count);
-  const flash = notice(query.status);
+  const provider = text(conversation.provider);
+  const directMetaSend = metaState.configured && provider === "meta";
+  const flash = notice(query.status, metaState.configured);
 
   return (
     <main className={styles.page}>
@@ -100,7 +113,7 @@ export default async function WhatsAppConversationPage({ params, searchParams }:
 
         <div className={styles.reviewShell}>
           <section className={styles.reviewCard} style={{ borderColor: "rgba(239,59,127,.24)", background: "rgba(239,59,127,.025)" }}>
-            <span className={styles.eyebrow}>WHATSAPP · {text(conversation.provider).toUpperCase()}</span>
+            <span className={styles.eyebrow}>WHATSAPP · {provider.toUpperCase()}</span>
             <h1 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 42, fontWeight: 500, marginBottom: 8 }}>
               {text(conversation.contact_name) || text(lead?.name) || text(conversation.phone_e164)}
             </h1>
@@ -111,6 +124,7 @@ export default async function WhatsAppConversationPage({ params, searchParams }:
               <span className={styles.badge}>{statusLabel(text(conversation.status))}</span>
               <span className={styles.badge}>{unread > 0 ? `${unread} não lida${unread > 1 ? "s" : ""}` : "Tudo lido"}</span>
               <span className={styles.badge}>{currentLeadId ? "CRM vinculado" : "Sem vínculo no CRM"}</span>
+              <span className={styles.badge}>{metaState.configured ? "WhatsApp oficial configurado" : "Provedor aguardando configuração"}</span>
               {currentOpportunityId ? <Link className={styles.badge} href={`/interno/oportunidades-diretas/${currentOpportunityId}`}>Abrir oportunidade →</Link> : null}
             </div>
             {unread > 0 ? (
@@ -186,12 +200,21 @@ export default async function WhatsAppConversationPage({ params, searchParams }:
                           <button className={styles.button} type="submit">Aprovar rascunho</button>
                         </form>
                       ) : null}
-                      {status === "approved" ? (
+                      {status === "approved" && directMetaSend ? (
+                        <form action={`/api/interno/whatsapp/${id}/send`} method="post" style={{ marginTop: 12 }}>
+                          <input type="hidden" name="message_id" value={messageId} />
+                          <button className={styles.button} type="submit">Enviar pelo WhatsApp</button>
+                        </form>
+                      ) : null}
+                      {status === "approved" && !directMetaSend ? (
                         <form action={`/api/interno/whatsapp/${id}/sent`} method="post" className={styles.form} style={{ marginTop: 12 }}>
                           <input type="hidden" name="message_id" value={messageId} />
-                          <label>ID externo, se houver<input name="provider_message_id" style={controlStyle} placeholder="Opcional enquanto o provedor não está conectado" /></label>
+                          <label>ID externo, se houver<input name="provider_message_id" style={controlStyle} placeholder="Opcional para envio feito fora do Blinko OS" /></label>
                           <button className={styles.button} type="submit">Registrar como enviada manualmente</button>
                         </form>
+                      ) : null}
+                      {status === "queued" ? (
+                        <div className={styles.notice} style={{ marginTop: 12 }}>Envio reservado pelo provedor. Não reenvie manualmente enquanto estiver neste estado.</div>
                       ) : null}
                     </article>
                   );
@@ -204,7 +227,7 @@ export default async function WhatsAppConversationPage({ params, searchParams }:
             <span className={styles.eyebrow}>RESPOSTA</span>
             <h2>Criar rascunho</h2>
             <p style={{ opacity: .72, lineHeight: 1.55 }}>
-              O rascunho fica dentro do Blinko OS e precisa de aprovação humana. Nesta etapa ele não é enviado ao WhatsApp automaticamente.
+              A mensagem entra como rascunho e exige aprovação humana. Mesmo com o provedor conectado, nada é enviado automaticamente pela IA.
             </p>
             <form action={`/api/interno/whatsapp/${id}/draft`} method="post" className={styles.form}>
               <label>Mensagem<textarea name="body" rows={6} required style={controlStyle} /></label>
