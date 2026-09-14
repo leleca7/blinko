@@ -2,11 +2,12 @@ import Link from "next/link";
 import InternalBrand from "./InternalBrand";
 import styles from "./internal-topbar.module.css";
 
-type InternalNavKey = "today" | "opportunities" | "companies";
+type InternalNavKey = "today" | "opportunities" | "whatsapp" | "companies";
 
 const navItems: Array<{ key: InternalNavKey; label: string; href: string }> = [
   { key: "today", label: "Hoje", href: "/interno" },
   { key: "opportunities", label: "Oportunidades", href: "/interno/oportunidades-diretas" },
+  { key: "whatsapp", label: "WhatsApp", href: "/interno/whatsapp" },
   { key: "companies", label: "Empresas", href: "/interno/empresas" },
 ];
 
