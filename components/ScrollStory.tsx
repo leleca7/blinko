@@ -19,13 +19,11 @@ export default function ScrollStory() {
       const viewport = window.innerHeight;
       const travel = Math.max(story.offsetHeight - viewport, 1);
       const progress = Math.min(1, Math.max(0, -rect.top / travel));
-      const scene = progress < 0.3 ? "surface" : progress < 0.6 ? "layers" : "root";
-      const phase = progress >= 0.9 ? "exit" : "reading";
+      const scene = progress < 1 / 3 ? "surface" : progress < 2 / 3 ? "layers" : "root";
       const state = rect.top > 0 ? "before" : rect.bottom <= viewport ? "after" : "active";
 
       story.style.setProperty("--story-progress", String(progress));
       if (story.dataset.scene !== scene) story.dataset.scene = scene;
-      if (story.dataset.phase !== phase) story.dataset.phase = phase;
       if (story.dataset.state !== state) story.dataset.state = state;
     };
 
@@ -47,19 +45,6 @@ export default function ScrollStory() {
   return (
     <section ref={storyRef} className={styles.story} aria-label="Do sinal até a prioridade">
       <div className={styles.stage}>
-        <div className={styles.organic} aria-hidden="true">
-          <div className={`${styles.orbit} ${styles.orbitA}`} />
-          <div className={`${styles.orbit} ${styles.orbitB}`} />
-          <div className={`${styles.shape} ${styles.shapeA}`} />
-          <div className={`${styles.shape} ${styles.shapeB}`} />
-          <div className={`${styles.shape} ${styles.shapeC}`} />
-          <div className={styles.core}>
-            <span>VALIDAR</span>
-            <small>quando a hipótese ganha evidência</small>
-          </div>
-          <span className={styles.caption}>sinal → hipótese → prioridade</span>
-        </div>
-
         <div className={styles.scenes}>
           <article className={`${styles.scene} ${styles.scene1}`}>
             <span>SINAL</span>
