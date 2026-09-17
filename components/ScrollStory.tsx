@@ -45,6 +45,19 @@ export default function ScrollStory() {
   return (
     <section ref={storyRef} className={styles.story} aria-label="Do sinal até a prioridade">
       <div className={styles.stage}>
+        <div className={styles.organic} aria-hidden="true">
+          <div className={`${styles.orbit} ${styles.orbitA}`} />
+          <div className={`${styles.orbit} ${styles.orbitB}`} />
+          <div className={`${styles.shape} ${styles.shapeA}`} />
+          <div className={`${styles.shape} ${styles.shapeB}`} />
+          <div className={`${styles.shape} ${styles.shapeC}`} />
+          <div className={styles.core}>
+            <span>VALIDAR</span>
+            <small>quando a hipótese ganha evidência</small>
+          </div>
+          <span className={styles.caption}>sinal → hipótese → prioridade</span>
+        </div>
+
         <div className={styles.scenes}>
           <article className={`${styles.scene} ${styles.scene1}`}>
             <span>SINAL</span>
