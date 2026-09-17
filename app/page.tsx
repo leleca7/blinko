@@ -1,4 +1,5 @@
 import { BLINKO_LOGO_DARK_DATA_URI } from "../lib/blinko/brand-logo-data";
+import ScrollStory from "../components/ScrollStory";
 import styles from "./home-v2.module.css";
 
 const areas = ["Marca", "Digital", "Financeiro", "Operação", "Atendimento", "Gestão", "Equipe"];
@@ -133,6 +134,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <ScrollStory />
 
       <section className={styles.method} id="metodo">
         <div className={styles.introBlock}>
