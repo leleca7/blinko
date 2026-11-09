@@ -1,3 +1,5 @@
+> **Direção de negócios 2027 (atual):** [plano executivo no Drive](https://docs.google.com/document/d/132fsG1PVdYFjQCYN7iz0tm_L3bAsSf9-1jClncLLAsI/edit) · [resumo operacional no repositório](docs/DIRECAO-OPERACIONAL-2027.md). Os arquivos históricos e as funções existentes permanecem preservados.
+
 # Blinko
 
 Primeira versão do site imersivo da Blinko.
