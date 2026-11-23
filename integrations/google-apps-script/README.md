@@ -44,7 +44,7 @@ Abas:
 
 ## Regras de negócio ainda em aberto
 
-- Rota Express de briefing simples x exigência de diagnóstico pago antes de todo serviço: decisão pendente.
+- DECISÃO DEFINIDA em 23/11/2026: o diagnóstico contratado é obrigatório antes de toda execução. A triagem gratuita serve apenas para primeiro contato e orientação comercial; não existe contratação avulsa de serviços sem diagnóstico.
 - WhatsApp comercial: número fornecido e variável configurada para esta branch de Preview. Ainda falta validar recebimento real e ativar o fluxo de dados.
 - E-mails de destino: não informados.
 - Prazo de atendimento e responsável pelo retorno: a definir.
