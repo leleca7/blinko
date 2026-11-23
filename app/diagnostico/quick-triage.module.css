@@ -40,3 +40,5 @@
 .optionalBlock .grid{margin:14px 0 0}
 
 .previewNotice{padding:15px 17px;border-radius:13px;background:#fff1dc;color:#754d25;border:1px solid #e7d6b7;font-size:13px;line-height:1.55;margin:2px 0 22px}
+
+.honeyField{position:absolute!important;left:-10000px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important}
