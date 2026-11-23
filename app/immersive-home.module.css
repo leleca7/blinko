@@ -542,3 +542,5 @@
  .audienceList>div p{font-size:clamp(26px,6.8vw,36px)}
  .audienceList>div:hover{transform:none}
 }
+
+.footerLegal{display:flex;flex-wrap:wrap;align-items:center;gap:8px 21px}.footerLegal a{color:rgba(255,255,255,.85);font-weight:700;text-decoration:underline;text-decoration-color:rgba(255,255,255,.2);text-underline-offset:4px}.footerLegal a:hover{color:#fff;text-decoration-color:#fff}
