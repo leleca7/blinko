@@ -165,7 +165,7 @@ export default function QuickTriageForm() {
             <input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)} required />
             <span>Autorizo a Blinko a registrar meu contato e estas respostas para tratar minha solicitação, inclusive se eu não concluir o formulário, e a retornar por WhatsApp ou e-mail. Não autorizo automaticamente mensagens promocionais.</span>
           </label>
-          <p className={styles.privacy}>Os dados serão usados apenas para acompanhar esta solicitação. Você pode pedir atualização ou exclusão pelo mesmo canal de atendimento.</p>
+          <p className={styles.privacy}>Saiba como tratamos seus dados na <a href="/privacidade" target="_blank" rel="noopener noreferrer">Política de Privacidade</a>. Veja também os <a href="/termos-de-uso" target="_blank" rel="noopener noreferrer">Termos de Uso</a> e como <a href="/solicitacoes-de-dados" target="_blank" rel="noopener noreferrer">solicitar acesso, correção ou exclusão</a>.</p>
           {error && <p role="alert" className={styles.error}>{error}</p>}
           <button type="submit" className={styles.primary} disabled={loading || !consent || storageStatus !== "ready"}>{loading ? "Salvando contato..." : storageStatus !== "ready" ? "Triagem em preparação" : "Continuar →"}</button>
         </form>
