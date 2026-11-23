@@ -34,6 +34,9 @@ export default function Home() {
       const storyTravel = Math.max(story.offsetHeight - window.innerHeight, 1);
       const progress = Math.min(1, Math.max(0, -rect.top / storyTravel));
       story.style.setProperty("--story-progress", String(progress));
+      story.style.setProperty("--story-rotation", String(progress * 12) + "deg");
+      story.style.setProperty("--ring-scale", String(1 + progress * 0.09));
+      story.style.setProperty("--node-scale", String(0.88 + progress * 0.23));
       story.dataset.scene = progress < 0.32 ? "0" : progress < 0.67 ? "1" : "2";
     };
 
