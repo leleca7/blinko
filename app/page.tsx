@@ -69,9 +69,10 @@ export default function Home() {
           <img src={BLINKO_LOGO_DARK_DATA_URI} alt="Blinko Studio" />
         </a>
         <nav className={styles.nav} aria-label="Navegação">
+          <a href="#sobre">A Blinko</a>
           <a href="#metodo">Nosso olhar</a>
-          <a href="#como-trabalhamos">O processo</a>
-          <a href="#comecar" className={styles.navCta}>Vamos conversar <span aria-hidden="true">↗</span></a>
+          <a href="#perguntas">Dúvidas</a>
+          <a href="#comecar" className={styles.navCta}>Começar <span aria-hidden="true">↗</span></a>
         </nav>
       </header>
 
@@ -101,17 +102,20 @@ export default function Home() {
           <span className={styles.artLabel}>clareza · estrutura · movimento</span>
         </div>
 
-        <a className={styles.scrollCue} href="#olhar"><span className={styles.scrollLine} /> Role para descobrir</a>
+        <a className={styles.scrollCue} href="#sobre"><span className={styles.scrollLine} /> Role para descobrir</a>
       </section>
 
-      <section className={styles.bridge} id="olhar" aria-labelledby="olhar-title">
-        <span className={styles.kicker}>Um olhar diferente</span>
-        <h2 id="olhar-title">Você vê o sintoma. <em>Nós investigamos o contexto.</em></h2>
+      <section className={styles.bridge} id="sobre" aria-labelledby="sobre-title">
+        <span className={styles.kicker}>Quem é a Blinko</span>
+        <h2 id="sobre-title">Uma visão <em>inteira</em> do seu negócio.</h2>
         <p>
-          Nem toda dificuldade de vendas se resolve com propaganda.
-          Nem toda falha de atendimento se resolve com tecnologia.
-          Primeiro entendemos o que realmente acontece no negócio.
+          Somos uma empresa de diagnóstico, estruturação e desenvolvimento de negócios.
+          Reunimos pesquisa, comunicação estratégica e Relações Públicas para investigar
+          desafios, compreender relações e organizar prioridades — antes de recomendar soluções.
         </p>
+        <div className={styles.aboutTagline} aria-label="Nossa forma de atuação">
+          <span>Pesquisa e escuta</span><span>Visão integrada</span><span>Decisões fundamentadas</span>
+        </div>
       </section>
 
       <section
@@ -165,6 +169,21 @@ export default function Home() {
               <span>{number} / 05</span>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className={styles.audience} id="para-quem" aria-labelledby="audience-title">
+        <div className={styles.audienceIntro}>
+          <span className={styles.kicker}>Para quem existimos</span>
+          <h2 id="audience-title">Seu negócio já deu esses <em>sinais?</em></h2>
+          <p>Atendemos micro, pequenas e médias empresas que querem organizar ou desenvolver o negócio sem depender de decisões improvisadas.</p>
+        </div>
+        <div className={styles.audienceList}>
+          <div><span>01</span><p>“Tudo depende de mim.”</p></div>
+          <div><span>02</span><p>“Não sei onde estamos perdendo clientes.”</p></div>
+          <div><span>03</span><p>“A gente faz, mas não tem processo.”</p></div>
+          <div><span>04</span><p>“Temos várias ideias, mas não sabemos o que priorizar.”</p></div>
+          <p className={styles.audienceNote}>Esses são exemplos de situações que podem motivar uma investigação, não diagnósticos antecipados.</p>
         </div>
       </section>
 
