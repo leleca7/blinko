@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import PreDiagnosticForm from "./PreDiagnosticForm";
+import QuickTriageForm from "./QuickTriageForm";
 import styles from "./diagnostico.module.css";
 
 export const metadata: Metadata = {
-  title: "Pré-Diagnóstico | Blinko",
-  description: "Mostre o que está acontecendo na sua empresa. A Blinko organiza os sinais e prepara a próxima conversa.",
+  title: "Converse com a Blinko | Triagem rápida",
+  description: "Em poucos passos, conte à Blinko o que sua empresa precisa. Um primeiro contato simples, sem diagnóstico longo.",
 };
 
 export default function DiagnosticoPage() {
@@ -13,29 +13,20 @@ export default function DiagnosticoPage() {
     <main className={styles.page}>
       <header className={styles.topbar}>
         <Link href="/" className={styles.brand} aria-label="Voltar para Blinko">
-          <img
-            src="/brand/logo-blinko-color.png"
-            alt="Blinko"
-            width={400}
-            height={199}
-            style={{ display: "block", width: 122, maxWidth: "36vw", height: "auto" }}
-          />
+          <img src="/brand/logo-blinko-color.png" alt="Blinko Studio" width={400} height={199}
+            style={{ display: "block", width: 122, maxWidth: "36vw", height: "auto" }} />
         </Link>
         <Link href="/" className={styles.back}>← voltar ao site</Link>
       </header>
-
       <section className={styles.intro}>
-        <p className={styles.eyebrow}>PRÉ-DIAGNÓSTICO BLINKO · TRIAGEM INICIAL</p>
-        <h1>Você não precisa saber <em>qual serviço contratar.</em></h1>
-        <p className={styles.lede}>
-          Mostre onde a empresa quer chegar e o que está acontecendo hoje. Vamos organizar os sinais para entender se existe algo que vale aprofundar.
-        </p>
+        <p className={styles.eyebrow}>BLINKO · PRIMEIRO CONTATO</p>
+        <h1>Vamos entender <em>por onde começar.</em></h1>
+        <p className={styles.lede}>Não precisa preencher um diagnóstico longo agora. Deixe seu contato e conte brevemente o que trouxe você até aqui.</p>
         <div className={styles.notice}>
-          <strong>Importante.</strong> Esta etapa não é o Diagnóstico Blinko profundo e não gera uma conclusão automática. A tecnologia organiza os sinais internamente, e a equipe Blinko revisa antes de qualquer leitura personalizada enviada por WhatsApp ou e-mail.
+          <strong>Uma conversa, não um laudo.</strong> A triagem rápida não confirma causas nem gera um diagnóstico automático. Caso faça sentido, convidaremos você para uma investigação mais completa.
         </div>
       </section>
-
-      <PreDiagnosticForm />
+      <QuickTriageForm />
     </main>
   );
 }
