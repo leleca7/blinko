@@ -19,6 +19,24 @@ export function hasTriageDatabase() {
   return Boolean(process.env.DATABASE_URL);
 }
 
+/**
+ * Leitura somente da existência da tabela da triagem.
+ * Nunca expõe credenciais nem registros de visitantes.
+ */
+export async function isTriageStorageReady(): Promise<boolean> {
+  if (!hasTriageDatabase()) return false;
+  try {
+    const sql = getSql();
+    const rows = await sql.query(
+      "SELECT to_regclass('public.blinko_triage_v2') IS NOT NULL AS ready"
+    );
+    return rows[0]?.ready === true;
+  } catch {
+    return false;
+  }
+}
+
+
 const SELECT_FIELDS = "id::text, created_at::text, updated_at::text, completed_at::text, whatsapp_link_opened_at::text, stage, status, name, company_name, whatsapp, email, request_kind, challenge, timeframe, preferred_channel";
 
 export async function saveTriageContact(data: {
