@@ -9,9 +9,9 @@ type CompleteResponse = { ok?: boolean; saved?: boolean; contactUrl?: string | n
 
 const INSTAGRAM = "https://www.instagram.com/blinko_studio/";
 const KIND_OPTIONS = [
-  ["known_service", "Já sei o serviço que preciso", "Ex.: cardápio, identidade, apresentação, material de comunicação."],
-  ["need_clarity", "Tenho um problema, mas não sei a causa", "Quero entender o que está atrapalhando meu negócio."],
-  ["not_sure", "Quero conversar e entender as possibilidades", "Ainda estou descobrindo o que fazer."],
+  ["current_problem", "Meu negócio enfrenta uma dificuldade", "Quero entender o que está acontecendo e suas possíveis causas."],
+  ["growth_goal", "Quero melhorar a estrutura do negócio", "Busco mais clareza sobre prioridades, processos ou comunicação."],
+  ["learn_diagnosis", "Quero conhecer o Diagnóstico Blinko", "Gostaria de entender como funciona essa investigação."],
 ] as const;
 
 export default function QuickTriageForm() {
@@ -95,7 +95,7 @@ export default function QuickTriageForm() {
       <section className={styles.success} aria-live="polite">
         <span className={styles.kicker}>TRIAGEM REGISTRADA</span>
         <h2>Agora podemos conversar.</h2>
-        <p>Recebemos seu pedido inicial e vamos analisá-lo com atenção. Isso ainda não é um diagnóstico técnico.</p>
+        <p>Recebemos sua triagem inicial. Nossa equipe poderá explicar o escopo e a contratação do Diagnóstico Blinko, nosso serviço principal. Esta triagem não é um diagnóstico técnico.</p>
         <p className={styles.reference}>Referência: <strong>{reference}</strong></p>
         {contactUrl ? (
           <>
@@ -152,9 +152,9 @@ export default function QuickTriageForm() {
       ) : (
         <form className={styles.form} onSubmit={complete}>
           <div className={styles.head}>
-            <span className={styles.kicker}>SÓ MAIS DUAS PERGUNTAS</span>
+            <span className={styles.kicker}>SÓ MAIS UM POUCO</span>
             <h2>O que trouxe você até aqui?</h2>
-            <p>Não precisa explicar tudo. Uma breve resposta basta para começarmos.</p>
+            <p>Sua resposta ajuda a preparar o primeiro contato. Nosso serviço começa pelo Diagnóstico Blinko.</p>
           </div>
           <div className={styles.kindOptions}>
             {KIND_OPTIONS.map(([value,title,detail])=>(
@@ -164,8 +164,8 @@ export default function QuickTriageForm() {
               </label>
             ))}
           </div>
-          <label className={styles.bigLabel}>Em uma frase, o que você precisa?
-            <textarea required minLength={6} maxLength={650} rows={3} value={challenge} onChange={e=>setChallenge(e.target.value)} placeholder="Ex.: não sei por que as vendas caíram; ou preciso reformular meu cardápio." />
+          <label className={styles.bigLabel}>Quer contar mais alguma coisa? (opcional)
+            <textarea maxLength={650} rows={3} value={challenge} onChange={e=>setChallenge(e.target.value)} placeholder="Ex.: não sei por que as vendas caíram; ou preciso reformular meu cardápio." />
           </label>
           <div className={styles.grid}>
             <label>Quando gostaria de começar? <span>opcional</span>
@@ -184,7 +184,7 @@ export default function QuickTriageForm() {
           {error && <p role="alert" className={styles.error}>{error}</p>}
           <div className={styles.actions}>
             <button type="button" className={styles.back} onClick={()=>setStage("contact")} disabled={loading}>← Voltar</button>
-            <button type="submit" className={styles.primary} disabled={loading || !kind || challenge.trim().length < 6}>{loading ? "Registrando..." : "Enviar triagem →"}</button>
+            <button type="submit" className={styles.primary} disabled={loading || !kind}>{loading ? "Registrando..." : "Enviar triagem →"}</button>
           </div>
         </form>
       )}
