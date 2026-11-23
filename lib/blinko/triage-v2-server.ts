@@ -45,12 +45,13 @@ export async function submitTriage(data: {
   return (rows[0] as TriageRow | undefined) ?? null;
 }
 
-export async function markWhatsAppLinkOpened(id: string) {
+export async function markWhatsAppLinkOpened(id: string): Promise<TriageRow | null> {
   const sql = getSql();
-  await sql.query(
-    "UPDATE public.blinko_triage_v2 SET whatsapp_link_opened_at = coalesce(whatsapp_link_opened_at, now()), updated_at = now() WHERE id = $1::uuid AND status = 'submitted'",
+  const rows = await sql.query(
+    "UPDATE public.blinko_triage_v2 SET whatsapp_link_opened_at = coalesce(whatsapp_link_opened_at, now()), updated_at = now() WHERE id = $1::uuid AND status = 'submitted' RETURNING " + SELECT_FIELDS,
     [id],
   );
+  return (rows[0] as TriageRow | undefined) ?? null;
 }
 
 export function getBusinessWhatsAppUrl(row: TriageRow) {
@@ -113,6 +114,64 @@ export async function mirrorTriageToSheets(row: TriageRow) {
     return { configured: true, delivered: true };
   } catch (error) {
     console.error("Blinko triage: Sheets mirror failed", error instanceof Error ? error.message : "unknown");
+    return { configured: true, delivered: false };
+  }
+}
+
+
+/**
+ * Formulário detalhado v1. Espelha uma resposta completa já salva no Neon.
+ * Avisos de e-mail são enviados pela automação do Apps Script quando ativa.
+ */
+export async function mirrorDetailedToSheets(payload: Record<string, unknown>) {
+  const endpoint = process.env.BLINKO_SHEETS_WEBHOOK_URL || "";
+  const secret = process.env.BLINKO_SHEETS_WEBHOOK_SECRET || "";
+  if (!endpoint || !secret) return { configured: false, delivered: false };
+  const text = (key: string, cap: number) =>
+    typeof payload[key] === "string" ? (payload[key] as string).slice(0, cap) : "";
+  const arr = (key: string) => Array.isArray(payload[key]) ? (payload[key] as unknown[]).filter(x=>typeof x==="string").join(" | ") : "";
+  try {
+    const url = new URL(endpoint);
+    if (url.protocol !== "https:" || url.hostname !== "script.google.com") {
+      throw new Error("invalid_sheets_endpoint");
+    }
+    const body = {
+      secret,
+      kind: "diagnostic",
+      event: "submitted",
+      lead: {
+        id: text("submission_id", 40),
+        received_at: new Date().toISOString(),
+        name: text("name", 120),
+        company_name: text("company_name", 160),
+        whatsapp: text("whatsapp", 40),
+        email: text("email", 180),
+        city_state: text("city_state", 120),
+        segment: text("segment", 120),
+        objective: text("objective", 1200),
+        perceived_blocker: text("perceived_blocker", 1600),
+        perceived_areas: arr("perceived_areas"),
+        operational_signals: arr("operational_signals"),
+        company_moment: text("company_moment", 60),
+        urgency: text("urgency", 60),
+        review_status: "Novo",
+        owner: "",
+        next_action: "Revisar questionário detalhado",
+        source: "blinko_diagnostico_completo_v1",
+        response_summary: JSON.stringify(payload).slice(0, 12000),
+      },
+    };
+    const r = await fetch(url.href, {
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(body), cache: "no-store", redirect: "follow",
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!r.ok) throw new Error("sheet_webhook_http_" + r.status);
+    const json = (await r.json()) as { ok?: boolean };
+    if (json.ok !== true) throw new Error("sheet_webhook_rejected");
+    return { configured: true, delivered: true };
+  } catch (error) {
+    console.error("Blinko detailed form: sheet mirror failed", error instanceof Error ? error.message : "unknown");
     return { configured: true, delivered: false };
   }
 }
