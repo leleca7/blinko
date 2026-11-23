@@ -36,7 +36,7 @@ Abas:
 6. Após autorizar permissões de planilha e e-mail, implantar o Apps Script como Web App Executar como eu, com URL /exec. Configurar em Vercel Preview:
    BLINKO_SHEETS_WEBHOOK_URL = URL /exec.
    BLINKO_SHEETS_WEBHOOK_SECRET = mesmo segredo do Apps Script.
-   BLINKO_WHATSAPP_NUMBER = número comercial em formato internacional, somente dígitos, com DDI 55 se Brasil.
+   BLINKO_WHATSAPP_NUMBER = configurado somente para esta branch de Preview com o WhatsApp comercial informado em 23/11/2026 (DDD 71). Verificar se o número recebe mensagens antes da publicação.
 7. Opcional: criar gatilho de tempo para checkAbandoned (a cada hora ou por dia). Ele envia aviso PARA A EQUIPE se alguém consentiu e não terminou em 24h. Não envia mensagem automática ao visitante.
 8. Testar no mobile/desktop em ambiente separado: começar e abandonar, concluir, abrir WhatsApp sem enviar, envio completo, erros de rede, tentativas repetidas, contatos inválidos, e-mail e planilha.
 9. Confirmar proteção de dados e idempotência. O espelho do Sheets é melhor esforço; se o Apps Script falhar, o registro permanece no Neon e exigirá conciliar registros pendentes. Antes da produção, adicionar retry ou reconciliação segura.
@@ -45,7 +45,8 @@ Abas:
 ## Regras de negócio ainda em aberto
 
 - Rota Express de briefing simples x exigência de diagnóstico pago antes de todo serviço: decisão pendente.
-- WhatsApp oficial e e-mails de destino: não informados.
+- WhatsApp comercial: número fornecido e variável configurada para esta branch de Preview. Ainda falta validar recebimento real e ativar o fluxo de dados.
+- E-mails de destino: não informados.
 - Prazo de atendimento e responsável pelo retorno: a definir.
 - Questionário completo ainda pede contato no fim. Para evitar duplicação, considerar convite autenticado/temporário associado à triagem, sem dados pessoais em parâmetros de URL.
 - O CRM da Blinko já possui leads; integrar essa fonte antes de operar duas filas paralelas.
