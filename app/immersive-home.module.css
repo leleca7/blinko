@@ -99,7 +99,7 @@
  position:absolute; width:89%;aspect-ratio:1; border-radius:50%;
  border: 1px solid rgba(245,237,230,.18);
  box-shadow:inset 0 0 100px rgba(206,238,184,.04),0 0 80px rgba(114,162,127,.08);
- transform:rotate(calc(var(--pointer-x) * 16deg));
+ transform:rotate(var(--pointer-rotation, 0deg));
 }
 .artHalo:before,.artHalo:after {
  content:""; position:absolute; border-radius:50%;border:1px dashed rgba(241,231,220,.24);
@@ -178,11 +178,11 @@
 }
 .storyGraphic {
  position:relative;width:min(43vw,610px);aspect-ratio:1;display:grid;place-items:center;
- justify-self:center;transform:rotate(calc(var(--story-progress) * 12deg));
+ justify-self:center;transform:rotate(var(--story-rotation, 0deg));
 }
 .storyRing,.storyRingTwo {
  position:absolute;inset:4%;border:1px solid rgba(244,225,204,.24);
- border-radius:50%;transform:scale(calc(1 + var(--story-progress) * .09));
+ border-radius:50%;transform:scale(var(--ring-scale, 1));
 }
 .storyRingTwo {inset:20%;border-color:rgba(244,225,204,.15);border-style:dashed;}
 .storyGraphic:before,.storyGraphic:after {
@@ -196,7 +196,7 @@
  background: radial-gradient(circle at 29% 22%,#a28f71,#674b42 42%,#31231c 76%);
  border:1px solid rgba(245,219,195,.26);
  box-shadow:0 20px 90px rgba(0,0,0,.3),inset 12px 15px 70px rgba(255,255,255,.04);
- display:grid;place-items:center;transform:scale(calc(.88 + var(--story-progress)*.23));
+ display:grid;place-items:center;transform:scale(var(--node-scale, .88));
  transition:background .5s;
 }
 .storyNode span {font-family:Georgia,serif;font-style:italic;font-size:clamp(42px,6vw,94px);letter-spacing:-.07em;line-height:.9;}
