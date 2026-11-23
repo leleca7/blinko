@@ -34,6 +34,7 @@ export default function QuickTriageForm() {
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
+  const [companyFax, setCompanyFax] = useState("");
   const [kind, setKind] = useState("");
   const [challenge, setChallenge] = useState("");
   const [timeframe, setTimeframe] = useState("");
@@ -45,7 +46,7 @@ export default function QuickTriageForm() {
     const response = await fetch("/api/triagem", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, id: session.current, companyFax: "" }),
+      body: JSON.stringify({ ...body, id: session.current, companyFax }),
       cache: "no-store",
     });
     const data = (await response.json()) as ContactResponse & CompleteResponse;
@@ -145,6 +146,11 @@ export default function QuickTriageForm() {
 
       {stage === "contact" ? (
         <form className={styles.form} onSubmit={captureContact}>
+          <div className={styles.honeyField} aria-hidden="true">
+            <label htmlFor="companyFax">Confirmação de fax</label>
+            <input id="companyFax" name="companyFax" tabIndex={-1} autoComplete="off"
+              value={companyFax} onChange={e => setCompanyFax(e.target.value)} />
+          </div>
           <div className={styles.head}>
             <span className={styles.kicker}>PRIMEIRO, VOCÊ</span>
             <h2>Com quem vamos conversar?</h2>
