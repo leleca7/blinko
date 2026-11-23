@@ -132,9 +132,14 @@ export default function QuickTriageForm() {
           </div>
           <div className={styles.grid}>
             <label>Seu nome <input required minLength={2} maxLength={120} autoComplete="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Como podemos chamar você?" /></label>
-            <label>Nome do negócio <span>opcional</span><input maxLength={140} autoComplete="organization" value={companyName} onChange={e=>setCompanyName(e.target.value)} placeholder="Empresa ou projeto" /></label>
             <label>WhatsApp <input required type="tel" minLength={10} maxLength={30} autoComplete="tel" value={whatsapp} onChange={e=>setWhatsapp(e.target.value)} placeholder="(00) 00000-0000" /></label>
-            <label>E-mail <span>opcional, recomendado</span><input type="email" maxLength={180} autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@empresa.com.br" /></label>
+          </div>
+          <div className={styles.optionalBlock}>
+            <p className={styles.optionalIntro}>Se quiser, conte um pouco mais <span>Opcional</span></p>
+            <div className={styles.grid}>
+              <label>Nome do negócio <input maxLength={140} autoComplete="organization" value={companyName} onChange={e=>setCompanyName(e.target.value)} placeholder="Empresa ou projeto" /></label>
+              <label>E-mail <input type="email" maxLength={180} autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@empresa.com.br" /></label>
+            </div>
           </div>
           <label className={styles.consent}>
             <input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)} required />
