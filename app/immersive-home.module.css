@@ -428,3 +428,52 @@
  .outcomeItems>div{padding:13px 0}
  .outcomeItems span{margin-bottom:7px}
 }
+
+.faq {
+ padding:110px max(6vw,24px) 118px;
+ display:grid;grid-template-columns:minmax(240px,.75fr) minmax(360px,1fr);
+ gap:clamp(36px,7vw,105px);background:#e8ece4;color:#103623;
+}
+.faqIntro{position:relative;align-self:start}
+.faqIntro .kicker{color:#ae3e72;display:block;margin-bottom:22px}
+.faqIntro h2{
+ font-family:Georgia,"Times New Roman",serif;font-size:clamp(53px,6.1vw,95px);
+ letter-spacing:-.063em;line-height:.96;font-weight:400;max-width:10ch;
+}
+.faqIntro h2 em{color:#b54878;font-weight:400}
+.faqIntro p{margin-top:22px;font-size:16px;line-height:1.57;color:#546d5e;max-width:365px}
+.faqQuestions{min-width:0;align-self:center}
+.faqItem{border-bottom:1px solid rgba(10,54,32,.19)}
+.faqItem:first-child{border-top:1px solid rgba(10,54,32,.19)}
+.faqItem summary{
+ cursor:pointer;display:flex;justify-content:space-between;align-items:center;
+ gap:18px;list-style:none;padding:25px 0;
+ color:#123a26;font-family:Georgia,"Times New Roman",serif;
+ font-size:clamp(19px,2.15vw,29px);line-height:1.23;letter-spacing:-.03em;
+}
+.faqItem summary::-webkit-details-marker{display:none}
+.faqItem summary:focus-visible{outline:3px solid #cb5986;outline-offset:5px}
+.faqItem summary span{
+ display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;
+ border:1px solid #8ba898;border-radius:50%;font:400 22px/1 Arial,sans-serif;
+ transition:transform .3s ease,color .3s,background .3s;
+}
+.faqItem[open] summary span{transform:rotate(45deg);background:#113e28;color:#fff}
+.faqItem p{
+ margin:0 39px 25px 0;font-size:15px;line-height:1.7;color:#526c5d;
+ max-width:670px;
+}
+.faqLink{
+ margin-top:28px;display:inline-flex;align-items:center;gap:15px;
+ border-bottom:1px solid #12412a;padding-bottom:11px;
+ text-transform:uppercase;letter-spacing:.09em;font-size:11px;font-weight:800;
+ transition:gap .2s ease;
+}
+.faqLink:hover{gap:24px}
+@media(max-width:760px){
+ .faq{padding:83px 22px 93px;grid-template-columns:1fr;gap:36px}
+ .faqIntro h2{font-size:clamp(56px,12vw,81px)}
+ .faqIntro p{margin-top:14px}
+ .faqItem summary{padding:21px 0;font-size:23px}
+ .faqItem p{font-size:14px;margin-right:15px}
+}
