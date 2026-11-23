@@ -3,6 +3,7 @@ import {
   createPreDiagnosticSubmission,
   isNeonConfigured,
 } from "../../../lib/blinko/neon-server";
+import { mirrorDetailedToSheets } from "../../../lib/blinko/triage-v2-server";
 import {
   PRE_DIAGNOSTIC_CONSENT_VERSION,
   PRE_DIAGNOSTIC_FORM_VERSION,
@@ -198,6 +199,8 @@ export async function POST(request: Request) {
     };
 
     await createPreDiagnosticSubmission(payload);
+    // Espelho não bloqueia a captura no Neon; falhas exigem reconciliação.
+    await mirrorDetailedToSheets(payload);
 
     // Não devolvemos score comercial nem IDs internos ao visitante.
     return NextResponse.json({ ok: true });
