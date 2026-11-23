@@ -4,8 +4,8 @@ import QuickTriageForm from "./QuickTriageForm";
 import styles from "./diagnostico.module.css";
 
 export const metadata: Metadata = {
-  title: "Converse com a Blinko | Triagem rápida",
-  description: "Em poucos passos, conte à Blinko o que sua empresa precisa. Um primeiro contato simples, sem diagnóstico longo.",
+  title: "Inicie seu Diagnóstico | Blinko Studio",
+  description: "Comece com uma triagem inicial gratuita. Entenda como funciona a contratação do Diagnóstico Blinko, nosso serviço principal.",
 };
 
 export default function DiagnosticoPage() {
@@ -21,9 +21,9 @@ export default function DiagnosticoPage() {
       <section className={styles.intro}>
         <p className={styles.eyebrow}>BLINKO · PRIMEIRO CONTATO</p>
         <h1>Vamos entender <em>por onde começar.</em></h1>
-        <p className={styles.lede}>Não precisa preencher um diagnóstico longo agora. Deixe seu contato e conte brevemente o que trouxe você até aqui.</p>
+        <p className={styles.lede}>Esta é só uma triagem gratuita para começarmos a conversa. Conte brevemente sua situação e conheça o Diagnóstico Blinko.</p>
         <div className={styles.notice}>
-          <strong>Uma conversa, não um laudo.</strong> A triagem rápida não confirma causas nem gera um diagnóstico automático. Caso faça sentido, convidaremos você para uma investigação mais completa.
+          <strong>Uma conversa, não um laudo.</strong> A triagem não identifica causas nem substitui o Diagnóstico Blinko. O diagnóstico é nosso serviço principal e contratado. Soluções e execução só são propostas após essa etapa.
         </div>
       </section>
       <QuickTriageForm />
