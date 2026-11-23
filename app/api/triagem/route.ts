@@ -80,7 +80,8 @@ export async function POST(request: Request) {
     }
 
     if (action === "whatsapp_opened") {
-      await markWhatsAppLinkOpened(id);
+      const row = await markWhatsAppLinkOpened(id);
+      if (row) await mirrorTriageToSheets(row);
       return NextResponse.json({ ok: true, tracked: "link_opened_not_message_sent" });
     }
 
