@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import {
-  getBusinessWhatsAppUrl, hasTriageDatabase, markWhatsAppLinkOpened,
+  getBusinessWhatsAppUrl, hasTriageDatabase, isTriageStorageReady, markWhatsAppLinkOpened,
   mirrorTriageToSheets, saveTriageContact, submitTriage,
   type TriageChannel, type TriageKind,
 } from "../../../lib/blinko/triage-v2-server";
@@ -11,6 +11,15 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const kinds: TriageKind[] = ["current_problem", "growth_goal", "learn_diagnosis"];
 const channels: TriageChannel[] = ["whatsapp", "email"];
 const timeframes = ["now", "this_month", "next_months", "just_looking", ""] as const;
+
+
+export async function GET() {
+  const ready = await isTriageStorageReady();
+  return NextResponse.json(
+    { ready },
+    { headers: { "Cache-Control": "no-store" } },
+  );
+}
 
 function str(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
