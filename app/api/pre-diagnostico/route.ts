@@ -94,8 +94,20 @@ function calculateScore(input: {
 }
 
 export async function POST(request: Request) {
+  const origin = request.headers.get("origin");
+  if (origin && origin !== new URL(request.url).origin) {
+    return NextResponse.json({ ok: false, error: "origin_not_allowed" }, { status: 403 });
+  }
+  const length = Number(request.headers.get("content-length") || "0");
+  if (Number.isFinite(length) && length > 60000) {
+    return NextResponse.json({ ok: false, error: "request_too_large" }, { status: 413 });
+  }
   try {
-    const body = (await request.json()) as FormBody;
+    const raw = await request.text();
+    if (raw.length > 60000) {
+      return NextResponse.json({ ok: false, error: "request_too_large" }, { status: 413 });
+    }
+    const body = JSON.parse(raw) as FormBody;
 
     // Honeypot: humanos não veem nem preenchem este campo.
     if (text(body.companyFax, 120)) {
