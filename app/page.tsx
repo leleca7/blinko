@@ -278,6 +278,11 @@ export default function Home() {
       <footer className={styles.footer}>
         <img src={BLINKO_LOGO_DARK_DATA_URI} alt="Blinko Studio" />
         <span>Diagnóstico · estratégia · estruturação</span>
+        <nav className={styles.footerLegal} aria-label="Privacidade e termos">
+          <a href="/privacidade">Privacidade</a>
+          <a href="/termos-de-uso">Termos de uso</a>
+          <a href="/solicitacoes-de-dados">Seus dados</a>
+        </nav>
         <a href="#inicio">Voltar ao início ↑</a>
       </footer>
     </main>
