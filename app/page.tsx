@@ -4,8 +4,6 @@ import { useEffect, useRef } from "react";
 import { BLINKO_LOGO_DARK_DATA_URI } from "../lib/blinko/brand-logo-data";
 import styles from "./immersive-home.module.css";
 
-const INSTAGRAM_URL = "https://www.instagram.com/blinko_studio/";
-
 const journey = [
   ["01", "Escutar", "O contexto vem antes do serviço."],
   ["02", "Investigar", "A hipótese precisa de evidência."],
@@ -82,12 +80,12 @@ export default function Home() {
           <p className={styles.eyebrow}>Diagnóstico e estruturação de negócios</p>
           <h1 id="hero-title">O problema <em>nem sempre</em> está onde parece.</h1>
           <p className={styles.heroLead}>
-            A Blinko investiga os desafios da sua empresa, organiza prioridades
-            e ajuda a transformar descobertas em soluções. Antes da resposta,
-            vem a pergunta certa.
+            O Diagnóstico Blinko investiga o que acontece na sua empresa e mostra
+            o que merece atenção primeiro. Soluções vêm depois, com base
+            no que realmente descobrirmos.
           </p>
           <div className={styles.actions}>
-            <a className={styles.pill} href="#comecar">Descubra seu próximo passo <span className={styles.arrow} aria-hidden="true">↗</span></a>
+            <a className={styles.pill} href="/diagnostico">Iniciar triagem gratuita <span className={styles.arrow} aria-hidden="true">↗</span></a>
             <a className={styles.textAction} href="#metodo">Conheça nosso olhar <span aria-hidden="true">↓</span></a>
           </div>
         </div>
@@ -158,7 +156,7 @@ export default function Home() {
         <div>
           <span className={styles.kicker}>O método Blinko</span>
           <h2 id="processo-title">Menos achismo. Mais direção.</h2>
-          <p className={styles.methodSmall}>Pesquisa, comunicação e Relações Públicas se conectam à estratégia e à organização do negócio. Cada intervenção depende do que faz sentido investigar e executar.</p>
+          <p className={styles.methodSmall}>Pesquisa, comunicação e Relações Públicas ajudam a enxergar o negócio por inteiro. Nosso primeiro serviço é o diagnóstico; só depois avaliamos as soluções apropriadas.</p>
         </div>
         <div aria-label="Etapas do nosso trabalho">
           {journey.map(([number, name, detail]) => (
@@ -173,36 +171,43 @@ export default function Home() {
       <section className={styles.entry} id="comecar" aria-labelledby="comece-title">
         <div className={styles.entryHeader}>
           <div>
-            <span className={styles.kicker}>Seu próximo passo</span>
-            <h2 id="comece-title">Por onde <em>começamos?</em></h2>
+            <span className={styles.kicker}>O ponto de partida</span>
+            <h2 id="comece-title">Primeiro, <em>entender.</em> Depois, agir.</h2>
           </div>
-          <p className={styles.entryIntro}>Você não precisa entender o método inteiro para conversar com a Blinko. Escolha o ponto que mais se parece com sua necessidade.</p>
+          <p className={styles.entryIntro}>
+            Na Blinko, o diagnóstico é o primeiro serviço contratado.
+            Não indicamos uma solução antes de investigar o que o negócio precisa.
+          </p>
+        </div>
+        <div className={styles.diagnosticSteps} aria-label="Como começa um projeto na Blinko">
+          <div><span>01</span><strong>Triagem gratuita</strong><p>Uma conversa breve para conhecer sua situação.</p></div>
+          <div><span>02</span><strong>Diagnóstico contratado</strong><p>Investigação, evidências e prioridades em um escopo definido.</p></div>
+          <div><span>03</span><strong>Soluções depois</strong><p>Se fizer sentido, apresentamos uma proposta de implementação.</p></div>
         </div>
         <div className={styles.entryGrid}>
-          <a className={[styles.path, styles.pathSimple].join(" ")} href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="Pedir orçamento de projeto pontual pelo Instagram da Blinko">
-            <div className={styles.pathTop}><span>Para uma necessidade específica</span><b aria-hidden="true">↗</b></div>
-            <div className={styles.pathBody}>
-              <h3>Já sei o que preciso.</h3>
-              <p>Uma peça, uma identidade, uma apresentação ou outra demanda objetiva de comunicação? Vamos entender o briefing.</p>
+          <a className={[styles.path, styles.pathStrategic, styles.diagnosticPath].join(" ")}
+            href="/diagnostico" aria-label="Começar a triagem gratuita para conversar sobre o Diagnóstico Blinko">
+            <div className={styles.pathTop}>
+              <span>Diagnóstico Blinko — nosso serviço principal</span>
+              <b aria-hidden="true">↗</b>
             </div>
-            <span className={styles.pathCta}>Conversar pelo Instagram <i aria-hidden="true">↗</i></span>
-          </a>
-          <a className={[styles.path, styles.pathStrategic].join(" ")} href="/diagnostico" aria-label="Iniciar a triagem da Blinko para investigar desafios do negócio">
-            <div className={styles.pathTop}><span>Para entender o desafio</span><b aria-hidden="true">↗</b></div>
             <div className={styles.pathBody}>
-              <h3>Quero entender o problema.</h3>
-              <p>Há algo dificultando o negócio, mas a causa ainda não está clara? Comece com uma triagem inicial.</p>
+              <h3>Não sabe por onde começar?</h3>
+              <p>Conte brevemente o que está acontecendo. Nossa equipe entende seu contexto e explica como funciona a contratação do diagnóstico.</p>
             </div>
-            <span className={styles.pathCta}>Começar a triagem <i aria-hidden="true">↗</i></span>
+            <span className={styles.pathCta}>Começar triagem gratuita <i aria-hidden="true">↗</i></span>
           </a>
         </div>
-        <p className={styles.pathNote}>A triagem é gratuita e não substitui o Diagnóstico Blinko aprofundado, que é uma contratação separada. Os serviços de execução também dependem de escopo e disponibilidade.</p>
+        <p className={styles.pathNote}>
+          A triagem inicial não é um diagnóstico técnico. O Diagnóstico Blinko é pago, com proposta e escopo apresentados antes da contratação.
+          Serviços de execução não são vendidos isoladamente: dependem de um diagnóstico prévio e de uma proposta específica.
+        </p>
       </section>
 
       <section className={styles.final} aria-labelledby="final-title">
         <span className={styles.kicker}>Blinko Studio — clareza para evoluir</span>
         <h2 id="final-title">Todo avanço começa com <em>uma boa pergunta.</em></h2>
-        <a className={styles.finalLink} href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">Converse com a Blinko <span className={styles.arrow} aria-hidden="true">↗</span></a>
+        <a className={styles.finalLink} href="/diagnostico">Iniciar triagem gratuita <span className={styles.arrow} aria-hidden="true">↗</span></a>
       </section>
 
       <footer className={styles.footer}>
