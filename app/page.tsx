@@ -81,9 +81,9 @@ export default function Home() {
           <p className={styles.eyebrow}>Diagnóstico e estruturação de negócios</p>
           <h1 id="hero-title">O problema <em>nem sempre</em> está onde parece.</h1>
           <p className={styles.heroLead}>
-            O Diagnóstico Blinko investiga o que acontece na sua empresa e mostra
-            o que merece atenção primeiro. Soluções vêm depois, com base
-            no que realmente descobrirmos.
+            Somos a Blinko, uma empresa de diagnóstico e estruturação de negócios.
+            Investigamos desafios, organizamos prioridades e só então propomos
+            soluções, integrando pesquisa, comunicação e Relações Públicas.
           </p>
           <div className={styles.actions}>
             <a className={styles.pill} href="/diagnostico">Iniciar triagem gratuita <span className={styles.arrow} aria-hidden="true">↗</span></a>
