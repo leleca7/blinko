@@ -38,3 +38,5 @@
 .optionalIntro{display:flex;align-items:center;gap:12px;margin:0 0 8px;color:#63766a;font-size:13px;line-height:1.4;font-weight:500}
 .optionalIntro span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#7c8b81;border:1px solid #dce4db;border-radius:999px;padding:4px 8px}
 .optionalBlock .grid{margin:14px 0 0}
+
+.previewNotice{padding:15px 17px;border-radius:13px;background:#fff1dc;color:#754d25;border:1px solid #e7d6b7;font-size:13px;line-height:1.55;margin:2px 0 22px}
