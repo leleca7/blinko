@@ -214,6 +214,42 @@ export default function Home() {
         </p>
       </section>
 
+
+      <section className={styles.faq} id="perguntas" aria-labelledby="faq-title">
+        <div className={styles.faqIntro}>
+          <span className={styles.kicker}>Perguntas frequentes</span>
+          <h2 id="faq-title">Ainda tem <em>dúvidas?</em></h2>
+          <p>Entenda como funciona o primeiro contato e o Diagnóstico Blinko.</p>
+        </div>
+        <div className={styles.faqQuestions}>
+          <details className={styles.faqItem}>
+            <summary>O que é o Diagnóstico Blinko?<span aria-hidden="true">+</span></summary>
+            <p>É uma investigação estruturada do seu negócio. Com escuta, pesquisa e análise de informações, buscamos compreender desafios, identificar prioridades e apresentar recomendações fundamentadas dentro do escopo contratado.</p>
+          </details>
+          <details className={styles.faqItem}>
+            <summary>A triagem inicial é gratuita?<span aria-hidden="true">+</span></summary>
+            <p>Sim. É um contato breve para conhecer sua situação e explicar o processo. A triagem não identifica causas nem substitui o diagnóstico técnico.</p>
+          </details>
+          <details className={styles.faqItem}>
+            <summary>O diagnóstico é pago?<span aria-hidden="true">+</span></summary>
+            <p>Sim. Antes de contratar, você recebe uma proposta com escopo, entregas, condições e preço. A profundidade da investigação depende das necessidades do negócio.</p>
+          </details>
+          <details className={styles.faqItem}>
+            <summary>Posso contratar só uma arte, site ou gestão de redes?<span aria-hidden="true">+</span></summary>
+            <p>Não como serviço avulso de entrada. Na Blinko, o diagnóstico vem primeiro. Só recomendamos ou oferecemos soluções depois de investigar o que faz sentido para o negócio.</p>
+          </details>
+          <details className={styles.faqItem}>
+            <summary>Sou obrigado a contratar a execução depois?<span aria-hidden="true">+</span></summary>
+            <p>Não. O diagnóstico tem valor por si só. Depois dele, você pode decidir se deseja contratar a Blinko para executar ou coordenar alguma solução, trabalhar com outros profissionais ou seguir as recomendações internamente.</p>
+          </details>
+          <details className={styles.faqItem}>
+            <summary>Quanto tempo leva o diagnóstico?<span aria-hidden="true">+</span></summary>
+            <p>Depende do tamanho do desafio, das informações disponíveis e do escopo da pesquisa. Etapas, prazo e entregas serão combinados na proposta, antes da contratação.</p>
+          </details>
+          <a className={styles.faqLink} href="/diagnostico">Comece pela triagem gratuita <span aria-hidden="true">↗</span></a>
+        </div>
+      </section>
+
       <section className={styles.final} aria-labelledby="final-title">
         <span className={styles.kicker}>Blinko Studio — clareza para evoluir</span>
         <h2 id="final-title">Todo avanço começa com <em>uma boa pergunta.</em></h2>
