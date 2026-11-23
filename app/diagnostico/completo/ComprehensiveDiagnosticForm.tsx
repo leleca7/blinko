@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useRef, useState } from "react";
-import styles from "../diagnostico/diagnostico.module.css";
+import styles from "../diagnostico.module.css";
 
 const areas = ["Marca", "Digital", "Financeiro", "Operação", "Atendimento", "Gestão", "Equipe", "Não sei identificar ainda"];
 
