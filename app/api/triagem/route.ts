@@ -8,7 +8,7 @@ import {
 export const runtime = "nodejs";
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const kinds: TriageKind[] = ["known_service", "need_clarity", "not_sure"];
+const kinds: TriageKind[] = ["current_problem", "growth_goal", "learn_diagnosis"];
 const channels: TriageChannel[] = ["whatsapp", "email"];
 const timeframes = ["now", "this_month", "next_months", "just_looking", ""] as const;
 
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       const challenge = str(body.challenge, 650);
       const timeframe = str(body.timeframe, 32);
       const channel = str(body.channel, 32) as TriageChannel;
-      if (!kinds.includes(kind) || challenge.length < 6 ||
+      if (!kinds.includes(kind) ||
           !timeframes.includes(timeframe as (typeof timeframes)[number]) ||
           !channels.includes(channel)) {
         return NextResponse.json({ ok: false, error: "invalid_details" }, { status: 400 });
