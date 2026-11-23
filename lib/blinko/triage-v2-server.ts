@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 
-export type TriageKind = "known_service" | "need_clarity" | "not_sure";
+export type TriageKind = "current_problem" | "growth_goal" | "learn_diagnosis";
 export type TriageChannel = "whatsapp" | "email";
 export type TriageRow = {
   id: string; created_at: string; updated_at: string;
