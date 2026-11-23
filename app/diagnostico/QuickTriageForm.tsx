@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import styles from "./quick-triage.module.css";
 
 type Stage = "contact" | "details" | "success";
@@ -17,6 +17,16 @@ const KIND_OPTIONS = [
 export default function QuickTriageForm() {
   const session = useRef<string | null>(null);
   const [stage, setStage] = useState<Stage>("contact");
+  const [storageStatus, setStorageStatus] = useState<"checking" | "ready" | "unavailable">("checking");
+
+  useEffect(() => {
+    let mounted = true;
+    fetch("/api/triagem", { cache: "no-store" })
+      .then(async (response) => response.ok ? response.json() as Promise<{ ready?: boolean }> : { ready: false })
+      .then((result) => { if (mounted) setStorageStatus(result.ready ? "ready" : "unavailable"); })
+      .catch(() => { if (mounted) setStorageStatus("unavailable"); });
+    return () => { mounted = false; };
+  }, []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [name, setName] = useState("");
@@ -45,7 +55,7 @@ export default function QuickTriageForm() {
 
   async function captureContact(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!consent) return;
+    if (!consent || storageStatus !== "ready") return;
     setError("");
     session.current ??= crypto.randomUUID();
     setLoading(true);
@@ -54,8 +64,11 @@ export default function QuickTriageForm() {
       if (!result.saved) throw new Error("not_saved");
       setStage("details");
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch {
-      setError("Não conseguimos salvar o contato agora. Confira os dados e tente novamente. Nenhuma mensagem foi enviada.");
+    } catch (caught) {
+      const errorCode = caught instanceof Error ? caught.message : "";
+      setError(errorCode === "service_not_configured" || errorCode === "migration_required"
+        ? "O armazenamento da triagem ainda não está ativado. Nenhum dado foi salvo. A integração precisa ser configurada antes de receber contatos."
+        : "Não foi possível registrar seu contato no momento. Nenhum dado foi salvo; tente novamente quando o formulário estiver disponível.");
     } finally {
       setLoading(false);
     }
@@ -122,6 +135,13 @@ export default function QuickTriageForm() {
         <span>{stage === "contact" ? "1 de 2 · contato" : "2 de 2 · sua necessidade"}</span>
       </div>
       <div className={styles.track} aria-hidden="true"><span style={{ width: stage === "contact" ? "50%" : "100%" }} /></div>
+      {storageStatus !== "ready" && (
+        <p className={styles.previewNotice} role="status">
+          {storageStatus === "checking"
+            ? "Conferindo a disponibilidade do formulário..."
+            : "Prévia em configuração: o recebimento de contatos ainda não está disponível. Não preencha dados pessoais reais até a ativação da triagem."}
+        </p>
+      )}
 
       {stage === "contact" ? (
         <form className={styles.form} onSubmit={captureContact}>
@@ -147,7 +167,7 @@ export default function QuickTriageForm() {
           </label>
           <p className={styles.privacy}>Os dados serão usados apenas para acompanhar esta solicitação. Você pode pedir atualização ou exclusão pelo mesmo canal de atendimento.</p>
           {error && <p role="alert" className={styles.error}>{error}</p>}
-          <button type="submit" className={styles.primary} disabled={loading || !consent}>{loading ? "Salvando contato..." : "Continuar →"}</button>
+          <button type="submit" className={styles.primary} disabled={loading || !consent || storageStatus !== "ready"}>{loading ? "Salvando contato..." : storageStatus !== "ready" ? "Triagem em preparação" : "Continuar →"}</button>
         </form>
       ) : (
         <form className={styles.form} onSubmit={complete}>
