@@ -380,7 +380,7 @@ export default function PreDiagnosticForm() {
 
         <label className={styles.consent}>
           <input type="checkbox" name="consent" value="yes" required />
-          <span>Autorizo a Blinko a usar estas informações para analisar esta solicitação, armazená-las para acompanhamento comercial e entrar em contato por e-mail ou WhatsApp sobre este pré-diagnóstico.</span>
+          <span>Autorizo a Blinko a tratar as informações fornecidas para analisar minha solicitação, acompanhar o diagnóstico e retornar por WhatsApp ou e-mail. Esta autorização não inclui publicidade ou promoções não solicitadas. Consulte a <a href="/privacidade" target="_blank" rel="noopener noreferrer">Política de Privacidade</a> e as <a href="/solicitacoes-de-dados" target="_blank" rel="noopener noreferrer">orientações sobre seus dados</a>.</span>
         </label>
       </fieldset>
 
