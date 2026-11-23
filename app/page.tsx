@@ -168,6 +168,16 @@ export default function Home() {
         </div>
       </section>
 
+      <section className={styles.outcome} aria-label="O que o Diagnóstico Blinko entrega">
+        <p className={styles.kicker}>O que você ganha com clareza</p>
+        <h2>Entender, priorizar, <em>decidir.</em></h2>
+        <div className={styles.outcomeItems}>
+          <div><span>01</span><strong>Uma visão do problema</strong><p>Achados fundamentados, com limites e evidências.</p></div>
+          <div><span>02</span><strong>Prioridades claras</strong><p>O que merece atenção e por quê.</p></div>
+          <div><span>03</span><strong>Próximos passos</strong><p>Recomendações proporcionais ao escopo do diagnóstico.</p></div>
+        </div>
+      </section>
+
       <section className={styles.entry} id="comecar" aria-labelledby="comece-title">
         <div className={styles.entryHeader}>
           <div>
