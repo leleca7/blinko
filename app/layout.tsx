@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
-const title = "Blinko | Diagnóstico empresarial, estratégia e execução";
-const description = "A Blinko investiga gargalos, valida prioridades e executa soluções sob medida em marca, marketing, atendimento, operação, gestão e tecnologia — com acompanhamento.";
+const title = "Blinko Studio | Diagnóstico e estruturação de negócios";
+const description = "A Blinko investiga desafios empresariais, organiza prioridades e estrutura soluções integrando estratégia, comunicação e Relações Públicas.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://blinko-wine.vercel.app"),
@@ -12,7 +12,9 @@ export const metadata: Metadata = {
   keywords: [
     "diagnóstico empresarial",
     "estratégia empresarial",
-    "diagnóstico e execução",
+    "estruturação de negócios",
+    "comunicação estratégica",
+    "relações públicas",
     "marketing e branding",
     "processos e operação",
     "automação e IA",
