@@ -13,8 +13,8 @@ export default function DiagnosticoPage() {
     <main className={styles.page}>
       <header className={styles.topbar}>
         <Link href="/" className={styles.brand} aria-label="Voltar para Blinko">
-          <img src="/brand/logo-blinko-color.png" alt="Blinko Studio" width={400} height={199}
-            style={{ display: "block", width: 122, maxWidth: "36vw", height: "auto" }} />
+          <img src="/brand/logo-fundo-claro.svg" alt="Blinko Studio" width={720} height={423}
+            style={{ display: "block", width: 175, maxWidth: "36vw", height: "auto" }} />
         </Link>
         <Link href="/" className={styles.back}>← voltar ao site</Link>
       </header>
