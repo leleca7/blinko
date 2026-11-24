@@ -5,7 +5,7 @@ const title = "Blinko Studio | Diagnóstico e estruturação de negócios";
 const description = "A Blinko investiga desafios empresariais, organiza prioridades e estrutura soluções integrando estratégia, comunicação e Relações Públicas.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://blinko-wine.vercel.app"),
+  metadataBase: new URL("https://blinko-imersiva.vercel.app"),
   title,
   description,
   applicationName: "Blinko",
@@ -27,8 +27,8 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   icons: { icon: [{ url: "/brand/monograma-b-rosa.svg", type: "image/svg+xml" }], apple: "/brand/monograma-b-rosa.svg" },
   robots: {
-    index: true,
-    follow: true,
+    index: false,
+    follow: false,
   },
   openGraph: {
     title,
@@ -42,6 +42,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title,
     description,
+    images: [{ url: "/opengraph-image", alt: "Blinko — O problema nem sempre está onde parece." }],
   },
 };
 
