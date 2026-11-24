@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { BLINKO_LOGO_DARK_DATA_URI } from "../lib/blinko/brand-logo-data";
 import styles from "./immersive-home.module.css";
 import Root3D from "./components/Root3D";
+import QuickTriageForm from "./diagnostico/QuickTriageForm";
 
 const journey = [
   ["01", "Escutar", "O contexto vem antes do serviço."],
@@ -48,14 +49,22 @@ export default function Home() {
     };
 
     const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const videos = page.querySelectorAll("video");
+    const mobile = window.matchMedia("(max-width: 760px)");
+    const videoVisibility = new Map<HTMLVideoElement, boolean>();
     const updatePlayback = () => {
-      const videos = page.querySelectorAll("video");
       videos.forEach((video) => {
-        if (motionPreference.matches) video.pause();
+        if (motionPreference.matches || mobile.matches || !videoVisibility.get(video)) video.pause();
         else void video.play().catch(() => undefined);
       });
     };
+    const videoObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => videoVisibility.set(entry.target as HTMLVideoElement, entry.isIntersecting));
+      updatePlayback();
+    }, { threshold: 0.05 });
+    videos.forEach(video => videoObserver.observe(video));
     motionPreference.addEventListener("change", updatePlayback);
+    mobile.addEventListener("change", updatePlayback);
     updatePlayback();
 
     window.addEventListener("scroll", schedule, { passive: true });
@@ -68,6 +77,8 @@ export default function Home() {
       window.removeEventListener("resize", schedule);
       window.removeEventListener("pointermove", movePointer);
       motionPreference.removeEventListener("change", updatePlayback);
+      mobile.removeEventListener("change", updatePlayback);
+      videoObserver.disconnect();
     };
   }, []);
 
@@ -88,7 +99,7 @@ export default function Home() {
       </header>
 
       <section className={styles.hero} id="inicio" aria-labelledby="hero-title">
-        <video className={styles.ambientVideo} aria-hidden="true" autoPlay muted loop playsInline preload="none">
+        <video className={styles.ambientVideo} aria-hidden="true" muted loop playsInline preload="none">
           <source src="/imersao/ambiente.mp4" type="video/mp4" />
         </video>
         <div className={styles.ambientTint} aria-hidden="true" />
@@ -101,20 +112,13 @@ export default function Home() {
             soluções, integrando pesquisa, comunicação e Relações Públicas.
           </p>
           <div className={styles.actions}>
-            <a className={styles.pill} href="/diagnostico">Iniciar triagem gratuita <span className={styles.arrow} aria-hidden="true">↗</span></a>
+            <a className={styles.pill} href="#triagem">Iniciar triagem gratuita <span className={styles.arrow} aria-hidden="true">↗</span></a>
             <a className={styles.textAction} href="#metodo">Conheça nosso olhar <span aria-hidden="true">↓</span></a>
           </div>
         </div>
 
         <div className={styles.heroArt} aria-hidden="true">
-          <div className={styles.artHalo} />
-          <div className={styles.artOrbit} />
-          <div className={[styles.artPetal, styles.petalOne].join(" ")} />
-          <div className={[styles.artPetal, styles.petalTwo].join(" ")} />
-          <div className={[styles.artPetal, styles.petalThree].join(" ")} />
-          <div className={[styles.artPetal, styles.petalFour].join(" ")} />
-          <div className={styles.artCore}><img src="/brand/monograma-b-rosa.svg" alt="" aria-hidden="true" /></div>
-          <span className={styles.artLabel}>clareza · estrutura · movimento</span>
+          <img className={styles.botanicalHero} src="/imersao/raizes.webp" alt="" decoding="async" />
         </div>
 
         <a className={styles.scrollCue} href="#sobre"><span className={styles.scrollLine} /> Role para descobrir</a>
@@ -141,6 +145,12 @@ export default function Home() {
         aria-label="Como a Blinko entende um problema"
       >
         <div className={styles.storySticky}>
+          <div className={styles.soilLandscape} aria-hidden="true">
+            <i className={styles.soilSurface} />
+            <i className={styles.soilFirst} />
+            <i className={styles.soilSecond} />
+            <i className={styles.soilDeep} />
+          </div>
           <Root3D />
 
           <div className={styles.storyText}>
@@ -237,7 +247,7 @@ export default function Home() {
         </div>
         <div className={styles.entryGrid}>
           <a className={[styles.path, styles.pathStrategic, styles.diagnosticPath].join(" ")}
-            href="/diagnostico" aria-label="Começar a triagem gratuita para conversar sobre o Diagnóstico Blinko">
+            href="#triagem" aria-label="Começar a triagem gratuita para conversar sobre o Diagnóstico Blinko">
             <div className={styles.pathTop}>
               <span>Diagnóstico Blinko — nosso serviço principal</span>
               <b aria-hidden="true">↗</b>
@@ -287,14 +297,20 @@ export default function Home() {
             <summary>Quanto tempo leva o diagnóstico?<span aria-hidden="true">+</span></summary>
             <p>Depende do tamanho do desafio, das informações disponíveis e do escopo da pesquisa. Etapas, prazo e entregas serão combinados na proposta, antes da contratação.</p>
           </details>
-          <a className={styles.faqLink} href="/diagnostico">Comece pela triagem gratuita <span aria-hidden="true">↗</span></a>
+          <a className={styles.faqLink} href="#triagem">Comece pela triagem gratuita <span aria-hidden="true">↗</span></a>
         </div>
       </section>
 
-      <section className={styles.final} aria-labelledby="final-title">
-        <span className={styles.kicker}>Blinko Studio — clareza para evoluir</span>
-        <h2 id="final-title">Todo avanço começa com <em>uma boa pergunta.</em></h2>
-        <a className={styles.finalLink} href="/diagnostico">Iniciar triagem gratuita <span className={styles.arrow} aria-hidden="true">↗</span></a>
+      <section className={styles.final} id="triagem" aria-labelledby="final-title">
+        <div className={styles.finalBackdrop} aria-hidden="true" />
+        <div className={styles.finalCopy}>
+          <span className={styles.kicker}>Blinko Studio — clareza para evoluir</span>
+          <h2 id="final-title">Todo avanço começa com <em>uma boa pergunta.</em></h2>
+          <p>Antes de propor uma solução, queremos conhecer a realidade do seu negócio.</p>
+        </div>
+        <div className={styles.triageGlass}>
+          <QuickTriageForm demo />
+        </div>
       </section>
 
       <footer className={styles.footer}>
