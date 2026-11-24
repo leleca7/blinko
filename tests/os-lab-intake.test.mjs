@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { syntheticIntake } from '../lib/os-lab/synthetic-intake.ts';
+const start={action:'start',id:'fixture-100',company:'Empresa fictícia D',consent:true};
+const complete={action:'complete',id:'fixture-100',challenge:'Organização comercial'};
+const initial=()=>syntheticIntake([],start).rows;
+test('explicit consent required',()=>{const r=syntheticIntake([],{...start,consent:false});assert.equal(r.status,'consent_required');assert.equal(r.rows.length,0)});
+test('partial intake can survive abandonment in current session',()=>{const r=syntheticIntake([],start);assert.equal(r.status,'created');assert.equal(r.rows[0].stage,'partial')});
+test('repeat start does not duplicate or replace',()=>{const rows=initial();assert.deepEqual(syntheticIntake(rows,start),{status:'duplicate',rows});assert.equal(syntheticIntake(rows,{...start,company:'Empresa fictícia E'}).status,'conflict')});
+test('complete requires existing contact',()=>assert.equal(syntheticIntake([],complete).status,'contact_missing'));
+test('complete updates and repeats are idempotent',()=>{const r=syntheticIntake(initial(),complete);assert.equal(r.status,'updated');assert.equal(r.rows.length,1);assert.equal(r.rows[0].stage,'complete');assert.deepEqual(syntheticIntake(r.rows,complete),{status:'duplicate',rows:r.rows});assert.deepEqual(syntheticIntake(r.rows,{...complete,challenge:'Comunicação'}),{status:'conflict',rows:r.rows});assert.deepEqual(syntheticIntake(r.rows,start),{status:'duplicate',rows:r.rows})});
+test('only synthetic allowed values',()=>{assert.equal(syntheticIntake([],{...start,id:'real-id'}).status,'invalid');assert.equal(syntheticIntake([],{...start,company:'Empresa real'}).status,'invalid');assert.equal(syntheticIntake(initial(),{...complete,challenge:'dados livres'}).status,'invalid')});
