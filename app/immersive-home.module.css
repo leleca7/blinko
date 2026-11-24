@@ -719,196 +719,127 @@
 }
 
 
-/* BLINKO · Refino 3D — substitui raiz circular e artefatos soltos.
-   Camadas CSS com perspectiva; sem dependência de WebGL ou métricas fictícias. */
-.bridge:before,
-.editorialShowcase:before{content:none!important;display:none!important}
-.aboutLogo,.methodSeal,.storyMeter,.storyFilm,.storyFilmTag,
-.storyVideo,.storyStill,.paperBackdrop{display:none!important}
-.bridge{background:#f3efeb!important}
-.editorialShowcase{
- background:
-  linear-gradient(rgba(251,248,242,.92),rgba(251,248,242,.92)),
-  url('/imersao/textura-papel.webp') center / cover!important
-}
-.editorialUnderline{display:none}
 
-/* A cor passa da superfície verde à terra conforme o visitante desce. */
+/* BLINKO · Corte orgânico: grama → solo → raízes.
+   Ilustração contínua; lente de profundidade guiada pelo scroll. */
+.bridge:before,.editorialShowcase:before{display:none!important;content:none!important}
+.aboutLogo,.methodSeal,.storyMeter,.storyFilm,.storyFilmTag,.storyVideo,.storyStill,.paperBackdrop{display:none!important}
+.bridge{background:#f3efeb!important}
+.editorialShowcase{background:linear-gradient(rgba(251,248,242,.93),rgba(251,248,242,.93)),url('/imersao/textura-papel.webp') center / cover!important}
+.editorialUnderline{display:none!important}
+
 .story{
- background:
-  linear-gradient(180deg,#143e2d 0%,#254b3c 23%,#404333 51%,#5a3e33 73%,#38271f 100%)!important;
  isolation:isolate;
+ background:linear-gradient(180deg,#133d2b 0%,#244a38 25%,#52463b 55%,#49342b 100%)!important;
 }
 .story:before{
- content:"";position:absolute;inset:0;pointer-events:none;
- background:repeating-linear-gradient(12deg,rgba(244,227,196,.035) 0 1px,transparent 1px 13px);
- opacity:.34;
+ content:"";position:absolute;inset:0;pointer-events:none;opacity:.25;
+ background:repeating-linear-gradient(12deg,rgba(249,228,195,.08) 0 1px,transparent 1px 17px);
 }
 .storySticky:before{content:none!important;display:none!important}
 .storySticky{z-index:1}
-.storyGraphic{
- position:relative;
- width:min(44vw,580px)!important;
- height:min(42vw,550px);
- aspect-ratio:auto!important;
- display:block;
- transform:none!important;
- filter:none!important;
- perspective:1000px;
-}
-.storyGraphic:before,.storyGraphic:after{content:none!important}
-.earthPerspective{
- position:absolute;inset:0;
- perspective:960px;perspective-origin:50% 43%;
- transform-style:preserve-3d;
-}
-.earthAtmosphere{
- position:absolute;inset:17% 6% 10%;border-radius:50%;
- background:radial-gradient(ellipse at 51% 48%,rgba(241,196,187,.22),rgba(117,95,67,.08) 40%,transparent 75%);
- filter:blur(19px);
- transform:translateZ(-40px);
-}
-.earthPlateStack{
- position:absolute;inset:4% 0 13%;
- transform-style:preserve-3d;
- transform:
-  rotateY(calc(-12deg + var(--earth-tilt,0deg) + var(--story-progress,0) * 28deg))
-  rotateZ(calc(-8deg + var(--story-progress,0) * 15deg));
- will-change:transform;
-}
-.earthPlate{
- position:absolute;left:8%;width:84%;height:25%;
- border-radius:52% 47% 49% 51%/58% 47% 53% 42%;
- transform-style:preserve-3d;
- display:flex;justify-content:center;align-items:center;
- text-align:center;
- border:1px solid rgba(250,239,213,.53);
- box-shadow:
-  0 8px 0 rgba(14,18,13,.3),
-  0 14px 15px rgba(9,18,14,.15),
-  inset 0 5px 13px rgba(255,255,255,.2);
- backface-visibility:visible;
- will-change:transform;
-}
-.earthPlate:before{
- content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
- background:
-  repeating-radial-gradient(ellipse at 23% 25%,rgba(255,255,255,.16) 0 1px,transparent 1px 9px);
- opacity:.27;
-}
-.earthPlate:after{
- content:"";position:absolute;left:9%;right:9%;bottom:-14px;height:20px;
- border-radius:0 0 50% 50%;
- background:linear-gradient(180deg,rgba(4,17,12,.32),transparent);
- filter:blur(5px);pointer-events:none;
-}
-.earthPlate span{
- color:#fff5e8;font-size:10px;font-weight:800;text-transform:uppercase;
- letter-spacing:.16em;
- text-shadow:0 1px 8px rgba(1,20,10,.65);
- transform:rotateX(-10deg);
- white-space:nowrap;
-}
-.plateSurface{
- top:10%;z-index:4;
- background:linear-gradient(150deg,#6f9b77 0%,#0a5032 44%,#082f22 100%);
- transform:translate3d(0,calc(var(--story-progress,0) * -68px),100px) rotateX(52deg);
-}
-.plateSignals{
- top:28%;z-index:3;
- background:linear-gradient(140deg,#e6ceb4 0%,#afa882 38%,#55634b 100%);
- transform:translate3d(0,calc(var(--story-progress,0) * -25px),50px) rotateX(52deg);
-}
-.plateSignals span{color:#244031;text-shadow:0 1px 5px rgba(255,255,255,.44)}
-.plateContext{
- top:46%;z-index:2;
- background:linear-gradient(130deg,#efb5ae 0%,#b47f71 46%,#7d5448 100%);
- transform:translate3d(0,calc(var(--story-progress,0) * 23px),0px) rotateX(52deg);
-}
-.plateCauses{
- top:64%;z-index:1;
- background:linear-gradient(140deg,#926454 0%,#6d4438 45%,#36251f 100%);
- transform:translate3d(0,calc(var(--story-progress,0) * 64px),-50px) rotateX(52deg);
-}
-.earthCaption{
- position:absolute;bottom:1%;left:50%;
- transform:translateX(-50%);
- width:85%;max-width:400px;
- margin:0!important;text-align:center;font-size:10px!important;
- letter-spacing:.14em;line-height:1.55!important;text-transform:uppercase;
- color:rgba(255,244,229,.73)!important;
-}
-.storyHint{color:rgba(255,237,217,.58)}
 
-/* Celular: narrativa contínua, sem objeto raiz, sem bloco verde vazio.
-   O próprio scroll leva naturalmente de vegetação à terra. */
+.earthCutaway{
+ position:relative;width:min(47vw,665px);aspect-ratio:820/780;
+ justify-self:center;align-self:center;min-width:0;
+ perspective:1100px;perspective-origin:50% 42%;
+ filter:drop-shadow(0 20px 45px rgba(11,20,10,.20));
+}
+.earthCutawaySvg{
+ display:block;width:100%;height:100%;
+ overflow:visible;
+ transform-origin:50% 45%;
+ transform:
+  translate3d(0,calc(var(--story-progress,0) * -72px),0)
+  scale(calc(1 + var(--story-progress,0) * .23))
+  rotateY(calc(-9deg + var(--earth-tilt,0deg)))
+  rotateX(3deg);
+ will-change:transform;
+}
+.earthLandmass{
+ transform-origin:50% 50%;
+}
+.earthGrassBlades{opacity:clamp(.28,calc(1 - var(--story-progress,0) * 1.7),1)}
+.earthRootWeb{
+ opacity:clamp(.28,calc(var(--story-progress,0) * 1.15 + .24),1);
+ filter:drop-shadow(0 1px 1px rgba(9,17,9,.15));
+}
+.mobileEarthDecor{display:none}
+
+/* O solo continua além da moldura, não são círculos isolados. */
+@media (min-width:761px) {
+ .storySticky{grid-template-columns:minmax(0,1.06fr) minmax(0,.94fr);gap:clamp(25px,4vw,80px)}
+ .storyText{z-index:2}
+}
+
+/* Android/iPhone: descida natural; sem sticky gigante nem espaço vazio. */
 @media(max-width:760px){
  .story{
-  height:auto!important;min-height:0!important;
-  overflow:hidden;
+  height:auto!important;min-height:0!important;overflow:hidden!important;
   background:linear-gradient(
    180deg,
-   #0c3526 0%,#244836 26%,#404032 52%,
-   #573f35 75%,#483128 92%,#403027 100%
+   #16432d 0%,#2b4e37 17%,
+   #51493a 39%,#675043 57%,
+   #543a2f 74%,#34271f 100%
   )!important;
  }
  .story:before{
-  opacity:.17;
-  background:repeating-linear-gradient(-12deg,rgba(242,223,191,.085) 0 1px,transparent 1px 17px);
+  opacity:.2;z-index:0;
+  background:repeating-linear-gradient(-10deg,rgba(255,233,203,.07) 0 1px,transparent 1px 19px);
  }
  .story:after{
-  content:"";position:absolute;left:0;right:0;bottom:0;height:70px;
-  pointer-events:none;
-  background:linear-gradient(to bottom,transparent,#f3efeb);
-  z-index:0;
+  content:"";position:absolute;bottom:0;left:0;right:0;height:65px;
+  background:linear-gradient(180deg,transparent,#f3efeb);
+  pointer-events:none;z-index:0;
  }
  .storySticky{
   position:relative!important;top:auto!important;
   height:auto!important;min-height:0!important;
-  display:block!important;grid-template-columns:none!important;
-  grid-template-rows:none!important;overflow:visible!important;
-  padding:54px 22px 75px!important;
+  display:block!important;overflow:visible!important;
+  padding:61px 22px 65px!important;
+  grid-template-columns:none!important;grid-template-rows:none!important;
  }
- .storyGraphic,.earthPerspective,.earthPlateStack,.earthCaption{
-  display:none!important;
+ .earthCutaway{display:none!important}
+ .mobileEarthDecor{
+  display:block!important;position:absolute;inset:0;
+  pointer-events:none;z-index:0;overflow:hidden;
+ }
+ .mobileGrassEdge{position:absolute;left:-2%;right:-2%;top:0;height:58px;opacity:.67}
+ .mobileGrassEdge svg{display:block;width:104%;height:100%}
+ .mobileRootIllustration{
+  position:absolute;width:min(96%,440px);height:43%;
+  right:-18%;bottom:3%;
+  opacity:.33;filter:drop-shadow(1px 1px 2px rgba(9,8,4,.2));
  }
  .storyText{
-  position:relative!important;height:auto!important;
-  width:100%!important;max-width:590px!important;
-  margin:0 auto!important;display:block!important;
-  align-self:auto!important;
+  position:relative!important;z-index:2;
+  width:100%!important;max-width:540px!important;
+  height:auto!important;display:block!important;
+  margin:0 auto!important;align-self:auto!important;
  }
  .scene,
  .story[data-scene="0"] .sceneOne,
  .story[data-scene="1"] .sceneTwo,
  .story[data-scene="2"] .sceneThree{
   position:relative!important;top:auto!important;left:auto!important;
-  opacity:1!important;visibility:visible!important;
-  transform:none!important;
-  height:auto!important;min-height:0!important;
-  padding:46px 0 52px!important;margin:0!important;
-  border-bottom:1px solid rgba(255,236,218,.2);
+  visibility:visible!important;opacity:1!important;transform:none!important;
+  margin:0!important;height:auto!important;min-height:0!important;
+  padding:49px 0 56px!important;
+  border-bottom:1px solid rgba(255,239,218,.17);
   transition:none!important;
  }
- .scene:first-child{padding-top:23px!important}
- .scene:last-child{border-bottom:0!important;padding-bottom:46px!important}
- .scene .kicker{margin-bottom:17px!important}
- .scene h2{
-  font-size:clamp(45px,10.6vw,72px)!important;
-  line-height:1.02!important;max-width:12ch!important;
- }
- .scene p{
-  font-size:15px!important;line-height:1.63!important;
-  max-width:440px!important;
- }
+ .scene:first-child{padding-top:18px!important}
+ .scene:last-child{border:0!important;padding-bottom:28px!important}
+ .scene .kicker{margin-bottom:18px!important}
+ .scene h2{font-size:clamp(45px,11vw,72px)!important;max-width:12ch!important;line-height:1.01!important}
+ .scene p{font-size:15px!important;line-height:1.65!important;max-width:430px!important}
  .storyHint{display:none!important}
 }
 @media(max-width:380px){
- .storySticky{padding:47px 20px 66px!important}
- .scene{padding:39px 0 43px!important}
- .scene h2{font-size:clamp(42px,10.8vw,54px)!important}
+ .storySticky{padding:54px 20px 60px!important}
+ .scene h2{font-size:clamp(42px,11vw,56px)!important}
 }
 @media(prefers-reduced-motion:reduce){
- .earthPlateStack{transform:none!important;will-change:auto!important}
- .earthPlate{will-change:auto!important}
+ .earthCutawaySvg{transform:none!important;will-change:auto!important}
+ .earthGrassBlades,.earthRootWeb{opacity:1!important}
 }
