@@ -14,7 +14,7 @@ export default function FullDiagnosticPage() {
     <main className={styles.page}>
       <header className={styles.topbar}>
         <Link href="/" className={styles.brand} aria-label="Voltar ao início da Blinko">
-          <img src="/brand/logo-blinko-color.png" alt="Blinko" width={400} height={199} style={{ display:"block",width:122,maxWidth:"36vw",height:"auto" }} />
+          <img src="/brand/logo-fundo-claro.svg" alt="Blinko" width={720} height={423} style={{ display:"block",width:175,maxWidth:"36vw",height:"auto" }} />
         </Link>
         <Link href="/diagnostico" className={styles.back}>← voltar à triagem</Link>
       </header>
