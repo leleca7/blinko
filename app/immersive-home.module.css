@@ -1083,3 +1083,13 @@
 :global(html.lenis),:global(html.lenis body){height:auto}
 :global(.lenis.lenis-smooth){scroll-behavior:auto!important}
 :global(.lenis.lenis-stopped){overflow:hidden}
+
+/* Root framing: allow the complete silhouette to breathe on all desktops.
+   The actual WebGL camera also fits the generated model's bounding box. */
+@media(min-width:761px) and (prefers-reduced-motion:no-preference){
+ .storySticky{grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:clamp(25px,4vw,70px);padding:94px max(6vw,24px) 42px}
+ .root3DContainer{width:100%;height:min(calc(100svh - 150px),780px);max-width:740px;min-height:0;align-self:center;filter:none}
+ .root3DContainer .rootSculptureSvg{transform:none;will-change:auto;overflow:hidden}
+ .root3DContainer .rootRevealedPath{stroke-dasharray:none;stroke-dashoffset:0;transition:none}
+ .root3DCanvas,.root3DCanvasReady{mask-image:none}
+}
