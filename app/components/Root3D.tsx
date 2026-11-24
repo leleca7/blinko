@@ -17,7 +17,7 @@ export default function Root3D() {
   useEffect(() => {
     const box = boxRef.current;
     const canvas = canvasRef.current;
-    if (!box || !canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!box || !canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches || window.matchMedia("(max-width: 760px)").matches) return;
 
     let cancelled = false;
     let clean = () => {};
