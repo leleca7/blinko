@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { syntheticIntake, type LabIntake } from "../../lib/os-lab/synthetic-intake";
 import styles from "./os-preview.module.css";
+import { pillarCoverage, investigationQuestions, assessHypothesis, type Hypothesis } from "../../lib/os-lab/intelligence";
 
 const modules = [
   ["Hoje", "Fila de atenção existente", "Revisar integração"],
@@ -15,7 +16,7 @@ const modules = [
   ["Documentos", "Rascunho de relatório e exportação", "Protótipo"],
   ["Financeiro", "Fluxo previsto e realizado por projeto", "Protótipo"],
   ["Agenda", "Reuniões, visitas e prazos", "Protótipo"],
-  ["Automação", "Fila de revisão e verificações de consistência", "Protótipo"],
+  ["Inteligência", "Cruzamento de fontes e hipóteses investigativas", "Protótipo"],
   ["Segurança", "Permissões e autenticação", "Auditoria pendente"],
 ];
 const stages = ["Triagem", "Contato", "Reunião", "Proposta", "Diagnóstico"];
@@ -27,14 +28,14 @@ const initialLeads = [
 const pillars = ["Estratégia","Administração","Pessoas","Financeiro","Comercial","Marketing","Marca","Relacionamentos","Experiência","Operação"];
 const method = ["Escutar","Investigar","Priorizar","Estruturar","Acompanhar"];
 const ratings = ["Inexistente","Inicial","Em estruturação","Consistente","Consolidado"];
-const views = [["home","Visão geral","01"],["crm","CRM e triagens","02"],["orcamento","Orçamentos","03"],["projects","Projetos","04"],["diagnostic","Diagnóstico","05"],["radar","Radar Blinko","06"],["gut","Criticidade","07"],["plan","Plano de ação","08"],["agenda","Agenda","09"],["report","Documentos","10"],["finance","Financeiro","11"],["review","Revisão humana","12"],["intake","Simular triagem","13"]] as const;
+const views = [["home","Visão geral","01"],["crm","CRM e triagens","02"],["orcamento","Orçamentos","03"],["projects","Projetos","04"],["diagnostic","Diagnóstico","05"],["radar","Radar Blinko","06"],["gut","Criticidade","07"],["plan","Plano de ação","08"],["agenda","Agenda","09"],["report","Documentos","10"],["finance","Financeiro","11"],["review","Revisão humana","12"],["intake","Simular triagem","13"],["intelligence","Inteligência","14"]] as const;
 type View = typeof views[number][0];
 type Evidence = {id:number; pillar:number; kind:string; source:string; statement:string; verified:boolean};
 type Action = {id:number; title:string; owner:string; due:string; evidenceId:number; gut:number; done:boolean};
 type Appointment = {id:number;title:string;date:string;kind:string;done:boolean};
 type Ledger = {id:number;label:string;date:string;kind:"income"|"expense";cents:number;settled:boolean};
-type Project = {id:number; company:string; stage:number; owner:string; due:string; evidence:Evidence[]; scores:Record<number,{value:number;evidenceId:number}>; actions:Action[]; appointments:Appointment[]; ledger:Ledger[]};
-const makeProject = (id:number,company:string):Project => ({id,company,stage:0,owner:"A definir",due:"",evidence:[],scores:{},actions:[],appointments:[],ledger:[]});
+type Project = {id:number; company:string; stage:number; owner:string; due:string; evidence:Evidence[]; scores:Record<number,{value:number;evidenceId:number}>; actions:Action[]; appointments:Appointment[]; ledger:Ledger[]; hypotheses:Hypothesis[]};
+const makeProject = (id:number,company:string):Project => ({id,company,stage:0,owner:"A definir",due:"",evidence:[],scores:{},actions:[],appointments:[],ledger:[],hypotheses:[]});
 const currency = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const clean = (n: number) => Number.isFinite(n) ? Math.max(0,n) : 0;
 
@@ -63,6 +64,8 @@ export default function OsPreview() {
   const [draft,setDraft] = useState({pillar:0,kind:"Relato",source:"",statement:""});
   const [actionDraft,setActionDraft] = useState({title:"",owner:"A definir",due:"",evidenceId:""});
   const [seq,setSeq] = useState(1);
+  const [focusPillar,setFocusPillar] = useState(0);
+  const [hypDraft,setHypDraft] = useState({cause:"",effect:"",supportId:"",challengeId:""});
   const [eventDraft,setEventDraft] = useState({title:"",date:"",kind:"Reunião"});
   const [moneyDraft,setMoneyDraft] = useState({label:"",date:"",kind:"income" as "income"|"expense",amount:""});
   const [reportNote,setReportNote] = useState<Record<number,string>>({});
@@ -72,9 +75,12 @@ export default function OsPreview() {
   const project = projects.find(p=>p.id===selected) ?? projects[0];
   const updateProject = (fn:(p:Project)=>Project) => setProjects(old=>old.map(p=>p.id===project.id?fn(p):p));
   const verified = project.evidence.filter(e=>e.verified && e.kind!=="Hipótese");
+  const coverage = pillarCoverage(project.evidence,pillars.length);
+  const questions = investigationQuestions(project.evidence,focusPillar);
+  const addHypothesis=()=>{if(!hypDraft.cause.trim()||!hypDraft.effect.trim())return;const supportId=hypDraft.supportId?Number(hypDraft.supportId):null;const challengeId=hypDraft.challengeId?Number(hypDraft.challengeId):null;if((supportId!==null&&!verified.some(e=>e.id===supportId))||(challengeId!==null&&!verified.some(e=>e.id===challengeId))||(supportId!==null&&supportId===challengeId))return;updateProject(p=>({...p,hypotheses:[...p.hypotheses,{id:seq,pillar:focusPillar,cause:hypDraft.cause.trim(),effect:hypDraft.effect.trim(),supportId,challengeId,decision:"open",rationale:""}]}));setSeq(n=>n+1);setHypDraft({cause:"",effect:"",supportId:"",challengeId:""});};
   const validScores = Object.entries(project.scores).filter(([i,s])=>s.value>=0 && verified.some(e=>e.id===s.evidenceId&&e.pillar===Number(i)));
   const maturity = validScores.length ? Math.round(validScores.reduce((sum,[,s])=>sum+s.value,0)/(4*validScores.length)*100) : null;
-  const changeProject = (id:number) => {setSelected(id);setDraft({pillar:0,kind:"Relato",source:"",statement:""});setActionDraft({title:"",owner:"A definir",due:"",evidenceId:""});setEventDraft({title:"",date:"",kind:"Reunião"});setMoneyDraft({label:"",date:"",kind:"income",amount:""});setExportNotice("");};
+  const changeProject = (id:number) => {setSelected(id);setDraft({pillar:0,kind:"Relato",source:"",statement:""});setActionDraft({title:"",owner:"A definir",due:"",evidenceId:""});setEventDraft({title:"",date:"",kind:"Reunião"});setMoneyDraft({label:"",date:"",kind:"income",amount:""});setExportNotice("");setFocusPillar(0);setHypDraft({cause:"",effect:"",supportId:"",challengeId:""});};
   const addProject = (id:number,company:string) => {setProjects(old=>old.some(p=>p.id===id)?old:[...old,makeProject(id,company)]);changeProject(id);setView("projects");};
   const addEvidence = () => {if(!draft.source.trim()||!draft.statement.trim())return;updateProject(p=>({...p,evidence:[...p.evidence,{...draft,id:seq,verified:false}]}));setSeq(n=>n+1);setDraft({...draft,source:"",statement:""});};
   const addAction = () => {const evidenceId=Number(actionDraft.evidenceId);if(!actionDraft.title.trim()||!verified.some(e=>e.id===evidenceId))return;updateProject(p=>({...p,actions:[...p.actions,{...actionDraft,id:seq,evidenceId,gut:gut.reduce((a,b)=>a*b,1),done:false}]}));setSeq(n=>n+1);setActionDraft({title:"",owner:"A definir",due:"",evidenceId:""});};
@@ -96,6 +102,7 @@ export default function OsPreview() {
     ...verified.map(e=>pillars[e.pillar]+" | "+e.kind+" | "+e.source+" | "+e.statement),
     ...(verified.length?[]:["Nenhuma evidência elegível."]),
     "", "2. HIPÓTESES — A VALIDAR", ...project.evidence.filter(e=>e.kind==="Hipótese").map(e=>pillars[e.pillar]+" | "+e.statement),
+    ...project.hypotheses.map(h=>{const a=assessHypothesis(h,project.evidence);return "Hipótese causal: "+h.cause+" → "+h.effect+" | "+a.status+" | Parecer: "+(h.rationale||"Pendente");}),
     "", "3. MATURIDADE — ESCALA PROVISÓRIA",
     "Cobertura: "+validScores.length+"/10. Média apenas dos pilares avaliados: "+(maturity===null?"Não avaliado":maturity+"%"),
     ...pillars.map((name,i)=>{const s=validScores.find(([key])=>Number(key)===i)?.[1];return name+": "+(s?s.value+"/4 — "+ratings[s.value]:"Não avaliado");}),
@@ -110,10 +117,11 @@ export default function OsPreview() {
     ...(!project.actions.length?["Registrar ao menos uma ação vinculada a evidência."]:[]),
     ...(project.actions.some(a=>!verified.some(e=>e.id===a.evidenceId))?["Revalidar evidências de apoio às ações."]:[]),
     ...(project.actions.some(a=>!a.due||a.owner==="A definir")?["Definir responsável e prazo das ações."]:[]),
+    ...(project.hypotheses.some(h=>assessHypothesis(h,project.evidence).stale)?["Revalidar os vínculos e pareceres das hipóteses causais."]:[]),
     ...(!reportNote[project.id]?.trim()?["Preencher a síntese humana."]:[]),
     ...(!reviewNotes[project.id]?.trim()?["Registrar o parecer de revisão."]:[])
   ];
-  const reviewKey=JSON.stringify([reportText,reviewNotes[project.id]||"",project.evidence,project.scores,project.actions]);
+  const reviewKey=JSON.stringify([reportText,reviewNotes[project.id]||"",project.evidence,project.scores,project.actions,project.hypotheses]);
   const reviewed=blockers.length===0&&reviewSnapshots[project.id]===reviewKey;
   const reviewStatus=reviewed?"Revisado na simulação":reviewSnapshots[project.id]?"Revisão desatualizada":"Rascunho pendente";
   const downloadReport = () => {const url=URL.createObjectURL(new Blob([reportText+"\n\nStatus interno: "+reviewStatus],{type:"text/plain;charset=utf-8"}));const a=document.createElement("a");a.href=url;a.download="blinko-relatorio-ficticio-"+project.id+".txt";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setExportNotice("Exportação solicitada ao navegador. Confira seus downloads.");};
@@ -139,10 +147,10 @@ export default function OsPreview() {
         <div className={styles.workspace}>
         <header className={styles.top}>
           <div className={styles.breadcrumb}>Blinko OS <span>/</span> {views.find(v=>v[0]===view)?.[1]}</div>
-          <span className={styles.previewTag}>PROTÓTIPO 04</span>
+          <span className={styles.previewTag}>PROTÓTIPO 05</span>
         </header>
         <aside className={styles.notice}>Ambiente experimental · Use somente dados fictícios. Não há conexão ao CRM, envio ou armazenamento. Recarregar restaura a demonstração.</aside>
-        {["projects","diagnostic","radar","plan","agenda","report","finance","review"].includes(view) && <div className={styles.projectBar}><label>Projeto ativo<select value={project.id} onChange={e=>changeProject(Number(e.target.value))}>{projects.map(p=><option key={p.id} value={p.id}>{p.company}</option>)}</select></label><span>{method[project.stage]} · {verified.length} evidências revisadas</span></div>}
+        {["projects","diagnostic","radar","plan","agenda","report","finance","review","intelligence"].includes(view) && <div className={styles.projectBar}><label>Projeto ativo<select value={project.id} onChange={e=>changeProject(Number(e.target.value))}>{projects.map(p=><option key={p.id} value={p.id}>{p.company}</option>)}</select></label><span>{method[project.stage]} · {verified.length} evidências revisadas</span></div>}
         {view==="home" && <>
         <section className={styles.hero}>
           <div><small>OPERAÇÃO E INTELIGÊNCIA</small><h1>Clareza para operar.</h1><p>Da triagem ao diagnóstico: uma central para organizar decisões, evidências e entregas.</p></div>
@@ -192,7 +200,19 @@ export default function OsPreview() {
         {view==="finance" && <section className={styles.panel}><small>11 / FINANCEIRO</small><h2>Movimentações do projeto</h2><p>Simulação de receitas e despesas. Previsto não é caixa realizado. Não é contabilidade, distribuição de lucro ou cobrança real.</p><div className={styles.financeGrid}>{[["Receitas previstas",financeTotal("income")],["Despesas previstas",financeTotal("expense")],["Saldo realizado",financeTotal("income",true)-financeTotal("expense",true)],["Saldo previsto",financeTotal("income")-financeTotal("expense")]].map(([name,value])=><article key={name}><small>{name}</small><strong>{currency(Number(value))}</strong></article>)}</div><div className={styles.fields}><label>Descrição fictícia<input maxLength={120} value={moneyDraft.label} onChange={e=>setMoneyDraft({...moneyDraft,label:e.target.value})}/></label><label>Natureza<select value={moneyDraft.kind} onChange={e=>setMoneyDraft({...moneyDraft,kind:e.target.value as Ledger["kind"]})}><option value="income">Receita</option><option value="expense">Despesa</option></select></label><label>Valor (R$)<input type="number" min=".01" max="100000000" step=".01" value={moneyDraft.amount} onChange={e=>setMoneyDraft({...moneyDraft,amount:e.target.value})}/></label><label>Vencimento<input type="date" value={moneyDraft.date} onChange={e=>setMoneyDraft({...moneyDraft,date:e.target.value})}/></label></div><button className={styles.primaryButton} disabled={!validMoney} onClick={addMoney}>Adicionar lançamento previsto</button><div className={styles.recordList}>{!project.ledger.length&&<p>Nenhuma movimentação neste projeto.</p>}{[...project.ledger].sort((a,b)=>a.date.localeCompare(b.date)).map(x=><article key={x.id}><small>{x.kind==="income"?"Receita":"Despesa"} · {dateLabel(x.date)}</small><h3>{x.label} · {currency(x.cents/100)}</h3><label className={styles.check}><input type="checkbox" checked={x.settled} onChange={e=>{const settled=e.target.checked;updateProject(p=>({...p,ledger:p.ledger.map(y=>y.id===x.id?{...y,settled}:y)}));}}/> {x.kind==="income"?"Recebido":"Pago"} (simulação)</label></article>)}</div></section>}
         {view==="review" && <section className={styles.panel}><small>12 / CONTROLE DE QUALIDADE</small><h2>Central de revisão humana</h2><p>Verificações automáticas de consistência, não avaliação profissional nem IA. A revisão é simulada, restrita ao projeto ativo. Alterar registros relevantes invalida a revisão anterior.</p><div className={styles.result}><small>STATUS DA ENTREGA</small><strong>{reviewStatus}</strong><p>{blockers.length?blockers.length+" critérios pendentes":"Critérios mínimos preenchidos. A avaliação do conteúdo continua humana."}</p></div><div className={styles.recordList}>{blockers.map((item,i)=><article key={item}><small>PENDÊNCIA {String(i+1).padStart(2,"0")}</small><h3>{item}</h3></article>)}{!blockers.length&&<article><small>VERIFICAÇÕES CONCLUÍDAS</small><h3>Conferir coerência, fundamentação, limitações e adequação das recomendações antes de registrar o parecer.</h3></article>}</div><div className={styles.buttonRow}>{(["diagnostic","radar","plan","report"] as const).map(v=><button className={styles.smallButton} key={v} onClick={()=>setView(v)}>{views.find(x=>x[0]===v)?.[1]} ↗</button>)}</div><label>Parecer humano fictício<textarea maxLength={1500} value={reviewNotes[project.id]||""} onChange={e=>setReviewNotes(old=>({...old,[project.id]:e.target.value}))} placeholder="Limitações, correções e conclusão da revisão"/></label><div className={styles.buttonRow}><button className={styles.primaryButton} disabled={blockers.length>0||reviewed} onClick={()=>setReviewSnapshots(old=>({...old,[project.id]:reviewKey}))}>Registrar revisão simulada</button>{reviewSnapshots[project.id]&&<button className={styles.smallButton} onClick={()=>setReviewSnapshots(old=>{const next={...old};delete next[project.id];return next})}>Revogar revisão</button>}</div></section>}
         {view==="intake" && <section className={styles.panel}><small>13 / INTEGRAÇÃO SIMULADA</small><h2>Da triagem ao CRM</h2><p>Teste local com um único contato fictício fixo. Não utiliza formulário público, dados pessoais, banco ou WhatsApp. A versão real ainda exige sessão de envio segura, consentimento, limites de requisições e testes HTTP.</p><div className={styles.recordList}><article><small>01 / CONTATO</small><h3>Empresa fictícia D</h3><label className={styles.check}><input type="checkbox" checked={intakeConsent} onChange={e=>setIntakeConsent(e.target.checked)}/> Simular consentimento explícito</label><div className={styles.buttonRow}><button className={styles.primaryButton} onClick={()=>runIntake("start")}>Simular início ou reenvio</button></div></article><article><small>02 / NECESSIDADE</small><label>Desafio fictício<select value={intakeChallenge} onChange={e=>setIntakeChallenge(e.target.value)}>{["Organização comercial","Comunicação","Processos internos"].map(x=><option key={x}>{x}</option>)}</select></label><div className={styles.buttonRow}><button className={styles.primaryButton} onClick={()=>runIntake("complete")}>Simular conclusão ou reenvio</button></div></article></div><div className={styles.result} aria-live="polite"><small>RESULTADO DO TESTE</small><strong>{intakeRows.length} registro</strong><p>{intakeStatus||"Aguardando simulação."}</p><p>{intakeRows[0]?.stage==="complete"?"Triagem completa":intakeRows.length?"Contato parcial registrado":"Nenhum contato"}{intakeRows[0]?.challenge?" · "+intakeRows[0].challenge:""}</p></div><button className={styles.smallButton} onClick={()=>setView("crm")}>Conferir no CRM ↗</button></section>}
-        <footer>BLINKO OS · Protótipo 04 · Sem dados reais · Não liberar em produção.</footer>
+        {view==="intelligence" && <section className={styles.panel}>
+          <small>14 / INTELIGÊNCIA DIAGNÓSTICA</small><h2>Investigar antes de concluir.</h2><p>Assistência por regras transparentes, sem IA generativa. Quantidade de fontes não comprova independência nem causalidade. Use somente registros fictícios.</p>
+          <div className={styles.intelGrid}>{coverage.map(row=><button className={styles.intelCard} data-current={focusPillar===row.pillar} key={row.pillar} onClick={()=>{setFocusPillar(row.pillar);setHypDraft({cause:"",effect:"",supportId:"",challengeId:""});}}><small>{pillars[row.pillar]}</small><strong>{row.reviewed}</strong><span>{row.sources} fontes identificadas · {row.pending} pendentes</span></button>)}</div>
+          <h3>{pillars[focusPillar]} · perguntas para investigar</h3><div className={styles.recordList}>{questions.map(q=><article key={q}><h3>{q}</h3></article>)}</div>
+          <h3>Mapa de hipóteses causais</h3><p>Vincule uma possível causa a um efeito observado. Compare registros favoráveis e contrários, sem presumir uma relação verdadeira.</p>
+          <div className={styles.fields}><label>Possível causa<textarea maxLength={300} value={hypDraft.cause} onChange={e=>setHypDraft({...hypDraft,cause:e.target.value})}/></label><label>Possível efeito<textarea maxLength={300} value={hypDraft.effect} onChange={e=>setHypDraft({...hypDraft,effect:e.target.value})}/></label><label>Registro favorável<select value={hypDraft.supportId} onChange={e=>setHypDraft({...hypDraft,supportId:e.target.value})}><option value="">Sem evidência ainda</option>{verified.map(e=><option key={e.id} value={e.id}>{pillars[e.pillar]} · {e.source}: {e.statement.slice(0,65)}</option>)}</select></label><label>Registro contrário<select value={hypDraft.challengeId} onChange={e=>setHypDraft({...hypDraft,challengeId:e.target.value})}><option value="">Sem evidência ainda</option>{verified.filter(e=>String(e.id)!==hypDraft.supportId).map(e=><option key={e.id} value={e.id}>{pillars[e.pillar]} · {e.source}: {e.statement.slice(0,65)}</option>)}</select></label></div>
+          <button className={styles.primaryButton} disabled={!hypDraft.cause.trim()||!hypDraft.effect.trim()||!!hypDraft.supportId&&hypDraft.supportId===hypDraft.challengeId} onClick={addHypothesis}>Registrar hipótese</button>
+          <div className={styles.recordList}>{project.hypotheses.length===0&&<p>Nenhuma hipótese causal registrada neste projeto.</p>}{project.hypotheses.map(h=>{const a=assessHypothesis(h,project.evidence);const patch=(next:Partial<Hypothesis>)=>updateProject(p=>({...p,hypotheses:p.hypotheses.map(x=>x.id===h.id?{...x,...next}:x)}));return <article key={h.id}><small>{pillars[h.pillar]} · {a.status}</small><div className={styles.causeFlow}><div><small>CAUSA POSSÍVEL</small><h3>{h.cause}</h3></div><span aria-hidden="true">→</span><div><small>EFEITO POSSÍVEL</small><h3>{h.effect}</h3></div></div>
+          <div className={styles.fields}><label>Registro favorável<select value={h.supportId??""} onChange={e=>patch({supportId:e.target.value?Number(e.target.value):null,decision:"open"})}><option value="">Sem vínculo</option>{h.supportId!==null&&!a.support&&<option value={h.supportId}>Vínculo requer revisão</option>}{verified.filter(e=>e.id!==h.challengeId).map(e=><option key={e.id} value={e.id}>{e.source}: {e.statement.slice(0,65)}</option>)}</select></label><label>Registro contrário<select value={h.challengeId??""} onChange={e=>patch({challengeId:e.target.value?Number(e.target.value):null,decision:"open"})}><option value="">Sem vínculo</option>{h.challengeId!==null&&!a.challenge&&<option value={h.challengeId}>Vínculo requer revisão</option>}{verified.filter(e=>e.id!==h.supportId).map(e=><option key={e.id} value={e.id}>{e.source}: {e.statement.slice(0,65)}</option>)}</select></label></div>
+          <p>Favorável: {a.support?a.support.statement:"Não disponível"}.</p><p>Contrário: {a.challenge?a.challenge.statement:"Não disponível"}.</p><label>Parecer humano fictício<textarea maxLength={1000} value={h.rationale} onChange={e=>patch({rationale:e.target.value,decision:"open"})} placeholder="Explique a relação, limitações e alternativas"/></label><div className={styles.buttonRow}><button className={styles.smallButton} onClick={()=>patch({decision:"open"})}>Em investigação</button><button className={styles.primaryButton} disabled={!a.canSupport} onClick={()=>patch({decision:"supported"})}>Sustentar provisoriamente</button><button className={styles.smallButton} disabled={!a.canReject} onClick={()=>patch({decision:"rejected"})}>Refutar</button></div></article>})}</div>
+          <button className={styles.smallButton} onClick={()=>setView("diagnostic")}>Registrar novas evidências ↗</button>
+        </section>}
+        <footer>BLINKO OS · Protótipo 05 · Sem dados reais · Não liberar em produção.</footer>
         </div>
       </div>
     </main>
