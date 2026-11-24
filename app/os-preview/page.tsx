@@ -27,6 +27,7 @@ const currency = (n: number) => n.toLocaleString("pt-BR", { style: "currency", c
 const clean = (n: number) => Number.isFinite(n) ? Math.max(0,n) : 0;
 
 export default function OsPreview() {
+  const [view, setView] = useState<"home" | "crm" | "orcamento" | "gut">("home");
   const [leads, setLeads] = useState(initialLeads);
   const [hours, setHours] = useState(40);
   const [rate, setRate] = useState(0);
@@ -48,20 +49,37 @@ export default function OsPreview() {
   return (
     <main className={styles.page}>
       <div className={styles.shell}>
+        <aside className={styles.sidebar}>
+          <div className={styles.brand}><strong>blinko<span>*</span></strong><small>OS / Laboratório</small></div>
+          <nav className={styles.navigation} aria-label="Navegação do laboratório">
+            <small>ESPAÇO DE TRABALHO</small>
+            {([["home","Visão geral","01"],["crm","CRM e triagens","02"],["orcamento","Orçamentos","03"],["gut","Criticidade","04"]] as const).map(([id,label,number])=>
+              <button type="button" key={id} aria-current={view===id?"page":undefined} data-active={view===id} onClick={()=>setView(id)}><span>{number}</span>{label}<span aria-hidden="true">↗</span></button>)}
+          </nav>
+          <div className={styles.sideFoot}><span className={styles.dot}/> Ambiente de teste</div>
+        </aside>
+        <div className={styles.workspace}>
         <header className={styles.top}>
-          <div><strong>blinko* OS</strong><small>Laboratório operacional</small></div>
-          <nav aria-label="Módulos de demonstração"><a href="#crm">CRM</a><a href="#orcamento">Orçamento</a><a href="#gut">Criticidade</a></nav>
+          <div className={styles.breadcrumb}>Blinko OS <span>/</span> {view==="home"?"Visão geral":view==="crm"?"CRM e triagens":view==="orcamento"?"Orçamentos":"Criticidade"}</div>
+          <span className={styles.previewTag}>PROTÓTIPO 01</span>
         </header>
         <aside className={styles.notice}>Ambiente experimental · Use somente dados fictícios. Não há conexão ao CRM, envio ou armazenamento. Recarregar restaura a demonstração.</aside>
+        {view==="home" && <>
         <section className={styles.hero}>
-          <small>01 / OPERAÇÃO E INTELIGÊNCIA</small>
-          <h1>Clareza para operar.</h1>
-          <p>Da triagem ao diagnóstico: uma central para organizar decisões, evidências e entregas.</p>
+          <div><small>OPERAÇÃO E INTELIGÊNCIA</small><h1>Clareza para operar.</h1><p>Da triagem ao diagnóstico: uma central para organizar decisões, evidências e entregas.</p></div>
+          <div className={styles.heroMark} aria-hidden="true">b<span>*</span></div>
         </section>
-        <section className={styles.modules} aria-label="Roadmap dos módulos">
-          {modules.map(([name,desc,status])=><article key={name}><small>{status}</small><h2>{name}</h2><p>{desc}</p></article>)}
+        <div className={styles.quickGrid}>
+          <button className={styles.quick} type="button" onClick={()=>setView("crm")}><small>CRM E TRIAGENS</small><strong>{leads.length.toString().padStart(2,"0")}</strong><span>Registros fictícios <b aria-hidden="true">↗</b></span></button>
+          <button className={styles.quick} type="button" onClick={()=>setView("orcamento")}><small>ORÇAMENTOS</small><strong>{price===null?"—":currency(price)}</strong><span>Estimativa simulada <b aria-hidden="true">↗</b></span></button>
+          <button className={styles.quick} type="button" onClick={()=>setView("gut")}><small>CRITICIDADE</small><strong>{priority}<i>/125</i></strong><span>Pontuação GUT <b aria-hidden="true">↗</b></span></button>
+        </div>
+        <section className={styles.moduleSection} aria-label="Roadmap dos módulos">
+          <div className={styles.heading}><h2>Módulos da operação</h2><small>ROADMAP</small></div>
+          <div className={styles.modules}>{modules.map(([name,desc,status])=><article key={name}><div><h3>{name}</h3><p>{desc}</p></div><small data-status={status==="Protótipo"?"prototype":"planned"}>{status}</small></article>)}</div>
         </section>
-        <section className={styles.panel} id="crm">
+        </>}
+        {view==="crm" && <section className={styles.panel} id="crm">
           <div className={styles.heading}><div><small>02 / CRM</small><h2>Pipeline de demonstração</h2></div><button onClick={()=>setLeads(initialLeads)}>Restaurar exemplo</button></div>
           <p>Experimente mover os registros fictícios entre as etapas. Nenhum dado é persistido.</p>
           <div className={styles.pipeline}>
@@ -69,20 +87,19 @@ export default function OsPreview() {
               {leads.filter(l=>l.stage===i).map(lead=><article key={lead.id} className={styles.lead}><strong>{lead.company}</strong><label>Etapa<select value={lead.stage} onChange={e=>setLeads(old=>old.map(l=>l.id===lead.id?{...l,stage:Number(e.target.value)}:l))}>{stages.map((s,j)=><option key={s} value={j}>{s}</option>)}</select></label></article>)}
             </div>)}
           </div>
-        </section>
-        <div className={styles.tools}>
-          <section className={styles.panel} id="orcamento">
+        </section>}
+        {view==="orcamento" && <section className={styles.panel} id="orcamento">
             <small>03 / ORÇAMENTO</small><h2>Estimador de proposta</h2><p>Hipótese de custo, não uma tabela comercial aprovada. Horas são a soma do esforço da equipe.</p>
             <div className={styles.fields}>{fields.map(f=><label key={f.label}>{f.label}<input type="number" min="0" step="any" value={f.value} onChange={e=>f.set(clean(Number(e.target.value)))}/></label>)}</div>
             <div className={styles.result} aria-live="polite"><small>Custo estimado: {currency(totalCost)}</small><strong>{price===null?"Percentuais inválidos":currency(price)}</strong><p>{price===null?"Taxas e margem somadas precisam ser inferiores a 100%.":"Preço simulado, incluindo margem e taxas."}</p></div>
-          </section>
-          <section className={styles.panel} id="gut">
+          </section>}
+          {view==="gut" && <section className={styles.panel} id="gut">
             <small>04 / CRITICIDADE</small><h2>Matriz GUT</h2><p>Instrumento experimental. Pontuações exigem evidências e revisão humana.</p>
             {["Gravidade","Urgência","Tendência"].map((name,i)=><label className={styles.range} key={name}>{name} <strong>{gut[i]}/5</strong><input type="range" min="1" max="5" step="1" value={gut[i]} onChange={e=>setGut(old=>old.map((v,j)=>j===i?Number(e.target.value):v))}/></label>)}
             <div className={styles.result} aria-live="polite"><small>Pontuação G × U × T</small><strong>{priority}/125</strong><p>{priority>=81?"Crítica":priority>=41?"Alta":priority>=16?"Moderada":"Baixa"} · faixa provisória</p><p>Riscos graves podem exigir ação imediata independentemente da nota.</p></div>
-          </section>
-        </div>
+          </section>}
         <footer>BLINKO OS · Protótipo 01 · Sem dados reais · Não liberar em produção.</footer>
+        </div>
       </div>
     </main>
   );
