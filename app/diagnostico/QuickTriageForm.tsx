@@ -14,19 +14,20 @@ const KIND_OPTIONS = [
   ["learn_diagnosis", "Quero conhecer o Diagnóstico Blinko", "Gostaria de entender como funciona essa investigação."],
 ] as const;
 
-export default function QuickTriageForm() {
+export default function QuickTriageForm({ demo = false }: { demo?: boolean }) {
   const session = useRef<string | null>(null);
   const [stage, setStage] = useState<Stage>("contact");
   const [storageStatus, setStorageStatus] = useState<"checking" | "ready" | "unavailable">("checking");
 
   useEffect(() => {
+    if (demo) { setStorageStatus("ready"); return; }
     let mounted = true;
     fetch("/api/triagem", { cache: "no-store" })
       .then(async (response) => response.ok ? response.json() as Promise<{ ready?: boolean }> : { ready: false })
       .then((result) => { if (mounted) setStorageStatus(result.ready ? "ready" : "unavailable"); })
       .catch(() => { if (mounted) setStorageStatus("unavailable"); });
     return () => { mounted = false; };
-  }, []);
+  }, [demo]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [name, setName] = useState("");
@@ -58,6 +59,7 @@ export default function QuickTriageForm() {
     event.preventDefault();
     if (!consent || storageStatus !== "ready") return;
     setError("");
+    if (demo) { setStage("details"); return; }
     session.current ??= crypto.randomUUID();
     setLoading(true);
     try {
@@ -78,6 +80,7 @@ export default function QuickTriageForm() {
   async function complete(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    if (demo) { setStage("success"); return; }
     setLoading(true);
     try {
       const result = await post({ action: "complete", kind, challenge, timeframe, channel });
@@ -103,6 +106,15 @@ export default function QuickTriageForm() {
       keepalive: true,
     }).catch(() => undefined);
   }
+
+  if (demo && stage === "success") return (
+    <section className={styles.success} aria-live="polite">
+      <span className={styles.kicker}>DEMONSTRAÇÃO CONCLUÍDA</span>
+      <h2>Agora podemos conversar.</h2>
+      <p>Você chegou ao fim da experiência de triagem. Nenhuma informação foi enviada ou salva.</p>
+      <button type="button" className={styles.primary} onClick={() => { setName(""); setWhatsapp(""); setCompanyName(""); setEmail(""); setConsent(false); setKind(""); setChallenge(""); setTimeframe(""); setChannel("whatsapp"); setStage("contact"); }}>Recomeçar demonstração ↗</button>
+    </section>
+  );
 
   if (stage === "success") {
     return (
@@ -130,13 +142,14 @@ export default function QuickTriageForm() {
   }
 
   return (
-    <section className={styles.shell} aria-label="Triagem rápida da Blinko">
+    <section className={styles.shell} aria-label="Triagem rápida da Blinko" data-embedded={demo ? "true" : undefined}>
       <div className={styles.progressTop}>
         <span>COMECE AQUI</span>
         <span>{stage === "contact" ? "1 de 2 · contato" : "2 de 2 · sua necessidade"}</span>
       </div>
       <div className={styles.track} aria-hidden="true"><span style={{ width: stage === "contact" ? "50%" : "100%" }} /></div>
-      {storageStatus !== "ready" && (
+      {demo && <p className={styles.previewNotice} role="status">Demonstração interativa. Use apenas dados fictícios. Nada é enviado ou armazenado.</p>}
+      {!demo && storageStatus !== "ready" && (
         <p className={styles.previewNotice} role="status">
           {storageStatus === "checking"
             ? "Conferindo a disponibilidade do formulário..."
@@ -154,7 +167,7 @@ export default function QuickTriageForm() {
           <div className={styles.head}>
             <span className={styles.kicker}>PRIMEIRO, VOCÊ</span>
             <h2>Com quem vamos conversar?</h2>
-            <p>Deixe um contato para que a gente possa retornar mesmo se você não conseguir terminar agora.</p>
+            <p>{demo ? "Experimente a primeira etapa com dados fictícios." : "Deixe um contato para que a gente possa retornar mesmo se você não conseguir terminar agora."}</p>
           </div>
           <div className={styles.grid}>
             <label>Seu nome <input required minLength={2} maxLength={120} autoComplete="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Como podemos chamar você?" /></label>
@@ -169,7 +182,7 @@ export default function QuickTriageForm() {
           </div>
           <label className={styles.consent}>
             <input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)} required />
-            <span>Autorizo a Blinko a registrar meu contato e estas respostas para tratar minha solicitação, inclusive se eu não concluir o formulário, e a retornar por WhatsApp ou e-mail. Não autorizo automaticamente mensagens promocionais.</span>
+            <span>{demo ? "Entendi que esta é uma demonstração e que não devo inserir dados pessoais reais." : "Autorizo a Blinko a registrar meu contato e estas respostas para tratar minha solicitação, inclusive se eu não concluir o formulário, e a retornar por WhatsApp ou e-mail. Não autorizo automaticamente mensagens promocionais."}</span>
           </label>
           <p className={styles.privacy}>Saiba como tratamos seus dados na <a href="/privacidade" target="_blank" rel="noopener noreferrer">Política de Privacidade</a>. Veja também os <a href="/termos-de-uso" target="_blank" rel="noopener noreferrer">Termos de Uso</a> e como <a href="/solicitacoes-de-dados" target="_blank" rel="noopener noreferrer">solicitar acesso, correção ou exclusão</a>.</p>
           {error && <p role="alert" className={styles.error}>{error}</p>}
@@ -206,11 +219,11 @@ export default function QuickTriageForm() {
               </select>
             </label>
           </div>
-          <p className={styles.savedNote}>Seu contato já foi registrado. Se você fechar agora, poderemos retornar conforme sua autorização.</p>
+          <p className={styles.savedNote}>{demo ? "Nenhum contato foi registrado. Esta etapa é apenas demonstrativa." : "Seu contato já foi registrado. Se você fechar agora, poderemos retornar conforme sua autorização."}</p>
           {error && <p role="alert" className={styles.error}>{error}</p>}
           <div className={styles.actions}>
             <button type="button" className={styles.back} onClick={()=>setStage("contact")} disabled={loading}>← Voltar</button>
-            <button type="submit" className={styles.primary} disabled={loading || !kind}>{loading ? "Registrando..." : "Enviar triagem →"}</button>
+            <button type="submit" className={styles.primary} disabled={loading || !kind}>{loading ? "Registrando..." : demo ? "Concluir demonstração →" : "Enviar triagem →"}</button>
           </div>
         </form>
       )}
