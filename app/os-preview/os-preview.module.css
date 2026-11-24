@@ -41,3 +41,12 @@
  .reportPreview{border:none;margin:0;overflow:visible!important;border-radius:0;print-color-adjust:exact;-webkit-print-color-adjust:exact}
  .reportCover,.reportMetrics{break-inside:avoid}.reportBody{padding:14px 0}.reportBody pre{font-size:10pt;line-height:1.5;color:#01301e}
 }
+
+/* Incremento 07: inteligência diagnóstica. */
+.intelGrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:25px 0 32px}
+.intelCard{text-align:left;min-width:0;display:grid;gap:9px;padding:15px 12px;background:#f5f3ed;border:1px solid var(--line);border-radius:10px;color:var(--ink);cursor:pointer}
+.intelCard small{font-size:10px;letter-spacing:0;overflow-wrap:anywhere}.intelCard strong{font:400 30px Georgia,serif}.intelCard span{font-size:11px;line-height:1.5;color:var(--muted)}
+.intelCard[data-current=true]{border-color:#01301e;background:#e1e9dc}.intelCard:hover{border-color:#819789}
+.causeFlow{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;margin:18px 0}.causeFlow>div{padding:17px;background:#f5f3ed;border:1px solid var(--line);border-radius:10px;min-width:0}.causeFlow h3{margin:8px 0 0}.causeFlow>span{font-size:25px;color:var(--muted)}
+@media(max-width:1050px){.intelGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:560px){.intelGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.causeFlow{grid-template-columns:1fr}.causeFlow>span{text-align:center;transform:rotate(90deg)}}
