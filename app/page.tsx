@@ -82,9 +82,95 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    const page = pageRef.current;
+    if (!page) return;
+    let disposed = false;
+    let cleanup = () => {};
+    async function setupMotion() {
+      try {
+        const [{ gsap }, { ScrollTrigger }, { default: Lenis }] = await Promise.all([
+          import("gsap"), import("gsap/ScrollTrigger"), import("lenis")
+        ]);
+        if (disposed || !page) return;
+        gsap.registerPlugin(ScrollTrigger);
+        const media = gsap.matchMedia();
+        media.add("(min-width: 761px) and (prefers-reduced-motion: no-preference)", () => {
+          const lenis = new Lenis({ autoRaf: false, anchors: true, smoothWheel: true, duration: 0.95 });
+          const tick = (time: number) => lenis.raf(time * 1000);
+          lenis.on("scroll", ScrollTrigger.update);
+          gsap.ticker.add(tick);
+          const method = page.querySelector<HTMLElement>("." + styles.method);
+          const lines = Array.from(page.querySelectorAll<HTMLElement>("." + styles.methodLine));
+          const orb = page.querySelector<HTMLElement>("." + styles.methodOrb);
+          let active = 0;
+          let stepTween: ReturnType<typeof gsap.to> | undefined;
+          if (method && lines.length) {
+            method.dataset.motion = "on";
+            gsap.set(lines, {autoAlpha: 0, y: 24});
+            gsap.set(lines[0], {autoAlpha: 1, y: 0});
+            const showStep = (index: number) => {
+              if (index === active) return;
+              stepTween?.kill();
+              gsap.killTweensOf(lines);
+              gsap.set(lines, {autoAlpha: 0, y: 24});
+              stepTween = gsap.to(lines[index], {autoAlpha: 1, y: 0, duration: .34, ease: "power2.out"});
+              if (orb) gsap.to(orb, { rotation: index * 73 - 26, scale: .84 + index * .08, borderRadius: index % 2 ? "42% 58% 58% 42%" : "50%", duration: .55, overwrite: true });
+              active = index;
+            };
+            ScrollTrigger.create({ trigger: method, start: "top top", end: () => "+=" + Math.round(innerHeight * 2.4), pin: true, anticipatePin: 1, invalidateOnRefresh: true,
+              onUpdate: self => showStep(Math.min(lines.length - 1, Math.floor(self.progress * lines.length))) });
+          }
+          const evidence = page.querySelector<HTMLElement>("." + styles.editorialShowcase);
+          const report = page.querySelector<HTMLElement>("." + styles.reportVisual);
+          const person = page.querySelector<HTMLElement>("." + styles.handsVisual);
+          if (evidence && report && person) {
+            gsap.fromTo(report, {y: 85, rotation: -9}, {y: -45, rotation: -3, ease: "none", scrollTrigger: {trigger: evidence, start: "top bottom", end: "bottom top", scrub: .65}});
+            gsap.fromTo(person, {y: 125, rotation: 10}, {y: -75, rotation: 3, ease: "none", scrollTrigger: {trigger: evidence, start: "top bottom", end: "bottom top", scrub: .8}});
+          }
+          for (const group of page.querySelectorAll<HTMLElement>("." + styles.outcomeItems + ", ." + styles.diagnosticSteps)) {
+            gsap.fromTo(Array.from(group.children), {clipPath: "inset(0 0 85% 0)", y: 24}, {clipPath: "inset(0 0 0% 0)", y: 0, duration: .7, stagger: .14, ease: "power2.out", scrollTrigger: {trigger: group, start: "top 88%", once: true}});
+          }
+          const cursor = page.querySelector<HTMLElement>("." + styles.cursorRing);
+          const magnet = Array.from(page.querySelectorAll<HTMLElement>("." + styles.pill + ", ." + styles.navCta));
+          const removers: Array<() => void> = [];
+          if (matchMedia("(pointer: fine)").matches) {
+            const follow = (e: PointerEvent) => {
+              if (cursor && e.pointerType === "mouse") gsap.to(cursor, {x: e.clientX, y: e.clientY, autoAlpha: 1, duration: .18, overwrite: true});
+            };
+            const hide = () => { if (cursor) gsap.set(cursor, {autoAlpha: 0}); };
+            window.addEventListener("pointermove", follow, {passive:true});
+            document.documentElement.addEventListener("pointerleave", hide);
+            removers.push(() => {window.removeEventListener("pointermove", follow); document.documentElement.removeEventListener("pointerleave", hide);});
+            for (const button of magnet) {
+              const move = (e: PointerEvent) => {
+                const rect = button.getBoundingClientRect();
+                gsap.to(button, {x:(e.clientX-rect.left-rect.width/2)*.16, y:(e.clientY-rect.top-rect.height/2)*.18, duration:.25, overwrite:true});
+              };
+              const reset = () => {gsap.to(button,{x:0,y:0,duration:.35,overwrite:true});};
+              button.addEventListener("pointermove",move); button.addEventListener("pointerleave",reset);
+              removers.push(()=>{button.removeEventListener("pointermove",move);button.removeEventListener("pointerleave",reset);gsap.set(button,{clearProps:"transform"});});
+            }
+          }
+          ScrollTrigger.refresh();
+          return () => {
+            removers.forEach(fn=>fn()); stepTween?.kill(); gsap.killTweensOf(lines); if(orb) gsap.killTweensOf(orb);
+            if (cursor) {gsap.killTweensOf(cursor);gsap.set(cursor,{autoAlpha:0});}
+            if(method) delete method.dataset.motion;
+            gsap.ticker.remove(tick); lenis.destroy();
+          };
+        });
+        cleanup = () => media.revert();
+      } catch { /* layout remains readable without motion dependencies */ }
+    }
+    void setupMotion();
+    return () => { disposed = true; cleanup(); };
+  }, []);
+
   return (
     <main className={styles.page} ref={pageRef}>
       <div aria-hidden="true" className={styles.progress} />
+      <div aria-hidden="true" className={styles.cursorRing} />
 
       <header className={styles.header}>
         <a className={styles.logo} href="#inicio" aria-label="Blinko — voltar ao início">
@@ -99,13 +185,10 @@ export default function Home() {
       </header>
 
       <section className={styles.hero} id="inicio" aria-labelledby="hero-title">
-        <video className={styles.ambientVideo} aria-hidden="true" muted loop playsInline preload="none">
-          <source src="/imersao/ambiente.mp4" type="video/mp4" />
-        </video>
         <div className={styles.ambientTint} aria-hidden="true" />
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>Diagnóstico e estruturação de negócios</p>
-          <h1 id="hero-title">O problema <em>nem sempre</em> está onde parece.</h1>
+          <h1 id="hero-title"><span className={styles.heroBehind}>O problema</span>{" "}<em>nem sempre</em>{" "}<span className={styles.heroFront}>está onde parece.</span></h1>
           <p className={styles.heroLead}>
             Somos a Blinko, uma empresa de diagnóstico e estruturação de negócios.
             Investigamos desafios, organizamos prioridades e só então propomos
@@ -118,12 +201,15 @@ export default function Home() {
         </div>
 
         <div className={styles.heroArt} aria-hidden="true">
-          <img className={styles.botanicalHero} src="/imersao/raizes.webp" alt="" decoding="async" />
+          {/* Ativo visual do hero: monograma oficial da marca, substituível aqui. */}
+          <img className={styles.botanicalHero} src="/brand/monograma-b-rosa.svg" alt="" decoding="async" />
         </div>
 
+        <span className={styles.heroSide} aria-hidden="true">clareza · estrutura · movimento</span>
         <a className={styles.scrollCue} href="#sobre"><span className={styles.scrollLine} /> Role para descobrir</a>
       </section>
 
+      <div className={styles.marquee} aria-hidden="true"><div className={styles.marqueeTrack}>{Array.from({length: 8}, (_, i) => <span key={i}>Diagnóstico · estratégia · estruturação · </span>)}</div></div>
       <section className={styles.bridge} id="sobre" aria-labelledby="sobre-title">
         <span className={styles.kicker}>Quem é a Blinko</span>
         <h2 id="sobre-title">Uma visão <em>inteira</em> do seu negócio.</h2>
@@ -156,17 +242,17 @@ export default function Home() {
           <div className={styles.storyText}>
             <article className={[styles.scene, styles.sceneOne].join(" ")}>
               <span className={styles.kicker}>01 / O sinal · a superfície</span>
-              <h2>“Precisamos <em>postar mais.</em>”</h2>
+              <h2><span className={styles.sceneWord}>“Precisamos</span>{" "}<em><span className={styles.sceneWord}>postar</span>{" "}<span className={styles.sceneWord}>mais.”</span></em></h2>
               <p>Talvez. Mas a dificuldade está na comunicação ou em outro momento da jornada do cliente?</p>
             </article>
             <article className={[styles.scene, styles.sceneTwo].join(" ")}>
               <span className={styles.kicker}>02 / A investigação · o solo</span>
-              <h2>E se a causa estiver <em>mais fundo?</em></h2>
+              <h2><span className={styles.sceneWord}>E</span>{" "}<span className={styles.sceneWord}>se</span>{" "}<span className={styles.sceneWord}>a</span>{" "}<span className={styles.sceneWord}>causa</span>{" "}<span className={styles.sceneWord}>estiver</span>{" "}<em><span className={styles.sceneWord}>mais</span>{" "}<span className={styles.sceneWord}>fundo?</span></em></h2>
               <p>Escutamos pessoas, observamos processos e cruzamos informações antes de tirar conclusões.</p>
             </article>
             <article className={[styles.scene, styles.sceneThree].join(" ")}>
               <span className={styles.kicker}>03 / A direção · as raízes</span>
-              <h2>Clareza para escolher <em>o que fazer.</em></h2>
+              <h2><span className={styles.sceneWord}>Clareza</span>{" "}<span className={styles.sceneWord}>para</span>{" "}<span className={styles.sceneWord}>escolher</span>{" "}<em><span className={styles.sceneWord}>o</span>{" "}<span className={styles.sceneWord}>que</span>{" "}<span className={styles.sceneWord}>fazer.</span></em></h2>
               <p>Transformamos os achados em prioridades e caminhos possíveis, com escopo e responsabilidades claros.</p>
             </article>
           </div>
@@ -180,13 +266,16 @@ export default function Home() {
           <h2 id="processo-title">Menos achismo. Mais direção.</h2>
           <p className={styles.methodSmall}>Pesquisa, comunicação e Relações Públicas ajudam a enxergar o negócio por inteiro. Nosso primeiro serviço é o diagnóstico; só depois avaliamos as soluções apropriadas.</p>
         </div>
-        <div aria-label="Etapas do nosso trabalho">
+        <div className={styles.methodVisual}>
+          <div className={styles.methodOrb} aria-hidden="true" />
+          <div className={styles.methodSteps} aria-label="Etapas do nosso trabalho">
           {journey.map(([number, name, detail]) => (
             <div className={styles.methodLine} key={number} title={detail}>
               <strong>{name}</strong>
               <span>{number} / 05</span>
             </div>
           ))}
+          </div>
         </div>
       </section>
 
@@ -198,6 +287,7 @@ export default function Home() {
           <span className={styles.editorialUnderline} aria-hidden="true" />
         </div>
         <figure className={styles.editorialCollage}>
+          {/* Ativos da evidência: mockup de relatório e recorte humano, substituíveis abaixo. */}
           <img className={styles.reportVisual} src="/imersao/mockup-relatorio.webp" alt="Composição ilustrativa de páginas de relatório com gráficos e esquemas" loading="lazy" />
           <img className={styles.handsVisual} src="/imersao/recorte-pessoa.webp" alt="" loading="lazy" />
           <figcaption>Referências visuais ilustrativas. Não são dados, métricas ou resultados de clientes.</figcaption>
@@ -307,6 +397,7 @@ export default function Home() {
           <span className={styles.kicker}>Blinko Studio — clareza para evoluir</span>
           <h2 id="final-title">Todo avanço começa com <em>uma boa pergunta.</em></h2>
           <p>Antes de propor uma solução, queremos conhecer a realidade do seu negócio.</p>
+          <img className={styles.closingMark} src="/brand/monograma-b-rosa.svg" alt="" aria-hidden="true" loading="lazy" />
         </div>
         <div className={styles.triageGlass}>
           <QuickTriageForm demo />
