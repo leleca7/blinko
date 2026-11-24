@@ -32,9 +32,6 @@ export default function Home() {
       const storyTravel = Math.max(story.offsetHeight - window.innerHeight, 1);
       const progress = Math.min(1, Math.max(0, -rect.top / storyTravel));
       story.style.setProperty("--story-progress", String(progress));
-      story.style.setProperty("--story-rotation", String(progress * 12) + "deg");
-      story.style.setProperty("--ring-scale", String(1 + progress * 0.09));
-      story.style.setProperty("--node-scale", String(0.88 + progress * 0.23));
       story.dataset.scene = progress < 0.32 ? "0" : progress < 0.67 ? "1" : "2";
     };
 
@@ -132,7 +129,6 @@ export default function Home() {
         <div className={styles.aboutTagline} aria-label="Nossa forma de atuação">
           <span>Pesquisa e escuta</span><span>Visão integrada</span><span>Decisões fundamentadas</span>
         </div>
-        <img className={styles.aboutLogo} src="/brand/logo-fundo-claro.svg" alt="Blinko Studio — Criatividade que conecta" loading="lazy" />
       </section>
 
       <section
@@ -144,14 +140,24 @@ export default function Home() {
       >
         <div className={styles.storySticky}>
           <div className={styles.storyGraphic} aria-hidden="true">
-            <div className={styles.storyFilm}>
-              <video className={styles.storyVideo} autoPlay muted loop playsInline preload="metadata">
-                <source src="/imersao/camadas-scroll.mp4" type="video/mp4" />
-              </video>
-              <img className={styles.storyStill} src="/imersao/raizes.webp" alt="" loading="lazy" />
+            <div className={styles.earthPerspective}>
+              <div className={styles.earthAtmosphere} />
+              <div className={styles.earthPlateStack}>
+                <div className={[styles.earthPlate, styles.plateSurface].join(" ")}>
+                  <span>O que aparece</span>
+                </div>
+                <div className={[styles.earthPlate, styles.plateSignals].join(" ")}>
+                  <span>Os sinais</span>
+                </div>
+                <div className={[styles.earthPlate, styles.plateContext].join(" ")}>
+                  <span>As relações</span>
+                </div>
+                <div className={[styles.earthPlate, styles.plateCauses].join(" ")}>
+                  <span>O que sustenta</span>
+                </div>
+              </div>
             </div>
-            <div className={styles.storyFilmTag}>Da superfície às raízes</div>
-            <div className={styles.storyMeter}><i /><i /><i /></div>
+            <p className={styles.earthCaption}>O diagnóstico atravessa as camadas do problema.</p>
           </div>
 
           <div className={styles.storyText}>
@@ -180,7 +186,6 @@ export default function Home() {
           <span className={styles.kicker}>O método Blinko</span>
           <h2 id="processo-title">Menos achismo. Mais direção.</h2>
           <p className={styles.methodSmall}>Pesquisa, comunicação e Relações Públicas ajudam a enxergar o negócio por inteiro. Nosso primeiro serviço é o diagnóstico; só depois avaliamos as soluções apropriadas.</p>
-          <img className={styles.methodSeal} src="/brand/flor-criatividade.svg" alt="Blinko Studio — Criatividade que conecta" loading="lazy" />
         </div>
         <div aria-label="Etapas do nosso trabalho">
           {journey.map(([number, name, detail]) => (
@@ -200,7 +205,6 @@ export default function Home() {
           <span className={styles.editorialUnderline} aria-hidden="true" />
         </div>
         <figure className={styles.editorialCollage}>
-          <img className={styles.paperBackdrop} src="/imersao/papel-rasgado.webp" alt="" loading="lazy" />
           <img className={styles.reportVisual} src="/imersao/mockup-relatorio.webp" alt="Composição ilustrativa de páginas de relatório com gráficos e esquemas" loading="lazy" />
           <img className={styles.handsVisual} src="/imersao/recorte-pessoa.webp" alt="" loading="lazy" />
           <figcaption>Referências visuais ilustrativas. Não são dados, métricas ou resultados de clientes.</figcaption>
