@@ -66,7 +66,7 @@ export default function Home() {
 
       <header className={styles.header}>
         <a className={styles.logo} href="#inicio" aria-label="Blinko — voltar ao início">
-          <img src={BLINKO_LOGO_DARK_DATA_URI} alt="Blinko Studio" />
+          <img src="/brand/logo-fundo-verde.svg" alt="Blinko Studio — Criatividade que conecta" loading="lazy" />
         </a>
         <nav className={styles.nav} aria-label="Navegação">
           <a href="#sobre">A Blinko</a>
@@ -98,7 +98,7 @@ export default function Home() {
           <div className={[styles.artPetal, styles.petalTwo].join(" ")} />
           <div className={[styles.artPetal, styles.petalThree].join(" ")} />
           <div className={[styles.artPetal, styles.petalFour].join(" ")} />
-          <div className={styles.artCore}><span>b.</span></div>
+          <div className={styles.artCore}><img src="/brand/monograma-b-rosa.svg" alt="" aria-hidden="true" /></div>
           <span className={styles.artLabel}>clareza · estrutura · movimento</span>
         </div>
 
@@ -116,6 +116,7 @@ export default function Home() {
         <div className={styles.aboutTagline} aria-label="Nossa forma de atuação">
           <span>Pesquisa e escuta</span><span>Visão integrada</span><span>Decisões fundamentadas</span>
         </div>
+        <img className={styles.aboutLogo} src="/brand/logo-fundo-claro.svg" alt="Blinko Studio — Criatividade que conecta" loading="lazy" />
       </section>
 
       <section
@@ -161,6 +162,7 @@ export default function Home() {
           <span className={styles.kicker}>O método Blinko</span>
           <h2 id="processo-title">Menos achismo. Mais direção.</h2>
           <p className={styles.methodSmall}>Pesquisa, comunicação e Relações Públicas ajudam a enxergar o negócio por inteiro. Nosso primeiro serviço é o diagnóstico; só depois avaliamos as soluções apropriadas.</p>
+          <img className={styles.methodSeal} src="/brand/flor-criatividade.svg" alt="Blinko Studio — Criatividade que conecta" loading="lazy" />
         </div>
         <div aria-label="Etapas do nosso trabalho">
           {journey.map(([number, name, detail]) => (
