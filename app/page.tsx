@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { BLINKO_LOGO_DARK_DATA_URI } from "../lib/blinko/brand-logo-data";
 import styles from "./immersive-home.module.css";
+import EarthCutaway from "./components/EarthCutaway";
 
 const journey = [
   ["01", "Escutar", "O contexto vem antes do serviço."],
@@ -140,40 +141,21 @@ export default function Home() {
         aria-label="Como a Blinko entende um problema"
       >
         <div className={styles.storySticky}>
-          <div className={styles.storyGraphic} aria-hidden="true">
-            <div className={styles.earthPerspective}>
-              <div className={styles.earthAtmosphere} />
-              <div className={styles.earthPlateStack}>
-                <div className={[styles.earthPlate, styles.plateSurface].join(" ")}>
-                  <span>O que aparece</span>
-                </div>
-                <div className={[styles.earthPlate, styles.plateSignals].join(" ")}>
-                  <span>Os sinais</span>
-                </div>
-                <div className={[styles.earthPlate, styles.plateContext].join(" ")}>
-                  <span>As relações</span>
-                </div>
-                <div className={[styles.earthPlate, styles.plateCauses].join(" ")}>
-                  <span>O que sustenta</span>
-                </div>
-              </div>
-            </div>
-            <p className={styles.earthCaption}>O diagnóstico atravessa as camadas do problema.</p>
-          </div>
+          <EarthCutaway />
 
           <div className={styles.storyText}>
             <article className={[styles.scene, styles.sceneOne].join(" ")}>
-              <span className={styles.kicker}>01 / O sinal</span>
+              <span className={styles.kicker}>01 / O sinal · a superfície</span>
               <h2>“Precisamos <em>postar mais.</em>”</h2>
               <p>Talvez. Mas a dificuldade está na comunicação ou em outro momento da jornada do cliente?</p>
             </article>
             <article className={[styles.scene, styles.sceneTwo].join(" ")}>
-              <span className={styles.kicker}>02 / A investigação</span>
+              <span className={styles.kicker}>02 / A investigação · o solo</span>
               <h2>E se a causa estiver <em>mais fundo?</em></h2>
               <p>Escutamos pessoas, observamos processos e cruzamos informações antes de tirar conclusões.</p>
             </article>
             <article className={[styles.scene, styles.sceneThree].join(" ")}>
-              <span className={styles.kicker}>03 / A direção</span>
+              <span className={styles.kicker}>03 / A direção · as raízes</span>
               <h2>Clareza para escolher <em>o que fazer.</em></h2>
               <p>Transformamos os achados em prioridades e caminhos possíveis, com escopo e responsabilidades claros.</p>
             </article>
