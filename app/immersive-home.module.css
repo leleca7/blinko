@@ -720,96 +720,96 @@
 
 
 
-/* BLINKO · Corte orgânico: grama → solo → raízes.
-   Ilustração contínua; lente de profundidade guiada pelo scroll. */
-.bridge:before,.editorialShowcase:before{display:none!important;content:none!important}
-.aboutLogo,.methodSeal,.storyMeter,.storyFilm,.storyFilmTag,.storyVideo,.storyStill,.paperBackdrop{display:none!important}
-.bridge{background:#f3efeb!important}
-.editorialShowcase{background:linear-gradient(rgba(251,248,242,.93),rgba(251,248,242,.93)),url('/imersao/textura-papel.webp') center / cover!important}
-.editorialUnderline{display:none!important}
 
+/* BLINKO · SOMENTE RAÍZES
+ * Geometria orgânica extraída do algoritmo enviado: sem grama, terra,
+ * discos, fotos, carimbos ou outras peças decorativas.
+ */
+.bridge:before,.editorialShowcase:before{content:none!important;display:none!important}
+.aboutLogo,.methodSeal,.storyMeter,.storyFilm,.storyFilmTag,
+.storyVideo,.storyStill,.paperBackdrop{display:none!important}
+.bridge{background:#f3efeb!important}
+.editorialShowcase{
+ background:linear-gradient(rgba(251,248,242,.93),rgba(251,248,242,.93)),
+ url('/imersao/textura-papel.webp') center / cover!important
+}
+.editorialUnderline{display:none!important}
 .story{
  isolation:isolate;
- background:linear-gradient(180deg,#133d2b 0%,#244a38 25%,#52463b 55%,#49342b 100%)!important;
+ background:linear-gradient(180deg,#103e2e 0%,#244436 31%,#4d4137 63%,#3b2924 100%)!important;
 }
-.story:before{
- content:"";position:absolute;inset:0;pointer-events:none;opacity:.25;
- background:repeating-linear-gradient(12deg,rgba(249,228,195,.08) 0 1px,transparent 1px 17px);
-}
+.story:before{content:none!important;display:none!important}
 .storySticky:before{content:none!important;display:none!important}
 .storySticky{z-index:1}
-
-.earthCutaway{
- position:relative;width:min(47vw,665px);aspect-ratio:820/780;
- justify-self:center;align-self:center;min-width:0;
- perspective:1100px;perspective-origin:50% 42%;
- filter:drop-shadow(0 20px 45px rgba(11,20,10,.20));
+.rootSculpture{
+ position:relative;
+ width:min(45vw,600px);
+ aspect-ratio:760/860;
+ justify-self:center;
+ align-self:center;
+ min-width:0;
+ pointer-events:none;
+ filter:drop-shadow(0 14px 26px rgba(12,14,8,.14));
+ perspective:1100px;
 }
-.earthCutawaySvg{
+.rootSculptureSvg{
  display:block;width:100%;height:100%;
  overflow:visible;
- transform-origin:50% 45%;
+ transform-origin:50% 40%;
  transform:
-  translate3d(0,calc(var(--story-progress,0) * -72px),0)
-  scale(calc(1 + var(--story-progress,0) * .23))
-  rotateY(calc(-9deg + var(--earth-tilt,0deg)))
-  rotateX(3deg);
+  translate3d(0,calc(var(--story-progress,0) * -39px),0)
+  scale(calc(1.03 + var(--story-progress,0) * .11))
+  rotateY(var(--earth-tilt,0deg));
  will-change:transform;
 }
-.earthLandmass{
- transform-origin:50% 50%;
+.rootRevealedPath{
+ stroke-dasharray:1;
+ stroke-dashoffset:calc(var(--root-reveal-base,1) - var(--story-progress,0) * 1.35);
+ transition:stroke-dashoffset .18s linear;
 }
-.earthGrassBlades{opacity:clamp(.28,calc(1 - var(--story-progress,0) * 1.7),1)}
-.earthRootWeb{
- opacity:clamp(.28,calc(var(--story-progress,0) * 1.15 + .24),1);
- filter:drop-shadow(0 1px 1px rgba(9,17,9,.15));
-}
-.mobileEarthDecor{display:none}
-
-/* O solo continua além da moldura, não são círculos isolados. */
-@media (min-width:761px) {
- .storySticky{grid-template-columns:minmax(0,1.06fr) minmax(0,.94fr);gap:clamp(25px,4vw,80px)}
+@media(min-width:761px){
+ .storySticky{
+  grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);
+  gap:clamp(26px,4vw,84px);
+ }
  .storyText{z-index:2}
 }
-
-/* Android/iPhone: descida natural; sem sticky gigante nem espaço vazio. */
 @media(max-width:760px){
  .story{
-  height:auto!important;min-height:0!important;overflow:hidden!important;
-  background:linear-gradient(
-   180deg,
-   #16432d 0%,#2b4e37 17%,
-   #51493a 39%,#675043 57%,
-   #543a2f 74%,#34271f 100%
-  )!important;
- }
- .story:before{
-  opacity:.2;z-index:0;
-  background:repeating-linear-gradient(-10deg,rgba(255,233,203,.07) 0 1px,transparent 1px 19px);
+  height:auto!important;
+  min-height:0!important;
+  overflow:hidden!important;
+  background:linear-gradient(180deg,#123f2d 0%,#294a3a 35%,#4f4036 70%,#372720 100%)!important;
  }
  .story:after{
-  content:"";position:absolute;bottom:0;left:0;right:0;height:65px;
-  background:linear-gradient(180deg,transparent,#f3efeb);
-  pointer-events:none;z-index:0;
+  content:"";position:absolute;bottom:0;left:0;right:0;
+  height:60px;pointer-events:none;
+  background:linear-gradient(to bottom,transparent,#f3efeb);
  }
  .storySticky{
   position:relative!important;top:auto!important;
-  height:auto!important;min-height:0!important;
-  display:block!important;overflow:visible!important;
-  padding:61px 22px 65px!important;
-  grid-template-columns:none!important;grid-template-rows:none!important;
+  height:auto!important;min-height:0!important;overflow:visible!important;
+  display:block!important;grid-template-columns:none!important;
+  grid-template-rows:none!important;padding:52px 22px 68px!important;
  }
- .earthCutaway{display:none!important}
- .mobileEarthDecor{
-  display:block!important;position:absolute;inset:0;
-  pointer-events:none;z-index:0;overflow:hidden;
+ .rootSculpture{
+  position:absolute!important;
+  display:block!important;
+  left:32%;right:auto;
+  width:88%;max-width:440px;
+  height:auto;
+  top:28%;
+  opacity:.18;
+  filter:none;
+  z-index:0;
  }
- .mobileGrassEdge{position:absolute;left:-2%;right:-2%;top:0;height:58px;opacity:.67}
- .mobileGrassEdge svg{display:block;width:104%;height:100%}
- .mobileRootIllustration{
-  position:absolute;width:min(96%,440px);height:43%;
-  right:-18%;bottom:3%;
-  opacity:.33;filter:drop-shadow(1px 1px 2px rgba(9,8,4,.2));
+ .rootSculptureSvg{
+  transform:none!important;
+  will-change:auto!important;
+ }
+ .rootRevealedPath{
+  stroke-dashoffset:0!important;
+  transition:none!important;
  }
  .storyText{
   position:relative!important;z-index:2;
@@ -822,24 +822,28 @@
  .story[data-scene="1"] .sceneTwo,
  .story[data-scene="2"] .sceneThree{
   position:relative!important;top:auto!important;left:auto!important;
-  visibility:visible!important;opacity:1!important;transform:none!important;
-  margin:0!important;height:auto!important;min-height:0!important;
-  padding:49px 0 56px!important;
-  border-bottom:1px solid rgba(255,239,218,.17);
+  visibility:visible!important;opacity:1!important;
+  transform:none!important;margin:0!important;
+  height:auto!important;min-height:0!important;
+  padding:47px 0 54px!important;
+  border-bottom:1px solid rgba(255,238,217,.19);
   transition:none!important;
  }
  .scene:first-child{padding-top:18px!important}
- .scene:last-child{border:0!important;padding-bottom:28px!important}
+ .scene:last-child{border:0!important;padding-bottom:26px!important}
  .scene .kicker{margin-bottom:18px!important}
- .scene h2{font-size:clamp(45px,11vw,72px)!important;max-width:12ch!important;line-height:1.01!important}
+ .scene h2{
+  font-size:clamp(45px,10.5vw,72px)!important;
+  max-width:12ch!important;line-height:1.02!important;
+ }
  .scene p{font-size:15px!important;line-height:1.65!important;max-width:430px!important}
  .storyHint{display:none!important}
 }
 @media(max-width:380px){
- .storySticky{padding:54px 20px 60px!important}
- .scene h2{font-size:clamp(42px,11vw,56px)!important}
+ .storySticky{padding:46px 20px 62px!important}
+ .scene h2{font-size:clamp(42px,10.7vw,55px)!important}
 }
 @media(prefers-reduced-motion:reduce){
- .earthCutawaySvg{transform:none!important;will-change:auto!important}
- .earthGrassBlades,.earthRootWeb{opacity:1!important}
+ .rootSculptureSvg{transform:none!important;will-change:auto!important}
+ .rootRevealedPath{stroke-dashoffset:0!important;transition:none!important}
 }
