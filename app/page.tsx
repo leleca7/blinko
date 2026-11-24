@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { BLINKO_LOGO_DARK_DATA_URI } from "../lib/blinko/brand-logo-data";
 import styles from "./immersive-home.module.css";
+import Root3D from "./components/Root3D";
 
 const journey = [
   ["01", "Escutar", "O contexto vem antes do serviço."],
@@ -32,9 +33,6 @@ export default function Home() {
       const storyTravel = Math.max(story.offsetHeight - window.innerHeight, 1);
       const progress = Math.min(1, Math.max(0, -rect.top / storyTravel));
       story.style.setProperty("--story-progress", String(progress));
-      story.style.setProperty("--story-rotation", String(progress * 12) + "deg");
-      story.style.setProperty("--ring-scale", String(1 + progress * 0.09));
-      story.style.setProperty("--node-scale", String(0.88 + progress * 0.23));
       story.dataset.scene = progress < 0.32 ? "0" : progress < 0.67 ? "1" : "2";
     };
 
@@ -46,7 +44,19 @@ export default function Home() {
       const fraction = Math.min(1, Math.max(0, event.clientX / window.innerWidth));
       page.style.setProperty("--pointer-x", String(fraction));
       page.style.setProperty("--pointer-rotation", String((fraction - 0.5) * 16) + "deg");
+      page.style.setProperty("--earth-tilt", String((fraction - 0.5) * 13) + "deg");
     };
+
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updatePlayback = () => {
+      const videos = page.querySelectorAll("video");
+      videos.forEach((video) => {
+        if (motionPreference.matches) video.pause();
+        else void video.play().catch(() => undefined);
+      });
+    };
+    motionPreference.addEventListener("change", updatePlayback);
+    updatePlayback();
 
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule, { passive: true });
@@ -57,6 +67,7 @@ export default function Home() {
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
       window.removeEventListener("pointermove", movePointer);
+      motionPreference.removeEventListener("change", updatePlayback);
     };
   }, []);
 
@@ -77,6 +88,10 @@ export default function Home() {
       </header>
 
       <section className={styles.hero} id="inicio" aria-labelledby="hero-title">
+        <video className={styles.ambientVideo} aria-hidden="true" autoPlay muted loop playsInline preload="none">
+          <source src="/imersao/ambiente.mp4" type="video/mp4" />
+        </video>
+        <div className={styles.ambientTint} aria-hidden="true" />
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>Diagnóstico e estruturação de negócios</p>
           <h1 id="hero-title">O problema <em>nem sempre</em> está onde parece.</h1>
@@ -116,7 +131,6 @@ export default function Home() {
         <div className={styles.aboutTagline} aria-label="Nossa forma de atuação">
           <span>Pesquisa e escuta</span><span>Visão integrada</span><span>Decisões fundamentadas</span>
         </div>
-        <img className={styles.aboutLogo} src="/brand/logo-fundo-claro.svg" alt="Blinko Studio — Criatividade que conecta" loading="lazy" />
       </section>
 
       <section
@@ -127,28 +141,21 @@ export default function Home() {
         aria-label="Como a Blinko entende um problema"
       >
         <div className={styles.storySticky}>
-          <div className={styles.storyGraphic} aria-hidden="true">
-            <div className={styles.storyRing} />
-            <div className={styles.storyRingTwo} />
-            <div className={styles.storyDot} />
-            <div className={[styles.storyDot, styles.storyDotTwo].join(" ")} />
-            <div className={styles.storyNode}><span>raiz.</span></div>
-            <div className={styles.storyMeter}><i /><i /><i /></div>
-          </div>
+          <Root3D />
 
           <div className={styles.storyText}>
             <article className={[styles.scene, styles.sceneOne].join(" ")}>
-              <span className={styles.kicker}>01 / O sinal</span>
+              <span className={styles.kicker}>01 / O sinal · a superfície</span>
               <h2>“Precisamos <em>postar mais.</em>”</h2>
               <p>Talvez. Mas a dificuldade está na comunicação ou em outro momento da jornada do cliente?</p>
             </article>
             <article className={[styles.scene, styles.sceneTwo].join(" ")}>
-              <span className={styles.kicker}>02 / A investigação</span>
+              <span className={styles.kicker}>02 / A investigação · o solo</span>
               <h2>E se a causa estiver <em>mais fundo?</em></h2>
               <p>Escutamos pessoas, observamos processos e cruzamos informações antes de tirar conclusões.</p>
             </article>
             <article className={[styles.scene, styles.sceneThree].join(" ")}>
-              <span className={styles.kicker}>03 / A direção</span>
+              <span className={styles.kicker}>03 / A direção · as raízes</span>
               <h2>Clareza para escolher <em>o que fazer.</em></h2>
               <p>Transformamos os achados em prioridades e caminhos possíveis, com escopo e responsabilidades claros.</p>
             </article>
@@ -162,7 +169,6 @@ export default function Home() {
           <span className={styles.kicker}>O método Blinko</span>
           <h2 id="processo-title">Menos achismo. Mais direção.</h2>
           <p className={styles.methodSmall}>Pesquisa, comunicação e Relações Públicas ajudam a enxergar o negócio por inteiro. Nosso primeiro serviço é o diagnóstico; só depois avaliamos as soluções apropriadas.</p>
-          <img className={styles.methodSeal} src="/brand/flor-criatividade.svg" alt="Blinko Studio — Criatividade que conecta" loading="lazy" />
         </div>
         <div aria-label="Etapas do nosso trabalho">
           {journey.map(([number, name, detail]) => (
@@ -172,6 +178,20 @@ export default function Home() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className={styles.editorialShowcase} aria-labelledby="investigacao-title">
+        <div className={styles.editorialCopy}>
+          <span className={styles.kicker}>O que muda quando investigamos</span>
+          <h2 id="investigacao-title">Uma ideia vira <em>hipótese.</em> Uma hipótese pede <em>evidência.</em></h2>
+          <p>O diagnóstico transforma informações dispersas em uma leitura mais clara do negócio — sem confundir impressões com causas confirmadas.</p>
+          <span className={styles.editorialUnderline} aria-hidden="true" />
+        </div>
+        <figure className={styles.editorialCollage}>
+          <img className={styles.reportVisual} src="/imersao/mockup-relatorio.webp" alt="Composição ilustrativa de páginas de relatório com gráficos e esquemas" loading="lazy" />
+          <img className={styles.handsVisual} src="/imersao/recorte-pessoa.webp" alt="" loading="lazy" />
+          <figcaption>Referências visuais ilustrativas. Não são dados, métricas ou resultados de clientes.</figcaption>
+        </figure>
       </section>
 
       <section className={styles.audience} id="para-quem" aria-labelledby="audience-title">
