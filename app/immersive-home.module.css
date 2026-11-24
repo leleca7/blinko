@@ -544,3 +544,14 @@
 }
 
 .footerLegal{display:flex;flex-wrap:wrap;align-items:center;gap:8px 21px}.footerLegal a{color:rgba(255,255,255,.85);font-weight:700;text-decoration:underline;text-decoration-color:rgba(255,255,255,.2);text-underline-offset:4px}.footerLegal a:hover{color:#fff;text-decoration-color:#fff}
+
+/* Assinaturas oficiais fornecidas pela marca: versões com transparência. */
+.artCore img{display:block;width:64%;height:76%;object-fit:contain;filter:drop-shadow(0 2px 10px rgba(255,255,255,.08))}
+.aboutLogo{grid-column:2;display:block;width:clamp(175px,22vw,265px);height:auto;margin-top:4px;max-width:100%;object-fit:contain}
+.methodSeal{display:block;width:clamp(140px,15vw,195px);height:auto;margin-top:29px;object-fit:contain;opacity:.86}
+.footer>img{height:74px;width:auto;max-width:140px;object-fit:contain;flex:0 0 auto}
+@media(max-width:760px){
+ .aboutLogo{grid-column:1;width:200px;margin-top:12px}
+ .methodSeal{width:145px;margin-top:23px}
+ .footer>img{height:64px;max-width:120px}
+}
