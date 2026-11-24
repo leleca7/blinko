@@ -35,18 +35,18 @@ export default function Root3D() {
 
         const scene = new T.Scene();
         const camera = new T.PerspectiveCamera(40, 1, 0.1, 80);
-        scene.add(new T.HemisphereLight(0xfff5dc, 0x4c352e, 1.7));
-        const light = new T.DirectionalLight(0xffe8cc, 1.55);
+        scene.add(new T.HemisphereLight(0xfff5dc, 0x4c352e, 1.25));
+        const light = new T.DirectionalLight(0xffe8cc, 2.0);
         light.position.set(-5, 6, 10);
         scene.add(light);
 
         const wood = new T.MeshStandardMaterial({
-          color: 0xcfae80, roughness: 0.88, metalness: 0,
+          color: 0xc3a17b, roughness: 0.96, metalness: 0,
           side: T.FrontSide,
         });
         const roots: Array<{
           mesh: InstanceType<typeof T.Mesh>;
-          tubularSegments: number;
+          material: InstanceType<typeof T.MeshStandardMaterial>;
           start: number;
           duration: number;
         }> = [];
@@ -56,47 +56,65 @@ export default function Root3D() {
           return seed / 2147483647;
         };
 
+        // Root geometry: a tapered taproot and alternating lateral branches.
+        // The reference algorithm remains procedural, but branches now have
+        // natural tips, varying thickness and a balanced, compact silhouette.
         const branch = (
           x: number, y: number, direction: number,
           length: number, radius: number, generation: number, depth = 0.8,
         ) => {
           const points: InstanceType<typeof T.Vector3>[] = [];
           let cx = x, cy = y, angle = direction;
-          const steps = Math.max(5, Math.round(length * 2.2));
+          const steps = Math.max(8, Math.round(length * 5));
+          const phase = rnd() * Math.PI * 2;
+          const side = direction < 0 ? -1 : 1;
           for (let i = 0; i <= steps; i++) {
-            points.push(new T.Vector3(cx, cy, depth + Math.sin(i / steps * Math.PI) * (generation ? 0.48 : 0.24)));
-            angle += (rnd() - 0.5) * 0.55;
-            angle *= 0.93;
+            const u = i / steps;
+            points.push(new T.Vector3(cx, cy, depth + Math.sin(u * Math.PI) * (generation ? 0.32 : 0.13) * side));
+            const desired = generation === 0 ? Math.sin(u * 6 + phase) * 0.16 : direction * (1 - u * 0.55);
+            angle += (desired - angle) * 0.19 + (rnd() - 0.5) * (generation === 0 ? 0.11 : 0.25);
             cx += Math.sin(angle) * length / steps;
             cy -= Math.cos(angle) * length / steps;
           }
-          const tubularSegments = steps * 8;
-          const geometry = new T.TubeGeometry(
-            new T.CatmullRomCurve3(points), tubularSegments,
-            radius, 5, false,
-          );
-          const mesh = new T.Mesh(geometry, wood);
+          const tubularSegments = Math.max(24, steps * 3);
+          const radialSegments = generation === 0 ? 9 : 6;
+          const curve = new T.CatmullRomCurve3(points);
+          const geometry = new T.TubeGeometry(curve, tubularSegments, radius, radialSegments, false);
+          const pos = geometry.attributes.position;
+          const center = new T.Vector3();
+          for (let ring = 0; ring <= tubularSegments; ring++) {
+            const u = ring / tubularSegments;
+            curve.getPointAt(u, center);
+            const taper = Math.max(0.018, Math.pow(1 - u, generation === 0 ? 0.85 : 1.15));
+            for (let j = 0; j <= radialSegments; j++) {
+              const k = ring * (radialSegments + 1) + j;
+              pos.setXYZ(k, center.x + (pos.getX(k)-center.x)*taper,
+                center.y + (pos.getY(k)-center.y)*taper,
+                center.z + (pos.getZ(k)-center.z)*taper);
+            }
+          }
+          pos.needsUpdate = true;
+          geometry.computeVertexNormals();
+          geometry.computeBoundingBox();
+          const material = wood.clone();
+          material.transparent = true;
+          material.opacity = 0.001;
+          const mesh = new T.Mesh(geometry, material);
           scene.add(mesh);
-          roots.push({
-            mesh, tubularSegments,
-            start: Math.max(0, -y / 11),
-            duration: generation ? 0.22 : 1,
-          });
-
+          roots.push({ mesh, material, start: generation === 0 ? 0 : Math.max(0, -y / 10 - 0.10), duration: generation ? 0.36 : 0.48 });
           if (generation < 3) {
-            const count = generation ? 2 : 11;
+            const count = generation === 0 ? 9 : generation === 1 ? 4 : 2;
             for (let i = 0; i < count; i++) {
-              const pt = points[Math.floor(2 + rnd() * (steps - 3))];
-              branch(
-                pt.x, pt.y,
-                (rnd() < 0.5 ? -1 : 1) * (0.7 + rnd() * 0.7),
-                length * (generation ? 0.42 : 0.32) + rnd(),
-                radius * 0.55, generation + 1, pt.z,
-              );
+              const u = 0.14 + i / count * 0.72 + rnd() * 0.055;
+              const pt = curve.getPointAt(u);
+              const lateral = generation === 0 ? (i % 2 === 0 ? -1 : 1) : (i % 2 === 0 ? side : -side);
+              const childLength = generation === 0 ? (2.8 * (1 - u * .55) + rnd() * .6) : length * (.32 + rnd() * .16);
+              branch(pt.x, pt.y, lateral * (.78 + rnd() * .50), childLength,
+                radius * Math.pow(1-u, .85) * (generation === 0 ? .48 : .52), generation + 1, pt.z);
             }
           }
         };
-        branch(0, -0.1, 0, 11, 0.055, 0);
+        branch(0, -0.1, 0, 8.5, 0.105, 0);
 
         // A superfície revela primeiro uma pequena planta; a mesma
         // câmera depois desce pelas raízes, sem recipiente ou moldura.
@@ -119,6 +137,15 @@ export default function Root3D() {
         }
         scene.add(plant);
 
+        // Fit the complete plant/root silhouette to the actual canvas bounds.
+        // No branch can be clipped by a camera push-in, even on a narrow desktop.
+        scene.updateMatrixWorld(true);
+        const bounds = new T.Box3();
+        for (const root of roots) bounds.expandByObject(root.mesh);
+        bounds.expandByObject(plant);
+        const center = bounds.getCenter(new T.Vector3());
+        const size = bounds.getSize(new T.Vector3());
+        const halfFov = T.MathUtils.degToRad(camera.fov / 2);
         const story = box.closest("section");
         let targetX = 0, targetY = 0;
         let currentProgress = 0;
@@ -146,22 +173,24 @@ export default function Root3D() {
           const target = Math.min(1, Math.max(0, Number(progressText) || 0));
           currentProgress += (target - currentProgress) * 0.09;
 
-          // Mesmo movimento vertical do HTML original: começamos perto
-          // do tronco e descemos junto com as raízes. Distância ajustada
-          // à coluna mais estreita da home (o HTML era tela cheia).
-          const focusY = 0.7 - 10.0 * currentProgress;
-          const z = (8.2 - 1.4 * currentProgress) / Math.min(1, Math.max(camera.aspect * 1.1, 0.57));
-          plant.rotation.z = Math.sin(currentProgress * 3) * 0.025;
-          camera.position.set(targetX * 0.5, focusY - targetY * 0.3, z);
-          camera.lookAt(targetX * 0.2, focusY, 0);
+          // Keep a gentle vertical descent while retaining the entire root
+          // silhouette. Camera fitting accounts for both canvas dimensions.
+          const focusY = center.y + (0.5 - currentProgress) * 0.9;
+          const focusX = center.x + targetX * 0.15;
+          const vertical = size.y / 2 + Math.abs(focusY - center.y) + 0.5;
+          const horizontal = size.x / 2 + Math.abs(focusX - center.x) + 0.45;
+          const fit = Math.max(vertical / Math.tan(halfFov), horizontal / (Math.tan(halfFov) * camera.aspect));
+          const z = bounds.max.z + fit * (1.10 - currentProgress * .025);
+          camera.position.set(focusX, focusY - targetY * 0.10, z);
+          camera.lookAt(focusX, focusY, center.z);
 
+          // Fade in whole tapered branches instead of exposing cut tube ends.
           for (const root of roots) {
-            const fraction = Math.min(1, Math.max(0,
-              (currentProgress * 1.18 + 0.07 - root.start) / root.duration));
-            root.mesh.visible = fraction > 0.001;
-            root.mesh.geometry.setDrawRange(
-              0, Math.floor(fraction * root.tubularSegments) * 30,
-            );
+            const fraction = Math.min(1, Math.max(0, (currentProgress * 1.12 + .12 - root.start) / root.duration));
+            const eased = fraction * fraction * (3 - 2 * fraction);
+            root.mesh.visible = eased > 0.002;
+            root.material.opacity = eased;
+            root.material.depthWrite = eased > .95;
           }
           renderer.render(scene, camera);
           frame = window.requestAnimationFrame(render);
@@ -199,7 +228,7 @@ export default function Root3D() {
           resizeObserver.disconnect();
           window.removeEventListener("pointermove", pointer);
           canvas.removeEventListener("webglcontextlost", contextLost);
-          for (const root of roots) root.mesh.geometry.dispose();
+          for (const root of roots) { root.mesh.geometry.dispose(); root.material.dispose(); }
           wood.dispose();
           stemGeometry.dispose(); leafGeometry.dispose(); foliage.dispose(); stemMaterial.dispose();
           renderer.dispose();
