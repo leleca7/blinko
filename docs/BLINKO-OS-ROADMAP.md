@@ -57,3 +57,12 @@ Primeiro incremento: roadmap, protótipo visual e funções locais de orçamento
 - Todos os registros ficam em memória no navegador; não há persistência, autenticação nova, integração real, nem mudança no proxy. Não inserir dados de clientes.
 - Testes de aceite manual: mover lead à etapa Diagnóstico, simular contratação, registrar e revisar fato fictício, selecionar evidência e nota, verificar média/cobertura, criar ação, alternar projetos e revogar revisão. Recarregar deve restaurar a demo.
 - P0 continua pendente: banco isolado, contrato de integração, autorização e auditoria técnica. A implementação funcional em memória não encerra esses bloqueios.
+
+## Incremento 03 — documentos, agenda e financeiro
+- Agenda por projeto: compromissos simulados e prazos do plano de ação, com conclusão sincronizada em memória.
+- Relatório: compilação determinística de evidências revisadas, hipóteses separadas, cobertura do Radar, prioridades e síntese humana. Exportação TXT; não é relatório aprovado, não inclui dados financeiros e não utiliza IA generativa.
+- Financeiro: lançamentos fictícios em centavos, vencimento, distinção entre previsto e realizado, saldo por projeto. Não implementa cobranças, impostos, conciliação bancária, remuneração ou divisão de lucros.
+- Neon: inventário somente de metadados na branch de simulação existente. Há tabelas de leads, pré-diagnósticos, diagnósticos, evidências, projetos, tarefas, contas a receber, custos, planos financeiros, modelos de documentos, papéis, usuários, acesso por projeto e auditoria. Não duplicar essas entidades antes de mapear contratos, estados e relações.
+- A branch de simulação deriva de dados da main. Isso não garante anonimização. Nenhuma linha de cliente foi consultada, nenhuma escrita foi realizada e nenhuma credencial foi recuperada.
+- Próximo passo P0: obter autorização e confirmar um banco exclusivamente sintético (não apenas cópia da produção), revisar permissões por organização/projeto no servidor, criar testes de acesso e mapear a triagem para leads/pré-diagnósticos, antes de conectar o protótipo. Não alterar produção, abrir endpoints bloqueados ou expor credenciais.
+- Testes manuais: alternar projetos; registrar compromisso e concluir ação pela agenda; verificar exportação com e sem evidências; verificar que receita/despesa prevista não altera saldo realizado até marcar recebimento/pagamento. Recarregar restaura a demonstração.
