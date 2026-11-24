@@ -48,6 +48,17 @@ export default function Home() {
       page.style.setProperty("--pointer-rotation", String((fraction - 0.5) * 16) + "deg");
     };
 
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updatePlayback = () => {
+      const videos = page.querySelectorAll("video");
+      videos.forEach((video) => {
+        if (motionPreference.matches) video.pause();
+        else void video.play().catch(() => undefined);
+      });
+    };
+    motionPreference.addEventListener("change", updatePlayback);
+    updatePlayback();
+
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule, { passive: true });
     window.addEventListener("pointermove", movePointer, { passive: true });
@@ -57,6 +68,7 @@ export default function Home() {
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
       window.removeEventListener("pointermove", movePointer);
+      motionPreference.removeEventListener("change", updatePlayback);
     };
   }, []);
 
@@ -77,6 +89,10 @@ export default function Home() {
       </header>
 
       <section className={styles.hero} id="inicio" aria-labelledby="hero-title">
+        <video className={styles.ambientVideo} aria-hidden="true" autoPlay muted loop playsInline preload="none">
+          <source src="/imersao/ambiente.mp4" type="video/mp4" />
+        </video>
+        <div className={styles.ambientTint} aria-hidden="true" />
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>Diagnóstico e estruturação de negócios</p>
           <h1 id="hero-title">O problema <em>nem sempre</em> está onde parece.</h1>
@@ -128,11 +144,13 @@ export default function Home() {
       >
         <div className={styles.storySticky}>
           <div className={styles.storyGraphic} aria-hidden="true">
-            <div className={styles.storyRing} />
-            <div className={styles.storyRingTwo} />
-            <div className={styles.storyDot} />
-            <div className={[styles.storyDot, styles.storyDotTwo].join(" ")} />
-            <div className={styles.storyNode}><span>raiz.</span></div>
+            <div className={styles.storyFilm}>
+              <video className={styles.storyVideo} autoPlay muted loop playsInline preload="metadata">
+                <source src="/imersao/camadas-scroll.mp4" type="video/mp4" />
+              </video>
+              <img className={styles.storyStill} src="/imersao/raizes.webp" alt="" loading="lazy" />
+            </div>
+            <div className={styles.storyFilmTag}>Da superfície às raízes</div>
             <div className={styles.storyMeter}><i /><i /><i /></div>
           </div>
 
@@ -172,6 +190,21 @@ export default function Home() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className={styles.editorialShowcase} aria-labelledby="investigacao-title">
+        <div className={styles.editorialCopy}>
+          <span className={styles.kicker}>O que muda quando investigamos</span>
+          <h2 id="investigacao-title">Uma ideia vira <em>hipótese.</em> Uma hipótese pede <em>evidência.</em></h2>
+          <p>O diagnóstico transforma informações dispersas em uma leitura mais clara do negócio — sem confundir impressões com causas confirmadas.</p>
+          <span className={styles.editorialUnderline} aria-hidden="true" />
+        </div>
+        <figure className={styles.editorialCollage}>
+          <img className={styles.paperBackdrop} src="/imersao/papel-rasgado.webp" alt="" loading="lazy" />
+          <img className={styles.reportVisual} src="/imersao/mockup-relatorio.webp" alt="Composição ilustrativa de páginas de relatório com gráficos e esquemas" loading="lazy" />
+          <img className={styles.handsVisual} src="/imersao/recorte-pessoa.webp" alt="" loading="lazy" />
+          <figcaption>Referências visuais ilustrativas. Não são dados, métricas ou resultados de clientes.</figcaption>
+        </figure>
       </section>
 
       <section className={styles.audience} id="para-quem" aria-labelledby="audience-title">
