@@ -25,6 +25,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   manifest: "/manifest.webmanifest",
+  icons: { icon: [{ url: "/brand/monograma-b-rosa.svg", type: "image/svg+xml" }], apple: "/brand/monograma-b-rosa.svg" },
   robots: {
     index: true,
     follow: true,
