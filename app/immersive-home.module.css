@@ -1093,3 +1093,14 @@
  .root3DContainer .rootRevealedPath{stroke-dasharray:none;stroke-dashoffset:0;transition:none}
  .root3DCanvas,.root3DCanvasReady{mask-image:none}
 }
+
+/* Text-led investigation: no 3D object or empty second column. */
+@media(min-width:761px) and (prefers-reduced-motion:no-preference){
+ .story{height:270svh}
+ .storySticky{display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;gap:0;padding:110px max(8vw,28px) 70px}
+ .storyText{width:min(100%,1020px);max-width:1020px;height:min(56vh,510px);text-align:center}
+ .story .scene h2{max-width:15ch;margin-inline:auto;font-size:clamp(56px,7.2vw,112px)}
+ .story .scene p{margin-inline:auto;max-width:580px}
+ .storySticky:after{background:radial-gradient(ellipse at 50% 48%,rgba(13,24,16,.26),rgba(19,19,15,.65)),linear-gradient(0deg,rgba(17,15,12,.3),transparent 28%)}
+ .storyHint{right:auto;left:50%;transform:translateX(-50%);white-space:nowrap}
+}
