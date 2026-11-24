@@ -1065,3 +1065,21 @@
  .marqueeTrack{animation:none}
 }
 @media(prefers-reduced-motion:reduce){.heroArt,.heroArt .botanicalHero,.reportVisual,.handsVisual,.audienceList>div,.closingMark{transform:none!important;transition:none!important;will-change:auto}.method{min-height:0}.methodVisual,.methodSteps{display:block;min-height:0}.methodOrb{display:none}.methodLine{opacity:1!important;visibility:visible!important;transform:none!important;display:flex;flex-direction:row;justify-content:space-between;padding:19px 0;border-bottom:1px solid #315a4240!important}.methodLine strong{font-size:clamp(27px,4vw,54px)}.marqueeTrack{animation:none!important}}
+
+/* Readable default if JS, GSAP or reduced motion prevents the pinned scene. */
+.method:not([data-motion="on"]) .methodVisual{min-height:0}
+.method:not([data-motion="on"]) .methodSteps{display:block;min-height:0}
+.method:not([data-motion="on"]) .methodOrb{display:none}
+.method:not([data-motion="on"]) .methodLine{opacity:1;visibility:visible;display:flex;flex-direction:row;justify-content:space-between;padding:20px 0;border-bottom:1px solid #315a4240!important}
+.method:not([data-motion="on"]) .methodLine strong{font-size:clamp(30px,4vw,55px)}
+.cursorRing{position:fixed;left:-14px;top:-14px;width:28px;height:28px;border:1px solid #e7b7d1;border-radius:50%;z-index:100;pointer-events:none;opacity:0;visibility:hidden;mix-blend-mode:difference}
+@media(min-width:761px) and (prefers-reduced-motion:no-preference){
+ .sceneWord{opacity:0;transform:translateY(.25em);transition:opacity .42s ease,transform .55s cubic-bezier(.2,.7,.2,1)}
+ .story[data-scene="0"] .sceneOne .sceneWord,.story[data-scene="1"] .sceneTwo .sceneWord,.story[data-scene="2"] .sceneThree .sceneWord{opacity:1;transform:none}
+ .sceneWord:nth-child(2){transition-delay:.06s}.sceneWord:nth-child(3){transition-delay:.12s}.sceneWord:nth-child(4){transition-delay:.18s}.sceneWord:nth-child(5){transition-delay:.24s}.scene h2 em .sceneWord{transition-delay:.26s}.scene h2 em .sceneWord:nth-child(2){transition-delay:.32s}
+}
+@media(max-width:760px),(prefers-reduced-motion:reduce){.cursorRing{display:none!important}.sceneWord{opacity:1!important;transform:none!important}}
+/* Lenis integration keeps anchor navigation and nested form controls usable. */
+:global(html.lenis),:global(html.lenis body){height:auto}
+:global(.lenis.lenis-smooth){scroll-behavior:auto!important}
+:global(.lenis.lenis-stopped){overflow:hidden}
