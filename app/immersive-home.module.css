@@ -254,7 +254,7 @@
 }
 .entry h2 em {font-weight:400;color:#bf4f7e;}
 .entryIntro {max-width:320px;font-size:15px;line-height:1.6;color:#63736a;}
-.entryGrid {display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.entryGrid {display:grid;grid-template-columns:1fr;gap:16px;}
 .path {
  min-height:360px;padding:34px;display:flex;flex-direction:column;
  justify-content:space-between;position:relative;overflow:hidden;
@@ -380,4 +380,178 @@
   scroll-behavior:auto !important;transition-duration:.01ms !important;
  }
  .storyGraphic{transform:none;}
+}
+
+
+.diagnosticSteps {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:1px;background:rgba(1,48,30,.18);border:1px solid rgba(1,48,30,.16);
+  margin:0 0 22px;border-radius:8px;overflow:hidden;
+}
+.diagnosticSteps>div{background:#f7f3ed;padding:25px 23px;min-height:170px;}
+.diagnosticSteps span{display:block;font-size:10px;letter-spacing:.15em;font-weight:800;color:#b9487c;margin-bottom:14px;}
+.diagnosticSteps strong{display:block;font-size:20px;line-height:1.18;font-family:Georgia,serif;font-weight:400;color:#153e28;}
+.diagnosticSteps p{margin-top:9px;font-size:13px;line-height:1.55;color:#62756b;}
+.diagnosticPath{min-height:310px;}
+.diagnosticPath .pathBody h3{max-width:18ch;}
+.diagnosticPath .pathBody p{max-width:590px;}
+@media(max-width:760px){
+ .diagnosticSteps{grid-template-columns:1fr;}
+ .diagnosticSteps>div{min-height:0;padding:18px 20px;}
+ .diagnosticSteps span{margin-bottom:6px;}
+ .diagnosticSteps strong{font-size:21px;}
+ .diagnosticSteps p{margin-top:4px;}
+ .diagnosticPath{min-height:330px;}
+}
+
+.outcome {
+ padding:95px max(6vw,24px) 115px;
+ background:#ebdbe0;color:#173b2a;
+ display:grid;grid-template-columns:.4fr 1fr;column-gap:6vw;row-gap:22px;
+}
+.outcome>.kicker{color:#a83c68;align-self:start;margin-top:12px}
+.outcome h2{
+ font-family:Georgia,"Times New Roman",serif;font-weight:400;
+ font-size:clamp(48px,6vw,88px);line-height:1.02;letter-spacing:-.06em;
+ max-width:15ch;
+}
+.outcome h2 em{font-weight:400;color:#a33e70}
+.outcomeItems{grid-column:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin-top:17px}
+.outcomeItems>div{padding-top:17px;border-top:1px solid rgba(14,59,36,.25)}
+.outcomeItems span{display:block;color:#a33e70;font-size:10px;font-weight:800;letter-spacing:.1em;margin-bottom:13px}
+.outcomeItems strong{display:block;font-family:Georgia,"Times New Roman",serif;font-size:clamp(19px,2vw,28px);font-weight:400;line-height:1.16}
+.outcomeItems p{margin-top:10px;font-size:13px;line-height:1.5;color:#516b5a}
+@media(max-width:760px){
+ .outcome{padding:75px 22px 85px;display:block}
+ .outcome h2{font-size:clamp(48px,11vw,70px);margin-top:15px}
+ .outcomeItems{grid-template-columns:1fr;gap:10px;margin-top:35px}
+ .outcomeItems>div{padding:13px 0}
+ .outcomeItems span{margin-bottom:7px}
+}
+
+.faq {
+ padding:110px max(6vw,24px) 118px;
+ display:grid;grid-template-columns:minmax(240px,.75fr) minmax(360px,1fr);
+ gap:clamp(36px,7vw,105px);background:#e8ece4;color:#103623;
+}
+.faqIntro{position:relative;align-self:start}
+.faqIntro .kicker{color:#ae3e72;display:block;margin-bottom:22px}
+.faqIntro h2{
+ font-family:Georgia,"Times New Roman",serif;font-size:clamp(53px,6.1vw,95px);
+ letter-spacing:-.063em;line-height:.96;font-weight:400;max-width:10ch;
+}
+.faqIntro h2 em{color:#b54878;font-weight:400}
+.faqIntro p{margin-top:22px;font-size:16px;line-height:1.57;color:#546d5e;max-width:365px}
+.faqQuestions{min-width:0;align-self:center}
+.faqItem{border-bottom:1px solid rgba(10,54,32,.19)}
+.faqItem:first-child{border-top:1px solid rgba(10,54,32,.19)}
+.faqItem summary{
+ cursor:pointer;display:flex;justify-content:space-between;align-items:center;
+ gap:18px;list-style:none;padding:25px 0;
+ color:#123a26;font-family:Georgia,"Times New Roman",serif;
+ font-size:clamp(19px,2.15vw,29px);line-height:1.23;letter-spacing:-.03em;
+}
+.faqItem summary::-webkit-details-marker{display:none}
+.faqItem summary:focus-visible{outline:3px solid #cb5986;outline-offset:5px}
+.faqItem summary span{
+ display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;
+ border:1px solid #8ba898;border-radius:50%;font:400 22px/1 Arial,sans-serif;
+ transition:transform .3s ease,color .3s,background .3s;
+}
+.faqItem[open] summary span{transform:rotate(45deg);background:#113e28;color:#fff}
+.faqItem p{
+ margin:0 39px 25px 0;font-size:15px;line-height:1.7;color:#526c5d;
+ max-width:670px;
+}
+.faqLink{
+ margin-top:28px;display:inline-flex;align-items:center;gap:15px;
+ border-bottom:1px solid #12412a;padding-bottom:11px;
+ text-transform:uppercase;letter-spacing:.09em;font-size:11px;font-weight:800;
+ transition:gap .2s ease;
+}
+.faqLink:hover{gap:24px}
+@media(max-width:760px){
+ .faq{padding:83px 22px 93px;grid-template-columns:1fr;gap:36px}
+ .faqIntro h2{font-size:clamp(56px,12vw,81px)}
+ .faqIntro p{margin-top:14px}
+ .faqItem summary{padding:21px 0;font-size:23px}
+ .faqItem p{font-size:14px;margin-right:15px}
+}
+
+
+/* Institucional: clareza sobre a Blinko sem aumentar a carga de leitura. */
+.aboutTagline{
+  grid-column:2;display:flex;flex-wrap:wrap;gap:9px;
+  margin-top:-16px;align-self:start;
+}
+.aboutTagline span{
+  display:inline-flex;align-items:center;min-height:35px;padding:0 13px;
+  border:1px solid rgba(1,48,30,.22);border-radius:99px;
+  color:#345a44;font-size:10px;line-height:1.3;
+  font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+}
+.audience{
+  display:grid;grid-template-columns:minmax(280px,.83fr) minmax(340px,1fr);
+  gap:clamp(45px,7.5vw,135px);padding:105px max(6vw,24px) 115px;
+  background:#0b3928;color:#f1eee7;align-items:start;
+  position:relative;overflow:hidden;
+}
+.audience:before{
+  content:"";position:absolute;width:520px;height:520px;border-radius:50%;
+  border:1px solid rgba(236,201,207,.12);top:-295px;left:-250px;
+  box-shadow:0 0 0 60px rgba(236,201,207,.015),0 0 0 125px rgba(236,201,207,.01);
+  pointer-events:none;
+}
+.audienceIntro,.audienceList{position:relative;z-index:1}
+.audienceIntro .kicker{color:#e7a9c7;display:block;margin-bottom:24px}
+.audienceIntro h2{
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(52px,6.2vw,97px);line-height:.96;
+  font-weight:400;letter-spacing:-.064em;max-width:11ch;
+}
+.audienceIntro h2 em{font-weight:400;color:#eab0ce}
+.audienceIntro>p{
+  font-size:16px;line-height:1.65;color:rgba(255,255,255,.73);
+  margin-top:24px;max-width:490px;
+}
+.audienceList>div{
+  display:grid;grid-template-columns:35px 1fr;gap:17px;
+  align-items:baseline;min-height:88px;
+  border-top:1px solid rgba(255,255,255,.2);padding:21px 0;
+  transition:transform .35s ease,border-color .35s ease;
+}
+.audienceList>div:hover{transform:translateX(5px);border-color:#f1b2d0}
+.audienceList>div span{
+  font-size:10px;color:#dfafc2;letter-spacing:.12em;font-weight:800;
+}
+.audienceList>div p{
+  font-family:Georgia,"Times New Roman",serif;font-size:clamp(24px,2.7vw,41px);
+  font-weight:400;letter-spacing:-.035em;line-height:1.2;
+}
+.audienceNote{
+  font-size:11px;line-height:1.65;color:rgba(255,255,255,.52);
+  max-width:540px;margin-top:17px !important;
+}
+@media(max-width:760px){
+ .aboutTagline{grid-column:1;margin-top:8px;gap:7px}
+ .aboutTagline span{font-size:9px;padding:0 10px;min-height:30px}
+ .audience{padding:83px 22px 91px;grid-template-columns:1fr;gap:40px}
+ .audienceIntro h2{font-size:clamp(56px,12vw,81px)}
+ .audienceIntro>p{font-size:15px;margin-top:18px}
+ .audienceList>div{min-height:0;grid-template-columns:28px 1fr;gap:12px;padding:18px 0}
+ .audienceList>div p{font-size:clamp(26px,6.8vw,36px)}
+ .audienceList>div:hover{transform:none}
+}
+
+.footerLegal{display:flex;flex-wrap:wrap;align-items:center;gap:8px 21px}.footerLegal a{color:rgba(255,255,255,.85);font-weight:700;text-decoration:underline;text-decoration-color:rgba(255,255,255,.2);text-underline-offset:4px}.footerLegal a:hover{color:#fff;text-decoration-color:#fff}
+
+/* Assinaturas oficiais fornecidas pela marca: versões com transparência. */
+.artCore img{display:block;width:64%;height:76%;object-fit:contain;filter:drop-shadow(0 2px 10px rgba(255,255,255,.08))}
+.aboutLogo{grid-column:2;display:block;width:clamp(175px,22vw,265px);height:auto;margin-top:4px;max-width:100%;object-fit:contain}
+.methodSeal{display:block;width:clamp(140px,15vw,195px);height:auto;margin-top:29px;object-fit:contain;opacity:.86}
+.footer>img{height:74px;width:auto;max-width:140px;object-fit:contain;flex:0 0 auto}
+@media(max-width:760px){
+ .aboutLogo{grid-column:1;width:200px;margin-top:12px}
+ .methodSeal{width:145px;margin-top:23px}
+ .footer>img{height:64px;max-width:120px}
 }

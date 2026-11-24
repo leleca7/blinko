@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Blinko",
     short_name: "Blinko",
-    description: "Diagnóstico, execução e acompanhamento aplicados ao problema real da empresa.",
+    description: "Diagnóstico e estruturação de negócios, integrando comunicação estratégica e Relações Públicas.",
     start_url: "/",
     display: "standalone",
     background_color: "#f3efeb",
@@ -12,9 +12,9 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: "pt-BR",
     icons: [
       {
-        src: "/brand/flor-centro.webp",
+        src: "/brand/monograma-b-rosa.svg",
         sizes: "any",
-        type: "image/webp",
+        type: "image/svg+xml",
       },
     ],
   };
