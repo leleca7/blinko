@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function DireitosTitular() {
  return <div className={styles.page}>
-  <header className={styles.top}><Link className={styles.brand} href="/">blinko<span>*</span> studio</Link><Link className={styles.back} href="/">← Voltar ao site</Link></header>
+  <header className={styles.top}><Link className={styles.brand} href="/" aria-label="Blinko Studio — início"><img src="/brand/logo-fundo-verde.svg" alt="Blinko Studio" /></Link><Link className={styles.back} href="/">← Voltar ao site</Link></header>
   <main className={styles.main}>
    <span className={styles.eyebrow}>Blinko Studio · Direitos dos titulares</span>
    <h1>Solicitações de Dados</h1>
