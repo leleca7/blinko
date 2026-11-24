@@ -29,3 +29,15 @@
 .reportPreview pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:400 14px/1.8 Arial,sans-serif;color:var(--ink)}
 @media(max-width:760px){.sidebar{max-height:none;overflow:visible}}
 @media(max-width:460px){.financeGrid{grid-template-columns:1fr}.financeGrid article{padding:16px}}
+
+/* Incremento 06: documento editorial e revisão humana. */
+.reviewBanner{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 24px;margin:25px 0;border:1px solid var(--line);border-radius:13px;background:#e8ede4}.reviewBanner small{display:block;font-size:10px;color:var(--muted);letter-spacing:.1em}.reviewBanner strong{display:block;font:400 24px Georgia,serif;margin:7px 0}.reviewBanner p{font-size:13px;color:var(--muted);margin:0}.reviewBanner button{margin:0;flex-shrink:0}.buttonRow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:20px 0}.buttonRow button{margin:0}.reportPreview{padding:0;overflow:hidden;border-top-width:1px}.reportCover{display:flex;justify-content:space-between;align-items:center;gap:15px;background:#01301e;color:#f3efeb;padding:30px}.reportCover small,.reportCover p{color:#d6e3d9}.reportCover h2{color:#f3efeb;margin:15px 0 5px}.reportCover>span{font:italic 60px Georgia,serif;color:#efbad5}.reportMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:20px 30px;background:#f5f3ed;border-bottom:1px solid var(--line)}.reportMetrics strong{display:block;font:400 29px Georgia,serif;margin-top:8px}.reportBody{padding:30px}.reportBody pre{font-size:13px;line-height:1.75}
+@media(max-width:560px){.reviewBanner{align-items:flex-start;flex-direction:column;padding:16px}.reportCover,.reportBody{padding:18px}.reportCover>span{font-size:40px}.reportMetrics{padding:16px;gap:7px}.reportMetrics strong{font-size:23px}.reportMetrics small{font-size:9px}}
+@media print{
+ @page{size:A4;margin:15mm}
+ :global(html),:global(body){background:#fff!important;height:auto!important;overflow:visible!important}
+ .page,.shell,.workspace,.panel{display:block!important;position:static!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;min-height:0!important;overflow:visible!important;background:white!important;border:none!important;box-shadow:none!important}
+ .page .sidebar,.workspace>.top,.workspace>.notice,.workspace>.projectBar,.workspace>footer,.panel>small,.panel>h2,.panel>p,.panel>label,.panel>.buttonRow{display:none!important}
+ .reportPreview{border:none;margin:0;overflow:visible!important;border-radius:0;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+ .reportCover,.reportMetrics{break-inside:avoid}.reportBody{padding:14px 0}.reportBody pre{font-size:10pt;line-height:1.5;color:#01301e}
+}
