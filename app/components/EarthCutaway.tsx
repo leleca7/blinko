@@ -19,12 +19,14 @@ function createRoots(): Root[] {
   };
 
   const roots: Root[] = [];
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   const toScreen = (point: Point) => ({
     x: 380 + point.x * 61,
     y: 58 - point.y * 52,
   });
   const smoothPath = (points: Point[]) => {
     const coords = points.map(toScreen);
+    for (const point of coords) { minX = Math.min(minX,point.x); minY = Math.min(minY,point.y); maxX = Math.max(maxX,point.x); maxY = Math.max(maxY,point.y); }
     let data = "M " + coords[0].x.toFixed(2) + " " + coords[0].y.toFixed(2);
     for (let i = 1; i < coords.length; i++) {
       const point = coords[i];
@@ -75,16 +77,17 @@ function createRoots(): Root[] {
     }
   }
   branch(0, -0.1, 0, 11, 0.055, 0);
-  return roots;
+  const margin = 45;
+  return { roots, viewBox: [minX-margin,minY-margin,maxX-minX+2*margin,maxY-minY+2*margin].join(" ") };
 }
 
-const ROOTS = createRoots();
+const { roots: ROOTS, viewBox } = createRoots();
 const REVEAL_BASE = [0.38, 0.94, 1.08, 1.21];
 
 export default function EarthCutaway() {
   return (
     <div className={styles.rootSculpture} aria-hidden="true">
-      <svg className={styles.rootSculptureSvg} viewBox="0 0 760 860" xmlns="http://www.w3.org/2000/svg">
+      <svg className={styles.rootSculptureSvg} viewBox={viewBox} preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="blinko-root-wood" x1="0" y1="0" x2=".8" y2="1">
             <stop offset="0" stopColor="#fff1ce" />
