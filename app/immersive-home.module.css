@@ -847,3 +847,57 @@
  .rootSculptureSvg{transform:none!important;will-change:auto!important}
  .rootRevealedPath{stroke-dashoffset:0!important;transition:none!important}
 }
+
+
+/* Cena Three.js: somente as raízes reais do HTML enviado. */
+.root3DContainer{
+  position:relative;
+  width:min(45vw,600px);
+  aspect-ratio:760/860;
+  align-self:center;
+  justify-self:center;
+  min-width:0;
+  isolation:isolate;
+}
+.root3DFallback,.root3DFallbackHidden{
+  position:absolute;inset:0;
+  transition:opacity .3s ease;
+}
+.root3DFallbackHidden{opacity:0;pointer-events:none}
+.root3DContainer .rootSculpture{
+  position:relative!important;
+  inset:auto!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  aspect-ratio:auto;
+  opacity:1!important;
+}
+.root3DCanvas,.root3DCanvasReady{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  display:block;
+  background:transparent;
+  pointer-events:none;
+  transition:opacity .3s ease;
+}
+.root3DCanvas{opacity:0}
+.root3DCanvasReady{opacity:1}
+@media(max-width:760px){
+  .root3DContainer{
+    position:absolute!important;
+    left:32%;top:28%;
+    width:88%;max-width:440px;
+    height:auto;
+    opacity:.18;
+    z-index:0;
+    filter:none;
+    pointer-events:none;
+  }
+  .root3DCanvas,.root3DCanvasReady{display:none!important}
+  .root3DFallbackHidden{opacity:1!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .root3DCanvas,.root3DCanvasReady{display:none!important}
+  .root3DFallbackHidden{opacity:1!important}
+}
