@@ -101,18 +101,15 @@ export default function EarthCutaway() {
           </filter>
         </defs>
 
-        <g className={styles.rootHalo}>
-          <ellipse cx="380" cy="460" rx="255" ry="360" fill="#e2b493" opacity=".075" />
-        </g>
         {ROOTS.map(root => {
           const reveal = {
             "--root-reveal-base": REVEAL_BASE[root.generation],
           } as CSSProperties;
           return (
             <g key={root.id} className={styles.rootStrokeGroup} style={reveal}>
-              <path d={root.d} fill="none" stroke="#231a14"
-                strokeWidth={root.width + 5} opacity=".38"
-                strokeLinecap="round" strokeLinejoin="round"
+              <path className={styles.rootRevealedPath} d={root.d} fill="none" stroke="#231a14"
+                strokeWidth={root.width + 5} opacity=".28"
+                strokeLinecap="round" strokeLinejoin="round" pathLength={1}
                 filter="url(#blinko-root-shadow)" />
               <path className={styles.rootRevealedPath} d={root.d}
                 fill="none" stroke="url(#blinko-root-wood)" strokeWidth={root.width}
