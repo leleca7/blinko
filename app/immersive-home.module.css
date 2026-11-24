@@ -901,3 +901,77 @@
   .root3DCanvas,.root3DCanvasReady{display:none!important}
   .root3DFallbackHidden{opacity:1!important}
 }
+
+/* Cinematic editorial preview — 24 Nov 2026. */
+.hero{min-height:100svh;grid-template-columns:minmax(0,1.06fr) minmax(0,.94fr)}
+.heroArt{width:100%;max-width:690px;aspect-ratio:4/5;isolation:isolate}
+.botanicalHero{display:block;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.92;mix-blend-mode:screen;mask-image:radial-gradient(ellipse 65% 66% at 50% 48%,#000 30%,transparent 96%);transform:translate3d(calc((var(--pointer-x,.5) - .5)*18px),0,0);transition:transform .35s ease-out}
+.hero:after{opacity:.09}
+.ambientTint{background:linear-gradient(90deg,rgba(1,48,30,.95),rgba(1,48,30,.65) 46%,rgba(1,48,30,.13) 100%),linear-gradient(0deg,#01301e,transparent 18%)}
+.bridge{position:relative;background:linear-gradient(180deg,#01301e 0,#173c2b 10%,#e9e6df 43%,#f3efeb 70%)!important;padding-top:clamp(165px,22vh,230px);padding-bottom:clamp(80px,12vh,140px)}
+.story{height:350svh;background:#38271f!important}
+.storySticky{isolation:isolate;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);gap:clamp(24px,4vw,76px);padding-top:92px}
+.soilLandscape{position:absolute;inset:0;z-index:-2;overflow:hidden;pointer-events:none;background:#211913}
+.soilLandscape i{position:absolute;display:block;left:-5%;width:110%;height:95%;background-image:url('/imersao/textura-papel.webp');background-blend-mode:multiply;background-size:cover;transform:translateY(calc(var(--story-progress,0) * -128vh));will-change:transform}
+.soilSurface{top:0;background-color:#163f2b;clip-path:polygon(0 0,100% 0,100% 48%,93% 51%,84% 45%,75% 50%,62% 44%,51% 48%,38% 43%,25% 47%,12% 42%,0 47%);z-index:4}
+.soilFirst{top:31%;background-color:#817251;clip-path:polygon(0 0,100% 0,100% 58%,86% 64%,71% 57%,59% 61%,48% 55%,31% 60%,17% 55%,0 60%);z-index:3}
+.soilSecond{top:75%;background-color:#624333;clip-path:polygon(0 0,100% 0,100% 64%,86% 59%,71% 66%,59% 60%,48% 65%,31% 59%,17% 63%,0 60%);z-index:2}
+.soilDeep{top:121%;background-color:#3c2a24;z-index:1}
+.storySticky:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(12,24,15,.02),rgba(26,20,16,.12) 40%,rgba(22,20,16,.72) 66%,rgba(22,20,16,.87)),linear-gradient(0deg,rgba(17,15,12,.28),transparent 24%,transparent 78%,rgba(1,48,30,.15));pointer-events:none}
+.root3DContainer{width:100%;max-width:780px;height:min(84svh,850px);aspect-ratio:auto;filter:drop-shadow(0 14px 30px rgba(0,0,0,.14))}
+.storyText{height:clamp(300px,46vh,490px)}
+.scene h2{font-size:clamp(48px,5.6vw,96px);text-wrap:balance;max-width:12ch}
+.scene .kicker{color:#f4c2db}
+.scene p{color:#f5e9dc}
+.storyHint{z-index:4}
+.method{background:linear-gradient(180deg,#eee8df,#f3efeb 30%);position:relative}
+.final{position:relative;display:grid;grid-template-columns:minmax(0,1.06fr) minmax(0,.94fr);gap:clamp(24px,5vw,92px);align-items:center;text-align:left;min-height:100svh;padding:clamp(110px,13vh,180px) max(6vw,24px);background:#01301e;color:#f6ece3;isolation:isolate;overflow:hidden}
+.final:after{content:none}
+.finalBackdrop{position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 82% 35%,#69805d60,transparent 47%),linear-gradient(90deg,#01301e 10%,#01301ee8 39%,#01301e65 100%),url('/imersao/raizes.webp') right center / auto 110% no-repeat}
+.finalCopy{position:relative;min-width:0}
+.finalCopy .kicker{display:block;color:#cbd8cc;margin-bottom:24px}
+.final h2{display:block;max-width:11.6ch;font-size:clamp(52px,6.6vw,108px);line-height:.99;letter-spacing:-.063em;text-wrap:balance;color:#f6ece3}
+.final h2 em{display:inline;color:#efbad5}
+.finalCopy>p{margin-top:26px!important;max-width:38ch;font-size:17px;line-height:1.65;color:#e0e9df}
+.triageGlass{position:relative;min-width:0;align-self:center}
+.triageGlass>section{width:100%;max-width:100%;margin:0;border:1px solid #e8efdf35;border-radius:18px;padding:clamp(20px,3.2vw,44px);background:linear-gradient(145deg,#2c5744a8,#294d3bbd);box-shadow:0 24px 80px #0002;backdrop-filter:blur(22px);color:#f6ece3}
+.triageGlass h2{font-size:clamp(30px,3vw,48px)!important;line-height:1.03;max-width:15ch;color:#f6ece3!important;letter-spacing:-.04em}
+.triageGlass p,.triageGlass label,.triageGlass small,.triageGlass strong,.triageGlass span{color:#e4eee5}
+.triageGlass input:not([type="checkbox"]):not([type="radio"]),.triageGlass textarea,.triageGlass select{color:#fff;background:#052d21c9;border:1px solid #a9c1ac70;border-radius:8px;min-width:0}
+.triageGlass input::placeholder,.triageGlass textarea::placeholder{color:#afc6b7;opacity:1}
+.triageGlass select option{background:#143d2b;color:#fff}
+.triageGlass input[type="checkbox"],.triageGlass input[type="radio"]{accent-color:#efbad5}
+.triageGlass button{background:#efbad5;color:#01301e}
+.triageGlass button:hover{background:#ffcee5;color:#01301e}
+.triageGlass button:disabled{opacity:.55}
+.triageGlass button:focus-visible,.triageGlass input:focus-visible,.triageGlass select:focus-visible,.triageGlass textarea:focus-visible{outline:2px solid #efbad5;outline-offset:3px}
+.triageGlass [role="status"]{background:#133d2c;color:#e6eadd;border:1px solid #c4d2c24d}
+.triageGlass label:has(input[type="checkbox"]){background:#163e2e;color:#e4eee5}
+.triageGlass label:has(input[type="radio"]){background:#0c3426;color:#f6ece3;border-color:#a9c1ac70}
+.triageGlass label[data-selected="true"]{background:#355b46;border-color:#efbad5}
+.triageGlass a{text-decoration:underline;text-underline-offset:3px}
+@media(max-width:1040px){.final{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:32px}.triageGlass>section{padding:25px}.hero h1{font-size:clamp(60px,8vw,96px)}}
+@media(max-width:760px){
+ .hero{min-height:0;display:block;padding:115px 22px 82px;background:radial-gradient(ellipse at 86% 40%,#335743,#01301e 70%)}
+ .hero h1{font-size:clamp(52px,12.5vw,86px);max-width:11ch}
+ .heroArt{display:none}.ambientVideo{display:none!important}.ambientTint{background:none}
+ .heroLead{font-size:16px}.hero .actions{gap:6px}
+ .bridge{min-height:0;padding:76px 22px 82px;background:#f3efeb!important}
+ .story{height:auto!important;background:linear-gradient(180deg,#123f2d 0%,#294a3a 30%,#66543d 62%,#392923 100%)!important}
+ .storySticky:after,.soilLandscape,.root3DContainer{display:none!important}
+ .storySticky{padding:52px 22px 68px!important}
+ .final{display:grid;grid-template-columns:minmax(0,1fr);gap:36px;min-height:0;padding:80px 22px}
+ .final h2{font-size:clamp(48px,12vw,78px);max-width:12ch;line-height:1.01}
+ .finalBackdrop{background:radial-gradient(ellipse at 90% 25%,#69805d50,transparent 55%),#01301e}
+ .triageGlass>section{padding:22px 16px;border-radius:14px;backdrop-filter:none}
+ .finalCopy>p{font-size:15px}
+}
+@media(prefers-reduced-motion:reduce){
+ .botanicalHero,.soilLandscape i{transform:none!important;transition:none!important;will-change:auto!important}
+ .story{height:auto!important;background:linear-gradient(180deg,#123f2d,#4f4036,#392923)!important}
+ .storySticky{position:relative!important;height:auto!important;display:block!important;padding:90px max(6vw,24px)!important}
+ .soilLandscape,.root3DContainer,.storyHint{display:none!important}
+ .storyText{height:auto!important;max-width:850px}
+ .scene,.story[data-scene] .scene{position:relative!important;top:auto!important;opacity:1!important;visibility:visible!important;transform:none!important;transition:none!important;padding:28px 0!important}
+ .triageGlass *{transition:none!important;animation:none!important}
+}
