@@ -10,7 +10,7 @@ import styles from "../immersive-home.module.css";
 type Point = { x: number; y: number };
 type Root = { d: string; width: number; generation: number; id: number };
 
-function createRoots(): Root[] {
+function createRoots(): { roots: Root[]; viewBox: string } {
   let seed = 25;
   let index = 0;
   const random = () => {
