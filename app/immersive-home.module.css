@@ -975,3 +975,93 @@
  .scene,.story[data-scene] .scene{position:relative!important;top:auto!important;opacity:1!important;visibility:visible!important;transform:none!important;transition:none!important;padding:28px 0!important}
  .triageGlass *{transition:none!important;animation:none!important}
 }
+
+/* Editorial scroll experiment: visual overrides only; replace the brand
+   monogram in the hero markup, report/person assets in editorialShowcase,
+   and soil texture above. No photograph behind hero or triage. */
+.hero{background:radial-gradient(ellipse at 73% 44%,#285b43 0,transparent 42%),#01301e;display:block;min-height:100svh;padding:clamp(130px,17vh,200px) max(7vw,24px) 110px;isolation:isolate}
+.hero .ambientVideo{display:none!important}
+.ambientTint{background:none}
+.heroCopy{max-width:none;position:relative;z-index:auto}
+.heroCopy>.eyebrow,.heroCopy>.heroLead,.heroCopy>.actions{position:relative;z-index:4}
+.hero h1{position:relative;z-index:auto;max-width:14ch;font-size:clamp(76px,10.1vw,172px);line-height:.94;letter-spacing:-.075em;text-wrap:initial}
+.heroBehind,.heroFront{display:block;position:relative}
+.heroBehind{z-index:1}.heroFront{z-index:4}
+.hero h1 em{display:block;position:relative;z-index:4}
+.heroArt{position:absolute;z-index:3;right:9%;top:50%;width:min(37vw,590px);height:auto;aspect-ratio:607/702;transform:translateY(-50%) rotate(-9deg);pointer-events:none;filter:drop-shadow(20px 32px 40px #001b12a0)}
+.heroArt .botanicalHero{width:100%;height:100%;object-fit:contain;mix-blend-mode:normal;mask-image:none;opacity:.86;transform:translateX(calc((var(--pointer-x,.5) - .5)*22px));filter:none}
+.heroSide{position:absolute;right:22px;top:50%;writing-mode:vertical-rl;text-transform:uppercase;letter-spacing:.22em;font-size:10px;color:#dbe7dd;z-index:5}
+.heroLead{max-width:530px;font-size:clamp(15px,1.3vw,19px)}
+.hero .actions{margin-top:32px}
+.story{height:340svh}
+.storySticky{padding-top:96px}
+.storyText{max-width:640px}
+.story .scene h2{font-size:clamp(46px,5.6vw,96px)}
+.sceneWord{display:inline-block;vertical-align:baseline}
+.sceneWord>span{display:inline-block}
+.method{position:relative;min-height:100svh;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:7vw}
+.methodVisual{position:relative;min-width:0;display:grid;align-items:center;min-height:310px;isolation:isolate}
+.methodOrb{position:absolute;inset:5% 7%;border:1px solid #38634850;border-radius:50%;pointer-events:none;transform:rotate(-26deg);opacity:.7;z-index:-1}
+.methodOrb:before,.methodOrb:after{content:"";position:absolute;inset:16%;border:1px solid #38634860;border-radius:43% 57% 61% 39%/48% 48% 52% 52%;transform:rotate(50deg)}
+.methodOrb:after{inset:31%;background:#dfadc5;border:none;transform:rotate(-25deg);opacity:.55}
+.methodSteps{position:relative;display:grid;align-items:center;min-height:310px}
+.methodLine{grid-area:1/1;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:18px;padding:20px 0;border:0!important;opacity:0;visibility:hidden;pointer-events:none}
+.methodLine:first-child{opacity:1;visibility:visible}
+.methodLine strong{font-size:clamp(49px,7.8vw,142px);letter-spacing:-.07em;line-height:.95;overflow-wrap:anywhere}
+.methodLine span{font-size:13px;color:#315a42}
+.editorialShowcase{grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:95svh}
+.editorialCopy h2{position:relative;z-index:3;max-width:13ch}
+.editorialCollage{perspective:1200px;margin-left:-5vw;z-index:2}
+.reportVisual,.handsVisual{transition:none;will-change:transform}
+.audienceList{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;perspective:1100px}
+.audienceList>div{display:flex;flex-direction:column;justify-content:space-between;min-height:200px;padding:24px;border:1px solid #d8e0d338;border-radius:10px;background:#1c4d37;transform:rotate(-3deg);box-shadow:0 12px 32px #001e1360;transition:transform .3s ease}
+.audienceList>div:nth-child(2n){transform:translateY(24px) rotate(3deg);background:#244d3a}
+.audienceList>div p{font-size:clamp(24px,2.4vw,37px)}
+.audienceList>div:hover{transform:translateY(-6px) rotateX(5deg) rotateY(-6deg);border-color:#efbad5}
+.audienceNote{grid-column:1/-1;margin-top:35px!important}
+.outcomeItems>div>span,.diagnosticSteps>div>span{display:block;font-family:Georgia,serif;font-size:clamp(48px,6vw,94px);font-weight:400;line-height:1;color:inherit;opacity:.8;margin-bottom:16px}
+.marquee{overflow:hidden;padding:16px 0;background:#e9b9cf;color:#01301e;white-space:nowrap;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+.marqueeTrack{display:flex;width:max-content;gap:48px;animation:blinkoMarquee 35s linear infinite}
+.marqueeTrack>span{flex:none}
+@keyframes blinkoMarquee{to{transform:translateX(-50%)}}
+/* Closing: calm, solid forest backdrop, no plant image; cream form surface.
+   Target only the form embedded on this home; no global triage CSS changes. */
+.final{background:#01301e;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(32px,6vw,104px);padding:clamp(110px,13vh,170px) max(6vw,24px)}
+.finalBackdrop{background:radial-gradient(ellipse at 20% 70%,#254f3b,transparent 50%),#01301e!important}
+.finalCopy .kicker{margin-bottom:28px}
+.final h2{font-size:clamp(54px,6.8vw,110px);max-width:11ch;line-height:1.02}
+.finalCopy>p{margin-top:30px!important}
+.closingMark{display:block;width:95px;height:auto;margin-top:42px;opacity:.7;transform:rotate(-10deg)}
+.triageGlass{width:100%;max-width:710px;margin:auto;min-width:0}
+.final .triageGlass>section{padding:clamp(25px,3.2vw,48px)!important;background:#f7f2eb!important;color:#01301e!important;border:1px solid #fff9!important;border-radius:18px;box-shadow:0 24px 70px #00190f55;backdrop-filter:blur(12px)}
+.final .triageGlass :is(p,label,small,strong,span){color:#234635!important}
+.final .triageGlass h2{color:#01301e!important;font-size:clamp(32px,3.1vw,48px)!important;line-height:1.08!important;max-width:16ch!important;letter-spacing:-.045em}
+.final .triageGlass form>div:has(h2){margin:25px 0 28px!important}
+.final .triageGlass form>div:has(h2) p{margin-top:16px!important;color:#4d6456!important;font-size:15px;line-height:1.65}
+.final .triageGlass form>div:has(>label>input:not([type="radio"])){gap:18px!important;margin:22px 0!important}
+.final .triageGlass label{font-size:12px;line-height:1.5;gap:9px}
+.final .triageGlass label:has(input:not([type="radio"]):not([type="checkbox"])){min-width:0}
+.final .triageGlass :is(input:not([type="checkbox"]):not([type="radio"]),textarea,select){background:#fffdf9!important;color:#123c29!important;border:1px solid #9eafa2!important;border-radius:8px;min-height:50px;padding:13px 14px;min-width:0;max-width:100%;font-size:16px}
+.final .triageGlass :is(input,textarea)::placeholder{color:#65796b!important;opacity:1}
+.final .triageGlass select option{background:#fffdf9;color:#123c29}
+.final .triageGlass [role="status"]{background:#e8eee5!important;color:#234635!important;border:1px solid #c4d1c3!important;padding:14px 16px!important;margin:18px 0 25px!important;font-size:13px;line-height:1.55}
+.final .triageGlass label:has(input[type="checkbox"]){background:#e8eee5!important;color:#234635!important;padding:16px!important;margin:24px 0 15px!important;border-radius:10px;gap:12px}
+.final .triageGlass input[type="checkbox"],.final .triageGlass input[type="radio"]{accent-color:#01301e}
+.final .triageGlass label:has(input[type="radio"]){background:#fffdf9!important;border-color:#a8b9ac!important;padding:16px!important}
+.final .triageGlass label[data-selected="true"]{background:#f3dbe6!important;border-color:#a34870!important}
+.final .triageGlass p:has(a){margin:16px 0 26px!important;color:#425e4e!important;line-height:1.65}
+.final .triageGlass a{color:#01301e!important}
+.final .triageGlass button{background:#01301e!important;color:#fff8ee!important;min-height:52px;border-radius:99px;padding:0 24px;margin-top:10px}
+.final .triageGlass button:hover{background:#24583e!important}
+.final .triageGlass button:disabled{background:#d4ddd2!important;color:#45634f!important;opacity:1}
+.final .triageGlass button:focus-visible,.final .triageGlass input:focus-visible,.final .triageGlass textarea:focus-visible,.final .triageGlass select:focus-visible{outline:2px solid #a34870!important;outline-offset:3px}
+@media(max-width:1040px){.hero h1{font-size:clamp(68px,10vw,115px)}.heroArt{right:5%;width:36vw}.final{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:32px}.final .triageGlass>section{padding:26px!important}}
+@media(max-width:760px){
+ .hero{min-height:0;padding:112px 22px 78px;overflow:hidden}.hero h1{font-size:clamp(52px,12.1vw,84px);max-width:12ch;line-height:.99}.heroArt,.heroSide{display:none}.heroBehind,.heroFront,.hero h1 em{display:inline;position:static}.heroLead{margin-top:25px!important}
+ .method{min-height:0;display:block;padding:72px 22px}.methodVisual{min-height:0;margin-top:38px}.methodOrb{display:none}.methodSteps{display:block;min-height:0}.methodLine{position:relative;opacity:1!important;visibility:visible!important;transform:none!important;display:flex;flex-direction:row;align-items:baseline;justify-content:space-between;padding:19px 0;border-bottom:1px solid #315a4240!important;min-height:0}.methodLine strong{font-size:clamp(27px,7vw,40px)}.methodLine span{font-size:10px}
+ .editorialShowcase{grid-template-columns:1fr;min-height:0}.editorialCollage{margin:0 auto}.reportVisual,.handsVisual{will-change:auto}
+ .audienceList{grid-template-columns:1fr;gap:13px}.audienceList>div,.audienceList>div:nth-child(2n){transform:none!important;min-height:0;padding:20px;gap:12px}.audienceList>div p{font-size:28px}.audienceNote{margin-top:10px!important}
+ .final{grid-template-columns:1fr;min-height:0;padding:76px 20px 65px;gap:34px}.final h2{font-size:clamp(49px,12.5vw,77px)}.closingMark{display:none}.final .triageGlass>section{padding:23px 18px!important;backdrop-filter:none}.final .triageGlass h2{font-size:35px!important}.final .triageGlass form>div:has(>label>input:not([type="radio"])){gap:16px!important}
+ .marqueeTrack{animation:none}
+}
+@media(prefers-reduced-motion:reduce){.heroArt,.heroArt .botanicalHero,.reportVisual,.handsVisual,.audienceList>div,.closingMark{transform:none!important;transition:none!important;will-change:auto}.method{min-height:0}.methodVisual,.methodSteps{display:block;min-height:0}.methodOrb{display:none}.methodLine{opacity:1!important;visibility:visible!important;transform:none!important;display:flex;flex-direction:row;justify-content:space-between;padding:19px 0;border-bottom:1px solid #315a4240!important}.methodLine strong{font-size:clamp(27px,4vw,54px)}.marqueeTrack{animation:none!important}}
