@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { BLINKO_LOGO_DARK_DATA_URI } from "../lib/blinko/brand-logo-data";
 import styles from "./immersive-home.module.css";
-import EarthCutaway from "./components/EarthCutaway";
+import Root3D from "./components/Root3D";
 
 const journey = [
   ["01", "Escutar", "O contexto vem antes do serviço."],
@@ -141,7 +141,7 @@ export default function Home() {
         aria-label="Como a Blinko entende um problema"
       >
         <div className={styles.storySticky}>
-          <EarthCutaway />
+          <Root3D />
 
           <div className={styles.storyText}>
             <article className={[styles.scene, styles.sceneOne].join(" ")}>
