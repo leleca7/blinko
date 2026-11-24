@@ -1,32 +1,33 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import QuickTriageForm from "./QuickTriageForm";
 import styles from "./diagnostico.module.css";
 
 export const metadata: Metadata = {
-  title: "Inicie seu Diagnóstico | Blinko Studio",
-  description: "Comece com uma triagem inicial gratuita. Entenda como funciona a contratação do Diagnóstico Blinko, nosso serviço principal.",
+  title: "Triagem Blinko — demonstração",
+  description: "Conheça o primeiro contato da Blinko. A triagem estará disponível depois dos testes de privacidade e segurança.",
+  robots: { index: false, follow: false },
 };
 
 export default function DiagnosticoPage() {
   return (
     <main className={styles.page}>
       <header className={styles.topbar}>
-        <Link href="/" className={styles.brand} aria-label="Voltar para Blinko">
+        <Link href="/" className={styles.brand} aria-label="Voltar à Blinko">
           <img src="/brand/logo-fundo-claro.svg" alt="Blinko Studio" width={720} height={423}
-            style={{ display: "block", width: 175, maxWidth: "36vw", height: "auto" }} />
+            style={{ display: "block", width: 175, maxWidth: "42vw", height: "auto" }} />
         </Link>
         <Link href="/" className={styles.back}>← voltar ao site</Link>
       </header>
-      <section className={styles.intro}>
-        <p className={styles.eyebrow}>BLINKO · PRIMEIRO CONTATO</p>
-        <h1>Vamos entender <em>por onde começar.</em></h1>
-        <p className={styles.lede}>Esta é só uma triagem gratuita para começarmos a conversa. Conte brevemente sua situação e conheça o Diagnóstico Blinko.</p>
+      <section className={styles.intro} style={{ minHeight: "65vh" }}>
+        <p className={styles.eyebrow}>BLINKO · APRESENTAÇÃO DO SITE</p>
+        <h1>Primeiro, <em>entender.</em></h1>
+        <p className={styles.lede}>A triagem gratuita é uma conversa breve para conhecer sua empresa e explicar como funciona a contratação do Diagnóstico Blinko.</p>
         <div className={styles.notice}>
-          <strong>Uma conversa, não um laudo.</strong> A triagem não identifica causas nem substitui o Diagnóstico Blinko. O diagnóstico é nosso serviço principal e contratado. Soluções e execução só são propostas após essa etapa.
+          <strong>Estamos preparando este atendimento.</strong>
+          {" "}Nesta demonstração o formulário está desativado. Não envie dados pessoais. A coleta será disponibilizada depois de concluirmos os testes de segurança e privacidade.
         </div>
+        <p><Link href="/" className={styles.back}>← Conhecer a Blinko</Link></p>
       </section>
-      <QuickTriageForm />
     </main>
   );
 }
