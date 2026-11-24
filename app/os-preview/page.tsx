@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { syntheticIntake, type LabIntake } from "../../lib/os-lab/synthetic-intake";
 import styles from "./os-preview.module.css";
+import { buildAssistiveDraft, validateSuggestion, portalProjection, portalApprovalKey, canPreviewPortal, type PortalDraft } from "../../lib/os-lab/assistive";
 import { pillarCoverage, investigationQuestions, assessHypothesis, type Hypothesis } from "../../lib/os-lab/intelligence";
 
 const modules = [
@@ -17,6 +18,8 @@ const modules = [
   ["Financeiro", "Fluxo previsto e realizado por projeto", "Protótipo"],
   ["Agenda", "Reuniões, visitas e prazos", "Protótipo"],
   ["Inteligência", "Cruzamento de fontes e hipóteses investigativas", "Protótipo"],
+  ["Assistência", "Sugestões rastreáveis e revisão", "Protótipo"],
+  ["Portal do cliente", "Prévia controlada das entregas", "Protótipo"],
   ["Segurança", "Permissões e autenticação", "Auditoria pendente"],
 ];
 const stages = ["Triagem", "Contato", "Reunião", "Proposta", "Diagnóstico"];
@@ -28,7 +31,7 @@ const initialLeads = [
 const pillars = ["Estratégia","Administração","Pessoas","Financeiro","Comercial","Marketing","Marca","Relacionamentos","Experiência","Operação"];
 const method = ["Escutar","Investigar","Priorizar","Estruturar","Acompanhar"];
 const ratings = ["Inexistente","Inicial","Em estruturação","Consistente","Consolidado"];
-const views = [["home","Visão geral","01"],["crm","CRM e triagens","02"],["orcamento","Orçamentos","03"],["projects","Projetos","04"],["diagnostic","Diagnóstico","05"],["radar","Radar Blinko","06"],["gut","Criticidade","07"],["plan","Plano de ação","08"],["agenda","Agenda","09"],["report","Documentos","10"],["finance","Financeiro","11"],["review","Revisão humana","12"],["intake","Simular triagem","13"],["intelligence","Inteligência","14"]] as const;
+const views = [["home","Visão geral","01"],["crm","CRM e triagens","02"],["orcamento","Orçamentos","03"],["projects","Projetos","04"],["diagnostic","Diagnóstico","05"],["radar","Radar Blinko","06"],["gut","Criticidade","07"],["plan","Plano de ação","08"],["agenda","Agenda","09"],["report","Documentos","10"],["finance","Financeiro","11"],["review","Revisão humana","12"],["intake","Simular triagem","13"],["intelligence","Inteligência","14"],["assist","Assistência","15"],["portal","Portal do cliente","16"]] as const;
 type View = typeof views[number][0];
 type Evidence = {id:number; pillar:number; kind:string; source:string; statement:string; verified:boolean};
 type Action = {id:number; title:string; owner:string; due:string; evidenceId:number; gut:number; done:boolean};
@@ -72,6 +75,9 @@ export default function OsPreview() {
   const [exportNotice,setExportNotice] = useState("");
   const [reviewSnapshots,setReviewSnapshots] = useState<Record<number,string>>({});
   const [reviewNotes,setReviewNotes] = useState<Record<number,string>>({});
+  const [assistDecisions,setAssistDecisions] = useState<Record<string,"accepted"|"dismissed">>({});
+  const [portalDrafts,setPortalDrafts] = useState<Record<number,PortalDraft>>({});
+  const [portalApprovals,setPortalApprovals] = useState<Record<number,string>>({});
   const project = projects.find(p=>p.id===selected) ?? projects[0];
   const updateProject = (fn:(p:Project)=>Project) => setProjects(old=>old.map(p=>p.id===project.id?fn(p):p));
   const verified = project.evidence.filter(e=>e.verified && e.kind!=="Hipótese");
@@ -123,6 +129,13 @@ export default function OsPreview() {
   ];
   const reviewKey=JSON.stringify([reportText,reviewNotes[project.id]||"",project.evidence,project.scores,project.actions,project.hypotheses]);
   const reviewed=blockers.length===0&&reviewSnapshots[project.id]===reviewKey;
+  const assistSuggestions=buildAssistiveDraft(project.evidence,focusPillar).map(s=>validateSuggestion(s,project.evidence,focusPillar)).filter(s=>s!==null);
+  const suggestionKey=(s:typeof assistSuggestions[number])=>JSON.stringify([project.id,s,project.evidence.filter(e=>s.sourceIds.includes(e.id))]);
+  const portalDraft=portalDrafts[project.id]??{summary:"",nextStep:"",showMaturity:false,showActions:false};
+  const patchPortal=(patch:Partial<PortalDraft>)=>{setPortalDrafts(old=>({...old,[project.id]:{...portalDraft,...patch}}));setPortalApprovals(old=>{const next={...old};delete next[project.id];return next;});};
+  const portalInput={projectId:project.id,company:project.company,stage:method[project.stage],due:project.due,maturity,coverage:validScores.length,actions:project.actions,draft:portalDraft};
+  const portalData=portalProjection(portalInput);
+  const portalVisible=canPreviewPortal(portalInput,reviewed,portalApprovals[project.id],reviewKey);
   const reviewStatus=reviewed?"Revisado na simulação":reviewSnapshots[project.id]?"Revisão desatualizada":"Rascunho pendente";
   const downloadReport = () => {const url=URL.createObjectURL(new Blob([reportText+"\n\nStatus interno: "+reviewStatus],{type:"text/plain;charset=utf-8"}));const a=document.createElement("a");a.href=url;a.download="blinko-relatorio-ficticio-"+project.id+".txt";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setExportNotice("Exportação solicitada ao navegador. Confira seus downloads.");};
   const fields = [
@@ -147,10 +160,10 @@ export default function OsPreview() {
         <div className={styles.workspace}>
         <header className={styles.top}>
           <div className={styles.breadcrumb}>Blinko OS <span>/</span> {views.find(v=>v[0]===view)?.[1]}</div>
-          <span className={styles.previewTag}>PROTÓTIPO 05</span>
+          <span className={styles.previewTag}>PROTÓTIPO 06</span>
         </header>
         <aside className={styles.notice}>Ambiente experimental · Use somente dados fictícios. Não há conexão ao CRM, envio ou armazenamento. Recarregar restaura a demonstração.</aside>
-        {["projects","diagnostic","radar","plan","agenda","report","finance","review","intelligence"].includes(view) && <div className={styles.projectBar}><label>Projeto ativo<select value={project.id} onChange={e=>changeProject(Number(e.target.value))}>{projects.map(p=><option key={p.id} value={p.id}>{p.company}</option>)}</select></label><span>{method[project.stage]} · {verified.length} evidências revisadas</span></div>}
+        {["projects","diagnostic","radar","plan","agenda","report","finance","review","intelligence","assist","portal"].includes(view) && <div className={styles.projectBar}><label>Projeto ativo<select value={project.id} onChange={e=>changeProject(Number(e.target.value))}>{projects.map(p=><option key={p.id} value={p.id}>{p.company}</option>)}</select></label><span>{method[project.stage]} · {verified.length} evidências revisadas</span></div>}
         {view==="home" && <>
         <section className={styles.hero}>
           <div><small>OPERAÇÃO E INTELIGÊNCIA</small><h1>Clareza para operar.</h1><p>Da triagem ao diagnóstico: uma central para organizar decisões, evidências e entregas.</p></div>
@@ -212,7 +225,21 @@ export default function OsPreview() {
           <p>Favorável: {a.support?a.support.statement:"Não disponível"}.</p><p>Contrário: {a.challenge?a.challenge.statement:"Não disponível"}.</p><label>Parecer humano fictício<textarea maxLength={1000} value={h.rationale} onChange={e=>patch({rationale:e.target.value,decision:"open"})} placeholder="Explique a relação, limitações e alternativas"/></label><div className={styles.buttonRow}><button className={styles.smallButton} onClick={()=>patch({decision:"open"})}>Em investigação</button><button className={styles.primaryButton} disabled={!a.canSupport} onClick={()=>patch({decision:"supported"})}>Sustentar provisoriamente</button><button className={styles.smallButton} disabled={!a.canReject} onClick={()=>patch({decision:"rejected"})}>Refutar</button></div></article>})}</div>
           <button className={styles.smallButton} onClick={()=>setView("diagnostic")}>Registrar novas evidências ↗</button>
         </section>}
-        <footer>BLINKO OS · Protótipo 05 · Sem dados reais · Não liberar em produção.</footer>
+        {view==="assist" && <section className={styles.panel}>
+          <small>15 / ASSISTÊNCIA INVESTIGATIVA</small><h2>Uma segunda perspectiva.</h2><p>Simulação determinística do futuro assistente de IA. Não conecta modelos externos, não interpreta textos semanticamente e não executa decisões. Cada sugestão mostra as referências elegíveis do pilar.</p>
+          <div className={styles.fields}><label>Pilar investigado<select value={focusPillar} onChange={e=>setFocusPillar(Number(e.target.value))}>{pillars.map((p,i)=><option key={p} value={i}>{p}</option>)}</select></label></div>
+          <div className={styles.recordList}>{assistSuggestions.map(s=>{const key=suggestionKey(s);const decision=assistDecisions[key];return <article key={key}><small>{decision==="accepted"?"SELECIONADA PARA INVESTIGAÇÃO":decision==="dismissed"?"DESCARTADA":"SUGESTÃO A REVISAR"}</small><h3>{s.question}</h3><p>{s.limitation}</p><div className={styles.sourceList}>{s.sourceIds.length?s.sourceIds.map(id=>{const e=project.evidence.find(x=>x.id===id);return <div key={id}><small>REGISTRO #{id} · {e?.kind}</small><p>{e?.source}: {e?.statement}</p></div>}):<p>Sem referência elegível. Pergunta de coleta, não uma conclusão.</p>}</div><div className={styles.buttonRow}><button className={styles.primaryButton} disabled={decision==="accepted"} onClick={()=>setAssistDecisions(old=>({...old,[key]:"accepted"}))}>Selecionar pergunta</button><button className={styles.smallButton} disabled={decision==="dismissed"} onClick={()=>setAssistDecisions(old=>({...old,[key]:"dismissed"}))}>Descartar</button></div></article>})}</div>
+          <p>Selecionar uma pergunta não altera o diagnóstico, as notas ou o plano de ação. Se as referências mudarem, a decisão anterior não é reutilizada.</p><button className={styles.smallButton} onClick={()=>setView("intelligence")}>Voltar à investigação ↗</button>
+        </section>}
+        {view==="portal" && <section className={styles.panel}>
+          <small>16 / ÁREA DO CLIENTE</small><h2>Uma entrega clara e segura.</h2><p>Prévia interna do que poderá ser apresentado ao cliente. Não há publicação, link de compartilhamento, acesso externo ou autenticação real. Use somente informações fictícias.</p>
+          <div className={styles.fields}><label>Resumo destinado ao cliente<textarea maxLength={1200} value={portalDraft.summary} onChange={e=>patchPortal({summary:e.target.value})}/></label><label>Próxima etapa comunicada<textarea maxLength={500} value={portalDraft.nextStep} onChange={e=>patchPortal({nextStep:e.target.value})}/></label></div>
+          <div className={styles.recordList}><article><label className={styles.check}><input type="checkbox" checked={portalDraft.showMaturity} onChange={e=>patchPortal({showMaturity:e.target.checked})}/> Incluir indicador de maturidade e cobertura</label><label className={styles.check}><input type="checkbox" checked={portalDraft.showActions} onChange={e=>patchPortal({showActions:e.target.checked})}/> Incluir títulos, prazos e estados das ações (conferir confidencialidade)</label></article></div>
+          <p>O resumo é redigido pela equipe. Evidências brutas, pareceres, hipóteses internas, nomes de responsáveis, custos, margens e credenciais não são incluídos automaticamente.</p>
+          <div className={styles.buttonRow}><button className={styles.primaryButton} disabled={!reviewed||!portalDraft.summary.trim()||!portalDraft.nextStep.trim()||portalVisible} onClick={()=>setPortalApprovals(old=>({...old,[project.id]:portalApprovalKey(portalInput,reviewKey)}))}>Autorizar prévia simulada</button><button className={styles.smallButton} onClick={()=>setView("review")}>Conferir revisão ↗</button>{portalApprovals[project.id]&&<button className={styles.smallButton} onClick={()=>setPortalApprovals(old=>{const next={...old};delete next[project.id];return next})}>Revogar prévia</button>}</div>
+          {!portalVisible?<div className={styles.result}><small>PRÉVIA BLOQUEADA</small><strong>Revisão necessária</strong><p>{!reviewed?"Conclua a revisão interna do projeto antes de autorizar a prévia.":"Preencha, confira e autorize o conteúdo destinado ao cliente."}</p></div>:<div className={styles.portalCard}><header className={styles.reportCover}><div><small>BLINKO · ÁREA DO CLIENTE · SIMULAÇÃO</small><h2>{portalData.company}</h2><p>{portalData.stage} · {dateLabel(portalData.due)}</p></div><span aria-hidden="true">b*</span></header><div className={styles.reportBody}><h3>Seu diagnóstico</h3><p>{portalData.summary}</p><h3>Próximos passos</h3><p>{portalData.nextStep}</p>{portalData.maturity&&<div className={styles.result}><small>MATURIDADE · {portalData.maturity.coverage}/10 pilares</small><strong>{portalData.maturity.value===null?"Não avaliado":portalData.maturity.value+"%"}</strong><p>Indicador experimental; não equivale a certificação.</p></div>}{portalData.actions.length>0&&<div className={styles.recordList}><h3>Plano de ação compartilhável</h3>{portalData.actions.map((a,i)=><article key={i}><small>{dateLabel(a.due)} · {a.done?"Concluída":"Em aberto"}</small><h3>{a.title}</h3></article>)}</div>}</div></div>}
+        </section>}
+        <footer>BLINKO OS · Protótipo 06 · Sem dados reais · Não liberar em produção.</footer>
         </div>
       </div>
     </main>
