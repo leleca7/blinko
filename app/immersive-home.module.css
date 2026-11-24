@@ -1104,3 +1104,20 @@
  .storySticky:after{background:radial-gradient(ellipse at 50% 48%,rgba(13,24,16,.26),rgba(19,19,15,.65)),linear-gradient(0deg,rgba(17,15,12,.3),transparent 28%)}
  .storyHint{right:auto;left:50%;transform:translateX(-50%);white-space:nowrap}
 }
+
+/* Social in-app browsers: mobile safe areas, tap targets, readable fields. */
+@media(max-width:760px){
+ .header{top:max(10px,env(safe-area-inset-top));width:calc(100% - 20px);height:60px}
+ .header .navCta{min-height:44px;padding-inline:17px}
+ .logo{min-width:0;flex-shrink:0}
+ .hero{padding-top:calc(112px + env(safe-area-inset-top))}
+ .page [id]{scroll-margin-top:calc(84px + env(safe-area-inset-top))}
+ .hero .actions{align-items:flex-start}
+ .hero .pill,.hero .textAction{min-height:48px}
+ .triageGlass input:not([type="checkbox"]):not([type="radio"]),.triageGlass textarea,.triageGlass select{font-size:16px!important}
+ .footer{padding-bottom:calc(30px + env(safe-area-inset-bottom));overflow-wrap:anywhere}
+}
+@media(hover:none),(pointer:coarse){
+ .cursorRing{display:none!important}
+ .audienceList>div:hover{transform:none}
+}
