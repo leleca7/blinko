@@ -46,3 +46,14 @@ P0 segurança e integração em ambiente isolado; P1 projetos, estimador e ferra
 
 ## Registro
 Primeiro incremento: roadmap, protótipo visual e funções locais de orçamento/criticidade. Próximo incremento: testes de autorização e contrato de integração triagem → CRM em ambiente de teste. Não há execução autônoma após o encerramento da conversa.
+
+## Incremento 02 — fluxo de diagnóstico (24/11/2026)
+- Interface experimental mantém menu lateral e telas separadas.
+- CRM: simulação explícita de contratação na etapa Diagnóstico; cria projeto independente sem duplicar o mesmo lead.
+- Projetos: etapa do método, responsável e prazo.
+- Evidências: pilar, fonte, fato observado/relato/hipótese e marcação de revisão humana simulada. Revisão não comprova relato; hipótese isolada não pontua.
+- Radar: dez pilares provisórios (Estratégia, Administração, Pessoas, Financeiro, Comercial, Marketing, Marca, Relacionamentos, Experiência e Operação); nota explícita 0–4, evidência revisada do mesmo pilar, média somente dos avaliados e cobertura explícita. Instrumento ainda requer validação metodológica.
+- Plano de ação: vinculação a evidência revisada, responsável, prazo, captura da pontuação GUT atual e conclusão; ordenação por prioridade. Revisão revogada invalida a nota e sinaliza ação.
+- Todos os registros ficam em memória no navegador; não há persistência, autenticação nova, integração real, nem mudança no proxy. Não inserir dados de clientes.
+- Testes de aceite manual: mover lead à etapa Diagnóstico, simular contratação, registrar e revisar fato fictício, selecionar evidência e nota, verificar média/cobertura, criar ação, alternar projetos e revogar revisão. Recarregar deve restaurar a demo.
+- P0 continua pendente: banco isolado, contrato de integração, autorização e auditoria técnica. A implementação funcional em memória não encerra esses bloqueios.
