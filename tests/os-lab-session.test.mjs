@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createHmac} from 'node:crypto';
+import {verifyLabSession,validateEvidence,isSandboxConnection} from '../lib/os-lab/session.ts';
+const key='synthetic-unit-test-key-not-a-credential-123';
+const now=10000;
+const actor='00000000-0000-4000-8000-000000000011';
+const project='00000000-0000-4000-8000-000000000041';
+const token=(patch={})=>{const body=Buffer.from(JSON.stringify({aud:'blinko-os-sandbox',sub:actor,iat:now-1,exp:now+60,...patch})).toString('base64url');return body+'.'+createHmac('sha256',key).update(body).digest('base64url')};
+test('valid session yields only verified actor',()=>assert.deepEqual(verifyLabSession(token(),key,now),{actorId:actor}));
+test('absent, altered, extra segments, wrong key',()=>{for(const t of [undefined,token()+'x',token()+'.extra'])assert.equal(verifyLabSession(t,key,now),null);assert.equal(verifyLabSession(token(),key+'wrong',now),null);});
+test('expired, future, excessive lifetime, wrong audience or invalid subject',()=>{for(const p of [{exp:now},{iat:now+1},{exp:now+4000},{aud:'production'},{sub:'admin'},{exp:'10060'}])assert.equal(verifyLabSession(token(p),key,now),null)});
+test('rejects client-selected actor, org, review and invalid evidence',()=>{const valid={projectId:project,pillar:2,kind:'fact',summary:' synthetic '};assert.equal(validateEvidence(valid).summary,'synthetic');for(const p of [{actorId:actor},{orgId:actor},{reviewed:true},{pillar:10},{kind:'other'},{summary:' '},{summary:'a'.repeat(501)}])assert.equal(validateEvidence({...valid,...p}),null)});
+test('database allowlist refuses production, owner role, wrong database, insecure connection',()=>{const base='postgresql://os_lab_runtime:fiction@ep-old-art-bbztkcnw.c-15.us-east-1.aws.neon.tech/blinko_sandbox?sslmode=require';assert.equal(isSandboxConnection(base),true);for(const s of [base.replace('old-art','other-host'),base.replace('os_lab_runtime','sandbox_owner'),base.replace('blinko_sandbox','neondb'),base.replace('require','disable')])assert.equal(isSandboxConnection(s),false)});
