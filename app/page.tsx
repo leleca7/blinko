@@ -43,6 +43,7 @@ export default function Home() {
       const fraction = Math.min(1, Math.max(0, event.clientX / window.innerWidth));
       page.style.setProperty("--pointer-x", String(fraction));
       page.style.setProperty("--pointer-rotation", String((fraction - 0.5) * 16) + "deg");
+      page.style.setProperty("--earth-tilt", String((fraction - 0.5) * 13) + "deg");
     };
 
     const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
