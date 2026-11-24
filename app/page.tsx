@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import { BLINKO_LOGO_DARK_DATA_URI } from "../lib/blinko/brand-logo-data";
 import styles from "./immersive-home.module.css";
-import Root3D from "./components/Root3D";
 import QuickTriageForm from "./diagnostico/QuickTriageForm";
 
 const journey = [
@@ -237,8 +236,6 @@ export default function Home() {
             <i className={styles.soilSecond} />
             <i className={styles.soilDeep} />
           </div>
-          <Root3D />
-
           <div className={styles.storyText}>
             <article className={[styles.scene, styles.sceneOne].join(" ")}>
               <span className={styles.kicker}>01 / O sinal · a superfície</span>
