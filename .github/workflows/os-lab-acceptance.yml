@@ -1,0 +1,58 @@
+name: Blinko OS - sandbox acceptance
+on:
+  push:
+    branches:
+      - preview/blinko-os-fase1-20261124
+    paths:
+      - "app/os-preview/**"
+      - "lib/os-lab/**"
+      - "tests/os-lab*"
+      - ".github/workflows/os-lab-acceptance.yml"
+      - "package.json"
+      - "proxy.ts"
+permissions:
+  contents: read
+concurrency:
+  group: blinko-os-sandbox-acceptance
+  cancel-in-progress: true
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      BLINKO_OS_LAB_ENABLED: "false"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Pure unit tests
+        run: node --experimental-strip-types --test tests/os-lab-*.test.mjs
+      - name: Install project and browser runner
+        run: npm install --no-save --package-lock=false playwright@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run isolated local browser test
+        shell: bash
+        run: |
+          mkdir -p test-artifacts
+          npm run dev -- --hostname 127.0.0.1 --port 3210 >test-artifacts/next.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for i in $(seq 1 60); do
+            if curl --fail --silent --max-time 10 http://127.0.0.1:3210/os-preview >/dev/null; then break; fi
+            sleep 2
+          done
+          curl --fail --silent --max-time 30 http://127.0.0.1:3210/os-preview >/dev/null
+          node tests/os-lab-browser.mjs
+      - name: Upload synthetic test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blinko-os-sandbox-test
+          path: test-artifacts/
+          retention-days: 7
+          if-no-files-found: ignore
