@@ -124,12 +124,13 @@ export default function Root3D() {
           const target = Math.min(1, Math.max(0, Number(progressText) || 0));
           currentProgress += (target - currentProgress) * 0.09;
 
-          // Câmera acompanha o crescimento da raiz, sem deslocamentos bruscos.
-          const focusY = -4.3 - 2.0 * currentProgress;
-          const z = (17.5 - currentProgress * 1.9) *
-            Math.max(1, 0.92 / Math.max(camera.aspect, 0.1));
-          camera.position.set(targetX * 0.75, focusY - targetY * 0.3, z);
-          camera.lookAt(targetX * 0.12, focusY, 0);
+          // Mesmo movimento vertical do HTML original: começamos perto
+          // do tronco e descemos junto com as raízes. Distância ajustada
+          // à coluna mais estreita da home (o HTML era tela cheia).
+          const focusY = 0.15 - 9.35 * currentProgress;
+          const z = 8.8 / Math.min(1, Math.max(camera.aspect * 1.1, 0.57));
+          camera.position.set(targetX * 0.5, focusY - targetY * 0.3, z);
+          camera.lookAt(targetX * 0.2, focusY, 0);
 
           for (const root of roots) {
             const fraction = Math.min(1, Math.max(0,
