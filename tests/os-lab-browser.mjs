@@ -37,8 +37,11 @@ try{
  assert.equal(await checks.count(),10);
  for(let i=0;i<10;i++)await checks.nth(i).check();
  await nav(/Radar Blinko/);
- const refs=page.getByLabel('Evidência de apoio',{exact:true});
- const notes=page.getByLabel('Nota',{exact:true});
+ await visible(page.getByRole('heading',{name:'Maturidade organizacional',exact:true}));
+ const refs=page.locator('label').filter({hasText:/^Evidência de apoio/}).locator('select');
+ const notes=page.locator('label').filter({hasText:/^Nota/}).locator('select');
+ await visible(refs.nth(9));
+ await visible(notes.nth(9));
  assert.equal(await refs.count(),10);
  for(let i=0;i<10;i++){
    await refs.nth(i).selectOption(String(900001+i));
