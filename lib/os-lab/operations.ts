@@ -16,7 +16,9 @@ type ReportSave = {type:"report_save";id:string;synthesis:string};
 type ReportReview = {type:"report_review";id:string;reviewed:boolean;note:string};
 type PortalSave = {type:"portal_save";id:string;summary:string;nextStep:string;showMaturity:boolean;showActions:boolean};
 type PortalApprove = {type:"portal_approve";id:string;approved:boolean};
-export type LabOperation = ReportSave|ReportReview|PortalSave|PortalApprove|ScoreCommand|ActionCommand|CompletionCommand|AppointmentCommand|AppointmentDoneCommand|LedgerCommand|LedgerSettledCommand|LeadCreate|LeadComplete|LeadMove|LeadContract|ProjectDetails;
+type HypothesisSave = {type:"hypothesis_save";id:string;projectId:string;pillar:number;cause:string;effect:string;supportId:string|null;challengeId:string|null;decision:"open"|"supported"|"rejected";rationale:string};
+type QuoteCreate = {type:"quote_create";id:string;leadId:string;minutes:number;hourlyCents:number;expenseCents:number;feeBps:number;marginBps:number};
+export type LabOperation = HypothesisSave|QuoteCreate|ReportSave|ReportReview|PortalSave|PortalApprove|ScoreCommand|ActionCommand|CompletionCommand|AppointmentCommand|AppointmentDoneCommand|LedgerCommand|LedgerSettledCommand|LeadCreate|LeadComplete|LeadMove|LeadContract|ProjectDetails;
 const intIn=(value:unknown,min:number,max:number):value is number=>typeof value==="number"&&Number.isInteger(value)&&value>=min&&value<=max;
 const allowed=(p:Record<string,unknown>,keys:string[])=>Object.keys(p).every(k=>keys.includes(k));
 function validDate(v:unknown):v is string {
@@ -91,6 +93,16 @@ export function validateOperation(value:unknown):LabOperation|null {
  if(p.type==="portal_approve"){
   if(!allowed(p,["type","id","approved"])||!isLabUuid(p.id)||typeof p.approved!=="boolean")return null;
   return {type:"portal_approve",id:p.id.toLowerCase(),approved:p.approved};
+ }
+ if(p.type==="hypothesis_save"){
+  if(!allowed(p,["type","id","projectId","pillar","cause","effect","supportId","challengeId","decision","rationale"])||!isLabUuid(p.id)||!isLabUuid(p.projectId)||!intIn(p.pillar,0,9)||typeof p.cause!=="string"||!p.cause.trim()||p.cause.trim().length>500||typeof p.effect!=="string"||!p.effect.trim()||p.effect.trim().length>500||(p.supportId!==null&&!isLabUuid(p.supportId))||(p.challengeId!==null&&!isLabUuid(p.challengeId))||(p.decision!=="open"&&p.decision!=="supported"&&p.decision!=="rejected")||typeof p.rationale!=="string"||p.rationale.trim().length>500)return null;
+  const supportId=p.supportId===null?null:p.supportId.toLowerCase(),challengeId=p.challengeId===null?null:p.challengeId.toLowerCase();
+  if((supportId!==null&&supportId===challengeId)||(p.decision!=="open"&&!p.rationale.trim())||(p.decision==="supported"&&supportId===null)||(p.decision==="rejected"&&challengeId===null))return null;
+  return {type:"hypothesis_save",id:p.id.toLowerCase(),projectId:p.projectId.toLowerCase(),pillar:p.pillar,cause:p.cause.trim(),effect:p.effect.trim(),supportId,challengeId,decision:p.decision,rationale:p.rationale.trim()};
+ }
+ if(p.type==="quote_create"){
+  if(!allowed(p,["type","id","leadId","minutes","hourlyCents","expenseCents","feeBps","marginBps"])||!isLabUuid(p.id)||!isLabUuid(p.leadId)||!intIn(p.minutes,1,600000)||!intIn(p.hourlyCents,0,10000000)||!intIn(p.expenseCents,0,10000000000)||!intIn(p.feeBps,0,9999)||!intIn(p.marginBps,0,9999)||(p.hourlyCents===0&&p.expenseCents===0)||p.feeBps+p.marginBps>=10000)return null;
+  return {type:"quote_create",id:p.id.toLowerCase(),leadId:p.leadId.toLowerCase(),minutes:p.minutes,hourlyCents:p.hourlyCents,expenseCents:p.expenseCents,feeBps:p.feeBps,marginBps:p.marginBps};
  }
  return null;
 }
