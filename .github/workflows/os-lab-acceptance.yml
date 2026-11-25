@@ -5,6 +5,8 @@ on:
       - preview/blinko-os-fase1-20261124
     paths:
       - "app/os-preview/**"
+      - "app/api/os-lab/**"
+      - "database/sandbox/**"
       - "lib/os-lab/**"
       - "tests/os-lab*"
       - ".github/workflows/os-lab-acceptance.yml"
