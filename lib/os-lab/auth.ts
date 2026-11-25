@@ -28,3 +28,16 @@ export async function endLabSession(token:string|undefined){
   sql`SELECT os_lab.revoke_own_session()`
  ]);
 }
+
+// A signed but revoked token must not render the protected workspace.
+export async function isLabSessionActive(token:string|undefined):Promise<boolean>{
+ if(process.env.BLINKO_OS_LAB_ENABLED!=="true"||process.env.VERCEL_ENV==="production")return false;
+ const session=verifyLabSession(token,process.env.BLINKO_OS_LAB_SESSION_SECRET??"");
+ const url=process.env.BLINKO_OS_LAB_DATABASE_URL??"";
+ if(!session||!isSandboxConnection(url))return false;
+ try{
+  const sql=neon(url);
+  const rows=await sql`SELECT os_lab.session_is_active(${session.actorId},${session.sessionId}) AS active`;
+  return rows.length===1&&rows[0].active===true;
+ }catch{return false;}
+}
