@@ -148,6 +148,19 @@ try{
  const pendingQueue=(await request('GET',endpoint+'?scope=queue')).body.data;
  assert.ok(pendingQueue.items.some(i=>i.kind==='delivery'&&i.project_id===projectId));
  console.log('PASS daily queue and authorized projection export');
+ await request('PATCH',endpoint,{evidenceId:e.id,reviewed:false,reason:'Synthetic stale basis'});
+ await request('PATCH',endpoint,{evidenceId:e.id,reviewed:true,reason:'Synthetic new review'});
+ await request('PUT',endpoint,{type:'completion',id:actionId,done:true},400);
+ await request('PUT',endpoint,{type:'action_revalidate',id:actionId,evidenceId:e.id,reason:'Synthetic action reconsidered'});
+ const revalidated=(await request('GET',endpoint+'?scope=operations&project='+projectId)).body.data.actions.find(a=>a.id===actionId);
+ assert.equal(revalidated.eligible,true);
+ assert.equal(revalidated.done,false);
+ const repeat=(await request('PUT',endpoint,{type:'action_revalidate',id:actionId,evidenceId:e.id,reason:'Synthetic repeat'})).body.data;
+ assert.equal(repeat.changed,false);
+ const reopenedQueue=(await request('GET',endpoint+'?scope=queue')).body.data;
+ assert.ok(reopenedQueue.items.some(i=>i.kind==='action'&&i.id===actionId));
+ console.log('PASS explicit action revalidation reopens completed work and restores queue');
+
  console.log('PASS remaining authenticated modules, portal projection and revision invalidation');
  // Parallel requests use independent database transactions and independent browser sessions.
  const raceContexts=await Promise.all([browser.newContext({ignoreHTTPSErrors:true}),browser.newContext({ignoreHTTPSErrors:true})]);
