@@ -136,6 +136,8 @@ try{
  await page.getByRole('button',{name:'Imprimir / salvar prévia em PDF',exact:true}).click();
  const printPage=await popupEvent;
  await printPage.getByText('Synthetic client summary',{exact:true}).waitFor();
+ await printPage.getByRole('button',{name:'Imprimir / salvar como PDF',exact:true}).waitFor();
+ await printPage.waitForFunction(()=>{const i=document.querySelector('header img');return i&&i.complete&&i.naturalWidth>0});
  const printable=await printPage.locator('main').innerText();
  assert.ok(printable.includes('50%'));
  assert.ok(printable.includes('DADOS FICTÍCIOS'));
