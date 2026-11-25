@@ -19,12 +19,12 @@ export function verifyLabSession(token: string | undefined, secret: string, now 
     return {actorId:p.sub.toLowerCase(),sessionId:p.sid.toLowerCase()};
   } catch { return null; }
 }
-export function validateEvidence(value: unknown): {projectId:string; pillar:number; kind:'fact'|'report'|'hypothesis'; summary:string} | null {
+export function validateEvidence(value: unknown): {id:string; projectId:string; pillar:number; kind:'fact'|'report'|'hypothesis'; source:string; summary:string} | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const p = value as Record<string, unknown>;
-  if (Object.keys(p).some(k => !['projectId','pillar','kind','summary'].includes(k))) return null;
-  if (!isLabUuid(p.projectId) || typeof p.pillar !== 'number' || !Number.isInteger(p.pillar) || p.pillar < 0 || p.pillar > 9 || (p.kind !== 'fact' && p.kind !== 'report' && p.kind !== 'hypothesis') || typeof p.summary !== 'string' || !p.summary.trim() || p.summary.trim().length > 500) return null;
-  return {projectId:p.projectId.toLowerCase(),pillar:p.pillar,kind:p.kind,summary:p.summary.trim()};
+  if (Object.keys(p).some(k => !['id','projectId','pillar','kind','source','summary'].includes(k))) return null;
+  if (!isLabUuid(p.id) || !isLabUuid(p.projectId) || typeof p.source !== 'string' || !p.source.trim() || p.source.trim().length > 200 || typeof p.pillar !== 'number' || !Number.isInteger(p.pillar) || p.pillar < 0 || p.pillar > 9 || (p.kind !== 'fact' && p.kind !== 'report' && p.kind !== 'hypothesis') || typeof p.summary !== 'string' || !p.summary.trim() || p.summary.trim().length > 500) return null;
+  return {id:p.id.toLowerCase(),projectId:p.projectId.toLowerCase(),pillar:p.pillar,kind:p.kind,source:p.source.trim(),summary:p.summary.trim()};
 }
 function isAllowedConnection(connection: string,role:'os_lab_runtime'|'os_lab_issuer'): boolean {
   try {
