@@ -130,3 +130,12 @@ Primeiro incremento: roadmap, protótipo visual e funções locais de orçamento
 - Falha anterior ao E2E: Playwright 1.56.1 não suporta o runner `ubuntu26.04-x64` selecionado por `ubuntu-latest`. O teste Chromium foi pulado, não reprovado funcionalmente.
 - Corrigido runner para `ubuntu-24.04`, mantendo versão do Playwright, escopo da branch, limites e bloqueios de segurança. Commit `06b35b50`. Nova execução precisa ser conferida antes de declarar o fluxo aprovado.
 - Não houve mudanças em produção, banco, credenciais ou APIs.
+
+## Incremento 12 — aprendizado de mercado e desenvolvimento orientado por MVP (25/11/2026)
+- As referências estratégicas foram catalogadas separadamente na biblioteca privada da equipe. Não reproduzir transcrições, planejamento pessoal ou dados comerciais neste repositório público.
+- Princípio: validar demanda e capacidade de entrega antes de ampliar o produto. Priorizar o Cliente Zero, correção de falhas, autenticação e persistência. Não converter toda referência externa em nova funcionalidade.
+- Backlog proposto (após gates de segurança e validação): registrar origem e próximo contato dos leads; capturar feedback e hipóteses de mercado com fonte/data/status; acompanhar conversão e custo de aquisição quando houver dados confiáveis; vincular experimentos de comunicação a objetivos e resultados; catalogar procedimentos reutilizáveis e suas verificações.
+- Automação criativa por pequenas rotinas: especificar entradas, saídas, limites, exemplos sintéticos e revisão humana. Testar em cópias; não alterar arquivos originais automaticamente.
+- Benchmark de ferramentas: comparar necessidade, custo total, portabilidade, segurança, termos e evidência de valor. Não copiar código/marca de terceiros. Não contratar provedores, ativar automações de contato, voz, telefonia ou IA externa nesta fase.
+- Evidência de CI: execução [45614917169](https://github.com/leleca7/blinko/actions/runs/45614917169) aprovou 27 testes unitários, instalação do Chromium e o primeiro cenário de navegador (bloqueio de triagem parcial e contratação após conclusão). Interrompeu na contagem de campos do Radar (0 em vez de 10). Ajustado teste para esperar a tela e localizar selects explicitamente (commit `aed7265a`); hipótese de sincronização/localização ainda precisa de nova execução. Não declarar E2E aprovado.
+- Nenhuma mudança em produção, banco, APIs, captação, credenciais ou comunicação pública.
