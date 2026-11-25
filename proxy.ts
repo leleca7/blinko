@@ -9,6 +9,8 @@ export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   if (
     /^\/(api|interno|internal)(\/|$)/.test(pathname) ||
+    pathname === "/os-workspace" ||
+    pathname.startsWith("/os-workspace/") ||
     pathname === "/diagnostico/completo" ||
     pathname.startsWith("/diagnostico/completo/")
   ) {
