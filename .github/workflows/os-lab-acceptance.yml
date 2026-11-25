@@ -51,6 +51,8 @@ jobs:
           done
           curl --fail --silent --max-time 30 http://127.0.0.1:3210/os-preview >/dev/null
           node tests/os-lab-browser.mjs
+      - name: Typecheck connected workspace and API
+        run: npx tsc --noEmit --target ES2017 --lib dom,dom.iterable,esnext --skipLibCheck --strict --esModuleInterop --module esnext --moduleResolution bundler --jsx preserve next-env.d.ts app/os-workspace/*.tsx app/api/os-lab/projects/route.ts lib/os-lab/*.ts
       - name: Upload synthetic test artifacts
         if: always()
         uses: actions/upload-artifact@v4
