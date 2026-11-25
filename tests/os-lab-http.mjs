@@ -132,6 +132,21 @@ try{
  assert.ok(exported.includes('Maturidade: 50%'));
  assert.ok(!exported.includes('Synthetic internal synthesis'));
  assert.ok(!exported.includes('Synthetic receipt'));
+ const popupEvent=context.waitForEvent('page');
+ await page.getByRole('button',{name:'Imprimir / salvar prévia em PDF',exact:true}).click();
+ const printPage=await popupEvent;
+ await printPage.getByText('Synthetic client summary',{exact:true}).waitFor();
+ const printable=await printPage.locator('main').innerText();
+ assert.ok(printable.includes('50%'));
+ assert.ok(printable.includes('DADOS FICTÍCIOS'));
+ assert.ok(!printable.includes('Synthetic internal synthesis'));
+ assert.ok(!printable.includes('Synthetic receipt'));
+ const pdf=await printPage.pdf({format:'A4',printBackground:true});
+ assert.equal(pdf.subarray(0,5).toString(),'%PDF-');
+ assert.ok(pdf.length>1000);
+ await printPage.close();
+ console.log('PASS authorized print view and PDF rendering');
+
  const queue=(await request('GET',endpoint+'?scope=queue')).body.data;
  assert.ok(Array.isArray(queue.items));
  assert.ok(!queue.items.some(i=>i.id===actionId||i.id===appointmentId));
@@ -145,6 +160,7 @@ try{
  await page.getByRole('button',{name:'Atualizar registros'}).click();
  await page.getByText('Prévia bloqueada ou ainda não autorizada.',{exact:true}).waitFor();
  assert.equal(await page.getByRole('button',{name:'Exportar prévia autorizada (.txt)',exact:true}).count(),0);
+ assert.equal(await page.getByRole('button',{name:'Imprimir / salvar prévia em PDF',exact:true}).count(),0);
  const pendingQueue=(await request('GET',endpoint+'?scope=queue')).body.data;
  assert.ok(pendingQueue.items.some(i=>i.kind==='delivery'&&i.project_id===projectId));
  console.log('PASS daily queue and authorized projection export');
