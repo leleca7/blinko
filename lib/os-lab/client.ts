@@ -11,6 +11,8 @@ export type LabLedger={id:string;label:string;kind:"income"|"expense";cents:stri
 export type LabOperations={scores:LabScore[];actions:LabAction[];appointments:LabAppointment[];hypotheses:LabHypothesis[];finance:null|{entries:LabLedger[];totals:{planned_income:string;planned_expense:string;realized_income:string;realized_expense:string}}};
 export type LabDelivery={draft:null|{synthesis:string;review_note:string|null;client_summary:string;client_next_step:string;show_maturity:boolean;show_actions:boolean;draft_revision:string;review_current:boolean};preview:null|{projectId:string;company:string;stage:string;due:string|null;summary:string;nextStep:string;maturity:null|{value:number;coverage:number};actions:{title:string;due:string;done:boolean}[]}};
 export type LabQuote={id:string;lead_id:string;display_name:string;minutes:number;hourly_cents:number;expense_cents:string;fee_bps:number;margin_bps:number;cost_cents:string;price_cents:string};
+export type LabQueueItem={kind:"lead"|"evidence"|"action"|"appointment"|"delivery";id:string;project_id:string|null;company:string;title:string;due_on:string|null};
+export type LabQueue={items:LabQueueItem[];total:string};
 export type LabMutation={id:string}|{changed:boolean};
 export class LabClientError extends Error {
  readonly status:number;
@@ -52,6 +54,7 @@ export function createLabClient(fetcher:Fetcher=fetch){
   return p.data as T;
  }
  return {
+  queue:(signal?:AbortSignal)=>request<LabQueue>(endpoint+"?scope=queue","GET",undefined,signal),
   projects:(signal?:AbortSignal)=>request<LabProject[]>(endpoint,"GET",undefined,signal),
   leads:(signal?:AbortSignal)=>request<LabLead[]>(endpoint+"?scope=crm","GET",undefined,signal),
   evidence:(id:string,signal?:AbortSignal)=>request<LabEvidence[]>(projectPath(id),"GET",undefined,signal),
