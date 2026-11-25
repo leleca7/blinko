@@ -20,3 +20,9 @@ test('evidence review requires a reason and exact command scope',()=>{
  assert.equal(validateEvidenceReview({...good,reviewed:false}).reviewed,false);
  for(const patch of [{reviewed:'true'},{reason:' '},{reason:'a'.repeat(501)},{actorId:actor},{orgId:actor},{evidenceId:'invalid'}]) assert.equal(validateEvidenceReview({...good,...patch}),null);
 });
+
+test('sandbox connection rejects extra and duplicate connection parameters',()=>{
+ const base='postgresql://os_lab_runtime:fiction@ep-old-art-bbztkcnw.c-15.us-east-1.aws.neon.tech/blinko_sandbox?sslmode=require';
+ assert.equal(isSandboxConnection(base),true);
+ for(const suffix of ['&sslmode=disable','&sslmode=require','&host=other.example','&options=test','&port=5433'])assert.equal(isSandboxConnection(base+suffix),false);
+});
