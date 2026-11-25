@@ -68,3 +68,21 @@ test('synthetic contract needs explicit confirmation and project metadata accept
  assert.equal(validateOperation({...details,owner:'other'}),null);
  assert.equal(validateOperation({...details,stage:'other'}),null);
 });
+
+test('report synthesis and review require bounded text and reject client approval metadata',()=>{
+ const draft={type:'report_save',id,synthesis:' Synthetic synthesis '};
+ assert.equal(validateOperation(draft).synthesis,'Synthetic synthesis');
+ for(const patch of [{synthesis:' '},{synthesis:'x'.repeat(2001)},{reviewed:true},{draftRevision:1}])assert.equal(validateOperation({...draft,...patch}),null);
+ const review={type:'report_review',id,reviewed:false,note:' Synthetic revocation '};
+ assert.deepEqual(validateOperation(review),{...review,note:'Synthetic revocation'});
+ for(const patch of [{note:' '},{reviewed:'true'},{reviewedBy:id},{projectRevision:2}])assert.equal(validateOperation({...review,...patch}),null);
+});
+test('portal requires explicit options and rejects internal data and client-selected authorization',()=>{
+ const draft={type:'portal_save',id,summary:' Synthetic summary ',nextStep:'Next step',showMaturity:false,showActions:false};
+ assert.deepEqual(validateOperation(draft),{...draft,summary:'Synthetic summary'});
+ for(const patch of [{summary:' '},{nextStep:'x'.repeat(501)},{showActions:1},{ledger:[]},{evidence:[]},{approved:true},{portalRevision:1}])assert.equal(validateOperation({...draft,...patch}),null);
+ const approval={type:'portal_approve',id,approved:true};
+ assert.deepEqual(validateOperation(approval),approval);
+ assert.equal(validateOperation({...approval,approved:'true'}),null);
+ assert.equal(validateOperation({...approval,approvedBy:id}),null);
+});
