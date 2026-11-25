@@ -34,12 +34,12 @@
 .reviewBanner{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 24px;margin:25px 0;border:1px solid var(--line);border-radius:13px;background:#e8ede4}.reviewBanner small{display:block;font-size:10px;color:var(--muted);letter-spacing:.1em}.reviewBanner strong{display:block;font:400 24px Georgia,serif;margin:7px 0}.reviewBanner p{font-size:13px;color:var(--muted);margin:0}.reviewBanner button{margin:0;flex-shrink:0}.buttonRow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:20px 0}.buttonRow button{margin:0}.reportPreview{padding:0;overflow:hidden;border-top-width:1px}.reportCover{display:flex;justify-content:space-between;align-items:center;gap:15px;background:#01301e;color:#f3efeb;padding:30px}.reportCover small,.reportCover p{color:#d6e3d9}.reportCover h2{color:#f3efeb;margin:15px 0 5px}.reportCover>span{font:italic 60px Georgia,serif;color:#efbad5}.reportMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:20px 30px;background:#f5f3ed;border-bottom:1px solid var(--line)}.reportMetrics strong{display:block;font:400 29px Georgia,serif;margin-top:8px}.reportBody{padding:30px}.reportBody pre{font-size:13px;line-height:1.75}
 @media(max-width:560px){.reviewBanner{align-items:flex-start;flex-direction:column;padding:16px}.reportCover,.reportBody{padding:18px}.reportCover>span{font-size:40px}.reportMetrics{padding:16px;gap:7px}.reportMetrics strong{font-size:23px}.reportMetrics small{font-size:9px}}
 @media print{
- @page{size:A4;margin:15mm}
+ @page{size:A4;margin:30mm 20mm 20mm 30mm}
  :global(html),:global(body){background:#fff!important;height:auto!important;overflow:visible!important}
  .page,.shell,.workspace,.panel{display:block!important;position:static!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;min-height:0!important;overflow:visible!important;background:white!important;border:none!important;box-shadow:none!important}
  .page .sidebar,.workspace>.top,.workspace>.notice,.workspace>.projectBar,.workspace>footer,.panel>small,.panel>h2,.panel>p,.panel>label,.panel>.buttonRow{display:none!important}
  .reportPreview{border:none;margin:0;overflow:visible!important;border-radius:0;print-color-adjust:exact;-webkit-print-color-adjust:exact}
- .reportCover,.reportMetrics{break-inside:avoid}.reportBody{padding:14px 0}.reportBody pre{font-size:10pt;line-height:1.5;color:#01301e}
+ .reportCover,.reportMetrics{break-inside:avoid}.reportBody{padding:14px 0}.reportBody pre{font-size:12pt;line-height:1.5;color:#163b2b}
 }
 
 /* Incremento 07: inteligência diagnóstica. */
@@ -57,3 +57,15 @@
 /* Operator's daily work queue. */
 .dailySection{margin:24px 0;padding:24px;background:#fffdf8;border:1px solid var(--line);border-radius:14px}.dailySection>p{color:var(--muted);font-size:13px;line-height:1.6}.dailySection .heading{align-items:center}.dailySection .heading h2{font:400 clamp(24px,3vw,34px)/1.15 Georgia,serif;margin:6px 0}.dailySection .heading .smallButton{margin:0;flex-shrink:0}.dailyStats{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.dailyStats span{background:#f5f3ed;border:1px solid var(--line);padding:10px 13px;border-radius:9px;font-size:12px;color:var(--muted)}.dailyStats strong{font-size:19px;color:var(--ink);margin-right:5px}.dailyList{display:grid;gap:6px}.dailyList button{text-align:left;display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;min-height:64px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--ink);padding:12px 14px;cursor:pointer}.dailyList button:hover{background:#f5f3ed}.dailyList button div{min-width:0}.dailyList button small{display:block;font-size:11px;color:var(--muted);margin-bottom:5px}.dailyList button strong{display:block;font-size:14px;overflow-wrap:anywhere}.dailyList button>span{font-size:12px;color:var(--muted);flex-shrink:0}
 @media(max-width:560px){.dailySection{padding:16px}.dailyList button{align-items:flex-start;flex-direction:column;gap:6px}.dailyStats span{flex:1 1 100%}}
+
+/* Original brand assets, editorial report hierarchy inspired by Plumareli. */
+.brandLogo{display:block;width:100%;max-width:160px;height:auto;object-fit:contain}
+.loginLogo{display:block;width:160px;max-width:100%;height:auto;margin:0 0 20px}
+.reportLogo{width:126px;max-width:30%;height:auto;flex-shrink:0;object-fit:contain}
+.reportCover{border-bottom:5px solid #ef3c7f}
+.reportCover>div{min-width:0;overflow-wrap:anywhere}
+.reportMetrics{background:#f5f1e9;border-bottom:1px solid #dce2d8}
+.reportMetrics>div{background:#fff;border:1px solid #dce2d8;border-radius:9px;padding:12px}
+.reportBody pre{line-height:1.65}
+@media(max-width:760px){.brand{align-items:center}.brandLogo{width:120px;max-width:45%}.reportLogo{width:96px}}
+@media print{.reportCover{padding:16pt;gap:14pt}.reportCover h2{font-size:21pt}.reportCover small,.reportCover p{font-size:9pt}.reportLogo{width:29mm;max-width:32%}.reportMetrics{padding:12pt;gap:6pt}.reportMetrics>div{padding:8pt}.reportMetrics strong{font-size:18pt}.reportMetrics small{font-size:8pt}.reportBody pre{font:12pt/1.5 Arial,sans-serif}.reportBody{padding:12pt 0}}
