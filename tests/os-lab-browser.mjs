@@ -38,8 +38,8 @@ try{
  for(let i=0;i<10;i++)await checks.nth(i).check();
  await nav(/Radar Blinko/);
  await visible(page.getByRole('heading',{name:'Maturidade organizacional',exact:true}));
- const refs=page.locator('label').filter({hasText:/^Evidência de apoio/}).locator('select');
- const notes=page.locator('label').filter({hasText:/^Nota/}).locator('select');
+ const refs=page.getByRole('combobox',{name:/^Evidência de apoio ·/});
+ const notes=page.getByRole('combobox',{name:/^Nota ·/});
  await visible(refs.nth(9));
  await visible(notes.nth(9));
  assert.equal(await refs.count(),10);
@@ -126,10 +126,11 @@ try{
  await visible(page.getByText('PRÉVIA BLOQUEADA',{exact:true}));
  assert.equal(await page.getByText('BLINKO · ÁREA DO CLIENTE · SIMULAÇÃO',{exact:true}).count(),0);
  mark('revisão, autorização e revogação do portal');
- await nav(/Diagnóstico/);
+ await nav(/05Diagnóstico|05 Diagnóstico/);
  await page.getByLabel('Projeto ativo').selectOption('0');
  await visible(page.getByText('Nenhum registro neste projeto.',{exact:true}));
  await page.getByLabel('Projeto ativo').selectOption('9000');
+ await visible(checks.nth(9));
  assert.equal(await checks.count(),10);
  await page.setViewportSize({width:390,height:844});
  await nav(/Visão geral/);
