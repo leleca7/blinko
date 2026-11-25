@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "noEmit": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "app/os-workspace/**/*.tsx",
+    "app/api/os-lab/**/*.ts",
+    "lib/os-lab/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
