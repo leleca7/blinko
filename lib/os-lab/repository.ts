@@ -138,7 +138,15 @@ export async function mutateLabOperation(token:string|undefined,body:unknown) {
   ? sql`SELECT os_lab.move_lead(${op.id}::uuid,${op.expectedStage},${op.nextStage}) AS changed`
   : op.type==="lead_contract"
   ? sql`SELECT os_lab.contract_synthetic_lead(${op.id}::uuid,${op.projectId}::uuid,${op.confirmed}) AS id`
-  : sql`SELECT os_lab.update_project_details(${op.id}::uuid,${op.stage},${op.owner},${op.due}::date) AS changed`;
+  : op.type==="project_details"
+  ? sql`SELECT os_lab.update_project_details(${op.id}::uuid,${op.stage},${op.owner},${op.due}::date) AS changed`
+  : op.type==="report_save"
+  ? sql`SELECT os_lab.save_report(${op.id}::uuid,${op.synthesis}) AS changed`
+  : op.type==="report_review"
+  ? sql`SELECT os_lab.review_report(${op.id}::uuid,${op.reviewed},${op.note}) AS changed`
+  : op.type==="portal_save"
+  ? sql`SELECT os_lab.save_portal_draft(${op.id}::uuid,${op.summary},${op.nextStep},${op.showMaturity},${op.showActions}) AS changed`
+  : sql`SELECT os_lab.approve_portal(${op.id}::uuid,${op.approved}) AS changed`;
  try {
   const [,rows]=await sql.transaction([
    sql`SELECT set_config('os_lab.actor_id',${actor},true),set_config('os_lab.session_id',${sid},true)`,
@@ -170,4 +178,22 @@ export async function listLabLeads(token:string|undefined) {
  ]);
  if(status[0]?.active!==true)throw new LabError(401,"session_inactive");
  return rows;
+}
+
+export async function getLabDelivery(token:string|undefined,projectId:string) {
+ const {sql,actor,sid}=access(token);
+ if(!isLabUuid(projectId))throw new LabError(400,"invalid_project");
+ const [,status,projects,deliverables,previews]=await sql.transaction([
+  sql`SELECT set_config('os_lab.actor_id',${actor},true),set_config('os_lab.session_id',${sid},true)`,
+  sql`SELECT os_lab.session_is_active(${actor},${sid}) AS active`,
+  sql`SELECT id FROM os_lab.projects WHERE id=${projectId}::uuid`,
+  sql`SELECT d.synthesis,d.review_note,d.client_summary,d.client_next_step,d.show_maturity,d.show_actions,
+    d.draft_revision::text AS draft_revision,
+    (d.reviewed_at IS NOT NULL AND d.review_project_revision=p.content_revision AND d.review_draft_revision=d.draft_revision) AS review_current
+    FROM os_lab.deliverables d JOIN os_lab.projects p ON p.id=d.project_id WHERE d.project_id=${projectId}::uuid`,
+  sql`SELECT os_lab.internal_portal_preview(${projectId}::uuid) AS preview`
+ ]);
+ if(status[0]?.active!==true)throw new LabError(401,"session_inactive");
+ if(!projects.length)throw new LabError(404,"project_unavailable");
+ return {draft:deliverables[0]??null,preview:previews[0]?.preview??null};
 }
