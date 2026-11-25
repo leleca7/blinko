@@ -41,7 +41,7 @@ BEGIN
  IF os_lab.contract_synthetic_lead(lead,project,true)<>project OR os_lab.contract_synthetic_lead(lead,gen_random_uuid(),true)<>project THEN RAISE EXCEPTION 'contract dedup'; END IF;
  PERFORM os_lab.update_project_details(project,'Investigar','Pesquisa','2026-12-15');
  FOR i IN 0..9 LOOP
-  INSERT INTO os_lab.evidence(id,project_id,org_id,pillar,kind,summary) VALUES(ev[i+1],project,org,i,'fact','Synthetic evidence '||i);
+  PERFORM os_lab.record_evidence(ev[i+1],project,i,'fact','Synthetic observation','Synthetic evidence '||i);
  END LOOP;
  BEGIN
   PERFORM os_lab.save_radar_score(project,0,2,ev[1]);
