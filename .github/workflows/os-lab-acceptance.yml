@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   acceptance:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 12
     env:
       BLINKO_OS_LAB_ENABLED: "false"
