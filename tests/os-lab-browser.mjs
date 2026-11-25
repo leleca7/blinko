@@ -16,6 +16,7 @@ const visible=async locator=>{await locator.waitFor({state:'visible'});};
 const mark=name=>console.log('PASS '+name);
 try{
  await page.goto(origin+'/os-preview',{waitUntil:'networkidle'});
+ assert.ok(await page.getByRole('img',{name:'Blinko Studio — Criatividade que conecta'}).evaluate(img=>img.complete&&img.naturalWidth>0),'official brand asset loads');
  await visible(page.getByText('Clareza para operar.',{exact:true}));
  await nav(/Cliente Zero/);
  await button('Iniciar triagem fictícia com consentimento').click();
@@ -88,6 +89,7 @@ try{
  const report=await readFile('test-artifacts/cliente-zero.txt','utf8');
  assert.match(report,/DADOS FICTÍCIOS/);assert.match(report,/10\/10/);assert.match(report,/Definir rotina de retorno/);
  assert.doesNotMatch(report,/Receita simulada do diagnóstico|Despesa simulada de pesquisa/);
+ assert.ok(await page.locator('#lab-print-report img').evaluate(img=>img.complete&&img.naturalWidth>0),'report brand asset loads');
  await page.pdf({path:'test-artifacts/cliente-zero.pdf',format:'A4',printBackground:true});
  assert.equal((await readFile('test-artifacts/cliente-zero.pdf')).subarray(0,5).toString(),'%PDF-');
  mark('exportações TXT e PDF geradas; sem financeiro no TXT');
