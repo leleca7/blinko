@@ -1,4 +1,5 @@
 import "server-only";
+import { validateOperation } from "./operations";
 import { randomUUID } from "node:crypto";
 import { neon } from "@neondatabase/serverless";
 import { isSandboxConnection, isLabUuid, validateEvidence, validateEvidenceReview, verifyLabSession } from "./session";
@@ -83,4 +84,47 @@ export async function reviewLabEvidence(token: string | undefined, body: unknown
     }
     throw error;
   }
+}
+
+export async function listLabOperations(token:string|undefined,projectId:string) {
+  const {sql,actor,sid}=access(token);
+  if(!isLabUuid(projectId)) throw new LabError(400,"invalid_project");
+  const [,status,projects,scores,actions]=await sql.transaction([
+    sql`SELECT set_config('os_lab.actor_id', ${actor}, true),set_config('os_lab.session_id', ${sid}, true)`,
+    sql`SELECT os_lab.session_is_active(${actor},${sid}) AS active`,
+    sql`SELECT id FROM os_lab.projects WHERE id=${projectId}::uuid`,
+    sql`SELECT s.pillar,s.value,s.evidence_id,
+      (e.reviewed AND e.kind<>'hypothesis' AND e.review_revision=s.evidence_revision) AS eligible
+      FROM os_lab.radar_scores s JOIN os_lab.evidence e ON e.id=s.evidence_id WHERE s.project_id=${projectId}::uuid ORDER BY s.pillar`,
+    sql`SELECT a.id,a.title,a.owner_label,a.due_on,a.gravity,a.urgency,a.tendency,a.gut,a.done,a.evidence_id,
+      (e.reviewed AND e.kind<>'hypothesis' AND e.review_revision=a.evidence_revision) AS eligible
+      FROM os_lab.action_items a JOIN os_lab.evidence e ON e.id=a.evidence_id WHERE a.project_id=${projectId}::uuid ORDER BY a.due_on,a.id LIMIT 100`
+  ]);
+  if(status[0]?.active!==true)throw new LabError(401,"session_inactive");
+  if(!projects.length)throw new LabError(404,"project_unavailable");
+  return {scores,actions};
+}
+export async function mutateLabOperation(token:string|undefined,body:unknown) {
+ const {sql,actor,sid}=access(token);
+ const op=validateOperation(body);
+ if(!op)throw new LabError(400,"invalid_operation");
+ const command=op.type==="score"
+  ? sql`SELECT os_lab.save_radar_score(${op.projectId}::uuid,${op.pillar}::integer,${op.value}::integer,${op.evidenceId}::uuid) AS changed`
+  : op.type==="action"
+  ? sql`SELECT os_lab.create_action_item(${op.id}::uuid,${op.projectId}::uuid,${op.evidenceId}::uuid,${op.title},${op.owner},${op.due}::date,${op.gravity}::integer,${op.urgency}::integer,${op.tendency}::integer) AS changed`
+  : sql`SELECT os_lab.set_action_done(${op.id}::uuid,${op.done}) AS changed`;
+ try {
+  const [,rows]=await sql.transaction([
+   sql`SELECT set_config('os_lab.actor_id',${actor},true),set_config('os_lab.session_id',${sid},true)`,
+   command
+  ]);
+  return {changed:rows[0]?.changed===true};
+ } catch(error) {
+  if(typeof error==="object"&&error!==null&&"code" in error) {
+   if(error.code==="42501")throw new LabError(403,"operation_denied");
+   if(error.code==="22023")throw new LabError(400,"invalid_operation_or_evidence");
+   if(error.code==="23505")throw new LabError(409,"operation_conflict");
+  }
+  throw error;
+ }
 }
