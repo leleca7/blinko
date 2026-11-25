@@ -124,3 +124,9 @@ Primeiro incremento: roadmap, protótipo visual e funções locais de orçamento
 - O código e a configuração de CI foram gravados no GitHub. A execução e o resultado do workflow de push ainda não foram confirmados: conector de workflow lista somente execuções de pull request. Não considerar o E2E aprovado antes de verificar o resultado e os artefatos em Actions. A inspeção visual do PDF permanece necessária.
 - Não há alteração de interface, produção, banco, credenciais ou controle de acesso nesta etapa.
 - Gate técnico: verificar resultados em Actions, corrigir falhas, revisar artefatos e aprovar o modelo de autenticação e as credenciais restritas antes da integração no sandbox.
+
+## Incremento 11 — diagnóstico da primeira execução de CI (25/11/2026)
+- Execução [45494990783](https://github.com/leleca7/blinko/actions/runs/45494990783), commit `f57a2249`: 27 testes unitários aprovados, zero falhas; instalação de dependências do projeto aprovada.
+- Falha anterior ao E2E: Playwright 1.56.1 não suporta o runner `ubuntu26.04-x64` selecionado por `ubuntu-latest`. O teste Chromium foi pulado, não reprovado funcionalmente.
+- Corrigido runner para `ubuntu-24.04`, mantendo versão do Playwright, escopo da branch, limites e bloqueios de segurança. Commit `06b35b50`. Nova execução precisa ser conferida antes de declarar o fluxo aprovado.
+- Não houve mudanças em produção, banco, credenciais ou APIs.
