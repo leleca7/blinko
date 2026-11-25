@@ -23,7 +23,7 @@ export async function listLabProjects(token: string | undefined) {
   const [,status,rows]=await sql.transaction([
     sql`SELECT set_config('os_lab.actor_id', ${actor}, true), set_config('os_lab.session_id', ${sid}, true)`,
     sql`SELECT os_lab.session_is_active(${actor}, ${sid}) AS active`,
-    sql`SELECT id,label FROM os_lab.projects ORDER BY label,id LIMIT 100`
+    sql`SELECT id,label,method_stage,owner_label,due_on::text AS due_on FROM os_lab.projects ORDER BY label,id LIMIT 100`
   ]);
   if (status[0]?.active!==true) throw new LabError(401,"session_inactive");
   return rows;
@@ -128,12 +128,26 @@ export async function mutateLabOperation(token:string|undefined,body:unknown) {
   ? sql`SELECT os_lab.set_appointment_done(${op.id}::uuid,${op.done}) AS changed`
   : op.type==="ledger"
   ? sql`SELECT os_lab.create_ledger_entry(${op.id}::uuid,${op.projectId}::uuid,${op.label},${op.kind},${op.cents}::bigint,${op.due}::date) AS changed`
-  : sql`SELECT os_lab.set_ledger_settled(${op.id}::uuid,${op.settled}) AS changed`;
+  : op.type==="ledger_settled"
+  ? sql`SELECT os_lab.set_ledger_settled(${op.id}::uuid,${op.settled}) AS changed`
+  : op.type==="lead_create"
+  ? sql`SELECT os_lab.create_synthetic_lead(${op.id}::uuid,${op.submissionId}::uuid,${op.company},${op.consent}) AS id`
+  : op.type==="lead_complete"
+  ? sql`SELECT os_lab.complete_synthetic_lead(${op.id}::uuid,${op.challenge}) AS changed`
+  : op.type==="lead_move"
+  ? sql`SELECT os_lab.move_lead(${op.id}::uuid,${op.expectedStage},${op.nextStage}) AS changed`
+  : op.type==="lead_contract"
+  ? sql`SELECT os_lab.contract_synthetic_lead(${op.id}::uuid,${op.projectId}::uuid,${op.confirmed}) AS id`
+  : sql`SELECT os_lab.update_project_details(${op.id}::uuid,${op.stage},${op.owner},${op.due}::date) AS changed`;
  try {
   const [,rows]=await sql.transaction([
    sql`SELECT set_config('os_lab.actor_id',${actor},true),set_config('os_lab.session_id',${sid},true)`,
    command
   ]);
+  if(op.type==="lead_create"||op.type==="lead_contract") {
+   if(!isLabUuid(rows[0]?.id))throw new LabError(500,"invalid_operation_result");
+   return {id:rows[0].id};
+  }
   return {changed:rows[0]?.changed===true};
  } catch(error) {
   if(typeof error==="object"&&error!==null&&"code" in error) {
@@ -143,4 +157,17 @@ export async function mutateLabOperation(token:string|undefined,body:unknown) {
   }
   throw error;
  }
+}
+
+export async function listLabLeads(token:string|undefined) {
+ const {sql,actor,sid}=access(token);
+ const [,status,rows]=await sql.transaction([
+  sql`SELECT set_config('os_lab.actor_id',${actor},true),set_config('os_lab.session_id',${sid},true)`,
+  sql`SELECT os_lab.session_is_active(${actor},${sid}) AS active`,
+  sql`SELECT l.id,l.display_name,l.stage,l.intake_complete,l.challenge,l.created_at,p.id AS project_id
+   FROM os_lab.leads l LEFT JOIN os_lab.projects p ON p.lead_id=l.id
+   ORDER BY l.created_at DESC,l.id LIMIT 100`
+ ]);
+ if(status[0]?.active!==true)throw new LabError(401,"session_inactive");
+ return rows;
 }
