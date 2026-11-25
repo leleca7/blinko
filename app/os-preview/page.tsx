@@ -8,7 +8,7 @@ import { buildAssistiveDraft, validateSuggestion, portalProjection, portalApprov
 import { pillarCoverage, investigationQuestions, assessHypothesis, type Hypothesis } from "../../lib/os-lab/intelligence";
 
 const modules = [
-  ["Hoje", "Fila de atenção existente", "Revisar integração"],
+  ["Hoje", "Fila operacional de todas as empresas", "Protótipo"],
   ["CRM e triagens", "Oportunidades, WhatsApp e empresas", "Protótipo"],
   ["Clientes e projetos", "Responsáveis, etapas e prazos", "Protótipo"],
   ["Orçamentos", "Custos e precificação personalizada", "Protótipo"],
@@ -80,6 +80,12 @@ export default function OsPreview() {
   const [portalDrafts,setPortalDrafts] = useState<Record<number,PortalDraft>>({});
   const [portalApprovals,setPortalApprovals] = useState<Record<number,string>>({});
   const project = projects.find(p=>p.id===selected) ?? projects[0];
+  const openWork=projects.flatMap(p=>[
+    ...p.actions.filter(a=>!a.done).map(a=>({key:p.id+"-action-"+a.id,projectId:p.id,company:p.company,title:a.title,due:a.due,owner:a.owner,view:"plan" as const})),
+    ...p.appointments.filter(a=>!a.done).map(a=>({key:p.id+"-event-"+a.id,projectId:p.id,company:p.company,title:a.title,due:a.date,owner:p.owner,view:"agenda" as const})),
+    ...p.evidence.filter(e=>!e.verified).map(e=>({key:p.id+"-evidence-"+e.id,projectId:p.id,company:p.company,title:"Revisar registro · "+pillars[e.pillar],due:"",owner:p.owner,view:"diagnostic" as const}))
+  ]).sort((a,b)=>(a.due||"9999-12-31").localeCompare(b.due||"9999-12-31")||a.company.localeCompare(b.company));
+  const openLeads=leads.filter(l=>!projects.some(p=>p.id===l.id));
   const invalidateReview=(id:number)=>{setReviewSnapshots(old=>withoutProjectKey(old,id));setPortalApprovals(old=>withoutProjectKey(old,id));};
   const updateProject = (fn:(p:Project)=>Project) => {setProjects(old=>old.map(p=>p.id===project.id?fn(p):p));invalidateReview(project.id);};
   const pilotProject=projects.find(p=>p.id===PILOT_ID);
@@ -170,7 +176,7 @@ export default function OsPreview() {
         <div className={styles.workspace}>
         <header className={styles.top}>
           <div className={styles.breadcrumb}>Blinko OS <span>/</span> {views.find(v=>v[0]===view)?.[1]}</div>
-          <span className={styles.previewTag}>PROTÓTIPO 07</span>
+          <span className={styles.previewTag}>PROTÓTIPO 08</span>
         </header>
         <aside className={styles.notice}>Ambiente experimental · Use somente dados fictícios. Não há conexão ao CRM, envio ou armazenamento. Recarregar restaura a demonstração.</aside>
         {["projects","diagnostic","radar","plan","agenda","report","finance","review","intelligence","assist","portal"].includes(view) && <div className={styles.projectBar}><label>Projeto ativo<select aria-label="Projeto ativo" value={project.id} onChange={e=>changeProject(Number(e.target.value))}>{projects.map(p=><option key={p.id} value={p.id}>{p.company}</option>)}</select></label><span>{method[project.stage]} · {verified.length} evidências revisadas</span></div>}
@@ -190,6 +196,14 @@ export default function OsPreview() {
           <button className={styles.quick} onClick={()=>setView("plan")}><small>PLANO DE AÇÃO</small><strong>{project.actions.filter(a=>!a.done).length}</strong><span>Ações em aberto <b>↗</b></span></button>
         </div>
         <div className={styles.reviewBanner}><div><small>CONTROLE DE QUALIDADE · PROJETO ATIVO</small><strong>{reviewStatus}</strong><p>{blockers.length} critérios pendentes · {project.company}</p></div><button className={styles.smallButton} onClick={()=>setView("review")}>Abrir revisão ↗</button></div>
+        <section className={styles.dailySection} aria-label="Fila de trabalho">
+          <div className={styles.heading}><div><small>ROTINA DA EQUIPE</small><h2>O que precisa de atenção</h2></div><button className={styles.smallButton} onClick={()=>setView("crm")}>CRM ↗</button></div>
+          <p>Fila de todos os projetos desta sessão, ordenada por prazo. Itens sem prazo aparecem no final. Não é uma agenda sincronizada.</p>
+          <div className={styles.dailyStats}><span><strong>{openLeads.length}</strong> oportunidades sem projeto</span><span><strong>{openWork.length}</strong> pendências de projeto</span></div>
+          {openWork.length===0?<p>Nenhuma pendência de projeto registrada. Use o Cliente Zero para ensaiar a operação.</p>:<div className={styles.dailyList}>{openWork.slice(0,12).map(item=><button key={item.key} onClick={()=>{changeProject(item.projectId);setView(item.view);}}><div><small>{item.company} · {item.owner}</small><strong>{item.title}</strong></div><span>{dateLabel(item.due)} ↗</span></button>)}</div>}
+          {openWork.length>12&&<p>Mostrando as primeiras 12 de {openWork.length} pendências. As demais estão nos respectivos projetos.</p>}
+          <button className={styles.smallButton} onClick={()=>setView("pilot")}>Roteiro Cliente Zero ↗</button>
+        </section>
         <section className={styles.moduleSection} aria-label="Roadmap dos módulos">
           <div className={styles.heading}><h2>Módulos da operação</h2><small>ROADMAP</small></div>
           <div className={styles.modules}>{modules.map(([name,desc,status])=><article key={name}><div><h3>{name}</h3><p>{desc}</p></div><small data-status={status==="Protótipo"?"prototype":"planned"}>{status}</small></article>)}</div>
@@ -257,7 +271,7 @@ export default function OsPreview() {
         <article><small>03 / INVESTIGAÇÃO · {pilotProject?.evidence.length??0} REGISTROS</small><h3>Carregar material fictício para conferência</h3><p>Dez observações não revisadas, uma visita de acompanhamento e duas movimentações previstas. Nenhuma nota, ação ou aprovação é preenchida automaticamente. O carregamento não substitui registros existentes.</p><div className={styles.buttonRow}><button className={styles.primaryButton} disabled={!pilotProject||!pilotCanLoad(pilotProject)} onClick={()=>{if(!pilotProject||!pilotCanLoad(pilotProject))return;const f=pilotFixture();setProjects(old=>old.map(p=>p.id===PILOT_ID?{...p,evidence:f.evidence,appointments:f.appointments,ledger:f.ledger}:p));invalidateReview(PILOT_ID);changeProject(PILOT_ID);setView("diagnostic");}}>Carregar material de ensaio</button><button className={styles.smallButton} disabled={!pilotProject} onClick={()=>{changeProject(PILOT_ID);setView("diagnostic");}}>Revisar evidências ↗</button></div></article>
         {([{view:"radar",n:"04",title:"Avaliar os dez pilares",description:"Vincule evidências revisadas e escolha as notas."},{view:"intelligence",n:"05",title:"Investigar causas",description:"Confronte registros e formule hipóteses provisórias."},{view:"gut",n:"06",title:"Definir criticidade",description:"Avalie gravidade, urgência e tendência."},{view:"plan",n:"07",title:"Criar ações",description:"Exemplo: definir rotina de retorno de contatos, com evidência comercial, responsável e prazo."},{view:"finance",n:"08",title:"Conferir previsto e realizado",description:"Verifique as duas movimentações fictícias."},{view:"agenda",n:"09",title:"Acompanhar compromissos",description:"Confira prazos e reunião simulada."},{view:"report",n:"10",title:"Consolidar relatório",description:"Escreva a síntese humana e confira a impressão."},{view:"review",n:"11",title:"Revisar a entrega",description:"Resolva pendências e registre parecer fictício."},{view:"portal",n:"12",title:"Conferir a visão do cliente",description:"Redija o resumo, autorize a prévia e verifique a revogação."}] as const).map(step=><article key={step.n}><small>{step.n} / ENSAIO MANUAL</small><h3>{step.title}</h3><p>{step.description}</p><button className={styles.smallButton} disabled={!pilotProject} onClick={()=>{changeProject(PILOT_ID);setView(step.view);}}>Abrir etapa ↗</button></article>)}
         </div><p>O roteiro não certifica a execução de todos os passos. Recarregar restaura o laboratório.</p></section>}
-        <footer>BLINKO OS · Protótipo 07 · Sem dados reais · Não liberar em produção.</footer>
+        <footer>BLINKO OS · Protótipo 08 · Sem dados reais · Não liberar em produção.</footer>
         </div>
       </div>
     </main>
