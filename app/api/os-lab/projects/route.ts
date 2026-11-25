@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { LAB_COOKIE } from "../../../../lib/os-lab/session";
+import { LAB_COOKIE, verifyLabSession } from "../../../../lib/os-lab/session";
 import { LabError, listLabProjects, listLabEvidence, createLabEvidence, reviewLabEvidence, listLabOperations, mutateLabOperation, listLabLeads, getLabDelivery, listLabQuotes } from "../../../../lib/os-lab/repository";
 
 export const runtime = "nodejs";
@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
   if (!origin || request.headers.get("origin")!==origin || request.nextUrl.origin!==origin) return json({ok:false,error:"origin_not_allowed"},403);
   try {
     const token=request.cookies.get(LAB_COOKIE)?.value;
+    if(!verifyLabSession(token,process.env.BLINKO_OS_LAB_SESSION_SECRET??"")) throw new LabError(401,"session_required");
     const body=await readJson(request);
     const data=await createLabEvidence(token,body);
     return json({ok:true,data},201);
@@ -68,6 +69,7 @@ export async function PATCH(request: NextRequest) {
   if (!origin || request.headers.get("origin")!==origin || request.nextUrl.origin!==origin) return json({ok:false,error:"origin_not_allowed"},403);
   try {
     const token=request.cookies.get(LAB_COOKIE)?.value;
+    if(!verifyLabSession(token,process.env.BLINKO_OS_LAB_SESSION_SECRET??"")) throw new LabError(401,"session_required");
     const body=await readJson(request);
     const data=await reviewLabEvidence(token,body);
     return json({ok:true,data});
@@ -80,6 +82,7 @@ export async function PUT(request: NextRequest) {
   if (!origin || request.headers.get("origin")!==origin || request.nextUrl.origin!==origin) return json({ok:false,error:"origin_not_allowed"},403);
   try {
     const token=request.cookies.get(LAB_COOKIE)?.value;
+    if(!verifyLabSession(token,process.env.BLINKO_OS_LAB_SESSION_SECRET??"")) throw new LabError(401,"session_required");
     const body=await readJson(request);
     const data=await mutateLabOperation(token,body);
     return json({ok:true,data});
