@@ -234,7 +234,7 @@ export async function listLabDailyQueue(token:string|undefined) {
    SELECT 'evidence',e.id,p.id,p.label,'Revisar evidência',NULL::date
    FROM os_lab.evidence e JOIN os_lab.projects p ON p.id=e.project_id WHERE NOT e.reviewed
    UNION ALL
-   SELECT 'action',a.id,p.id,p.label,a.title,a.due_on FROM os_lab.action_items a JOIN os_lab.projects p ON p.id=a.project_id WHERE NOT a.done
+   SELECT 'action',a.id,p.id,p.label,CASE WHEN NOT e.reviewed OR e.kind='hypothesis' OR e.review_revision<>a.evidence_revision THEN 'Revalidar ação: '||a.title ELSE a.title END,a.due_on FROM os_lab.action_items a JOIN os_lab.projects p ON p.id=a.project_id JOIN os_lab.evidence e ON e.id=a.evidence_id WHERE NOT a.done OR NOT e.reviewed OR e.kind='hypothesis' OR e.review_revision<>a.evidence_revision
    UNION ALL
    SELECT 'appointment',a.id,p.id,p.label,a.title,a.due_on FROM os_lab.appointments a JOIN os_lab.projects p ON p.id=a.project_id WHERE NOT a.done
    UNION ALL
