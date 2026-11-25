@@ -89,7 +89,7 @@ export async function reviewLabEvidence(token: string | undefined, body: unknown
 export async function listLabOperations(token:string|undefined,projectId:string) {
   const {sql,actor,sid}=access(token);
   if(!isLabUuid(projectId)) throw new LabError(400,"invalid_project");
-  const [,status,projects,scores,actions]=await sql.transaction([
+  const [,status,projects,scores,actions,appointments,financeAccess,ledger,totals]=await sql.transaction([
     sql`SELECT set_config('os_lab.actor_id', ${actor}, true),set_config('os_lab.session_id', ${sid}, true)`,
     sql`SELECT os_lab.session_is_active(${actor},${sid}) AS active`,
     sql`SELECT id FROM os_lab.projects WHERE id=${projectId}::uuid`,
@@ -98,11 +98,19 @@ export async function listLabOperations(token:string|undefined,projectId:string)
       FROM os_lab.radar_scores s JOIN os_lab.evidence e ON e.id=s.evidence_id WHERE s.project_id=${projectId}::uuid ORDER BY s.pillar`,
     sql`SELECT a.id,a.title,a.owner_label,a.due_on,a.gravity,a.urgency,a.tendency,a.gut,a.done,a.evidence_id,
       (e.reviewed AND e.kind<>'hypothesis' AND e.review_revision=a.evidence_revision) AS eligible
-      FROM os_lab.action_items a JOIN os_lab.evidence e ON e.id=a.evidence_id WHERE a.project_id=${projectId}::uuid ORDER BY a.due_on,a.id LIMIT 100`
+      FROM os_lab.action_items a JOIN os_lab.evidence e ON e.id=a.evidence_id WHERE a.project_id=${projectId}::uuid ORDER BY a.due_on,a.id LIMIT 100`,
+    sql`SELECT id,title,kind,due_on,done FROM os_lab.appointments WHERE project_id=${projectId}::uuid ORDER BY due_on,id LIMIT 100`,
+    sql`SELECT os_lab.can_access_finance(p.id,p.org_id) AS allowed FROM os_lab.projects p WHERE p.id=${projectId}::uuid`,
+    sql`SELECT id,label,kind,cents::text AS cents,due_on,settled_at FROM os_lab.ledger_entries WHERE project_id=${projectId}::uuid ORDER BY due_on,id LIMIT 100`,
+    sql`SELECT COALESCE(sum(cents) FILTER(WHERE kind='income'),0)::text AS planned_income,
+       COALESCE(sum(cents) FILTER(WHERE kind='expense'),0)::text AS planned_expense,
+       COALESCE(sum(cents) FILTER(WHERE kind='income' AND settled_at IS NOT NULL),0)::text AS realized_income,
+       COALESCE(sum(cents) FILTER(WHERE kind='expense' AND settled_at IS NOT NULL),0)::text AS realized_expense
+       FROM os_lab.ledger_entries WHERE project_id=${projectId}::uuid`
   ]);
   if(status[0]?.active!==true)throw new LabError(401,"session_inactive");
   if(!projects.length)throw new LabError(404,"project_unavailable");
-  return {scores,actions};
+  return {scores,actions,appointments,finance:financeAccess[0]?.allowed===true?{entries:ledger,totals:totals[0]}:null};
 }
 export async function mutateLabOperation(token:string|undefined,body:unknown) {
  const {sql,actor,sid}=access(token);
@@ -112,7 +120,15 @@ export async function mutateLabOperation(token:string|undefined,body:unknown) {
   ? sql`SELECT os_lab.save_radar_score(${op.projectId}::uuid,${op.pillar}::integer,${op.value}::integer,${op.evidenceId}::uuid) AS changed`
   : op.type==="action"
   ? sql`SELECT os_lab.create_action_item(${op.id}::uuid,${op.projectId}::uuid,${op.evidenceId}::uuid,${op.title},${op.owner},${op.due}::date,${op.gravity}::integer,${op.urgency}::integer,${op.tendency}::integer) AS changed`
-  : sql`SELECT os_lab.set_action_done(${op.id}::uuid,${op.done}) AS changed`;
+  : op.type==="completion"
+  ? sql`SELECT os_lab.set_action_done(${op.id}::uuid,${op.done}) AS changed`
+  : op.type==="appointment"
+  ? sql`SELECT os_lab.create_appointment(${op.id}::uuid,${op.projectId}::uuid,${op.title},${op.kind},${op.due}::date) AS changed`
+  : op.type==="appointment_done"
+  ? sql`SELECT os_lab.set_appointment_done(${op.id}::uuid,${op.done}) AS changed`
+  : op.type==="ledger"
+  ? sql`SELECT os_lab.create_ledger_entry(${op.id}::uuid,${op.projectId}::uuid,${op.label},${op.kind},${op.cents}::bigint,${op.due}::date) AS changed`
+  : sql`SELECT os_lab.set_ledger_settled(${op.id}::uuid,${op.settled}) AS changed`;
  try {
   const [,rows]=await sql.transaction([
    sql`SELECT set_config('os_lab.actor_id',${actor},true),set_config('os_lab.session_id',${sid},true)`,
