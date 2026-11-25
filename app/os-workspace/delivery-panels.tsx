@@ -71,7 +71,7 @@ function renderPrintPreview(target:Window,p:NonNullable<LabDelivery["preview"]>)
  doc.documentElement.lang="pt-BR";
  const style=doc.createElement("style");
  style.textContent="@page{size:A4;margin:18mm}*{box-sizing:border-box}body{font:11pt/1.55 Arial,sans-serif;color:#01301e;background:#fff;margin:0;padding:24px}main{max-width:760px;margin:auto}header{border-bottom:2px solid #01301e;padding-bottom:16px;margin-bottom:24px}h1{font:28pt Georgia,serif;margin:8px 0}h2{font:16pt Georgia,serif;margin:22px 0 8px}p,li{white-space:pre-wrap;overflow-wrap:anywhere}small{color:#52685a}li{margin-bottom:8px;break-inside:avoid}h2{break-after:avoid}button{font:inherit;padding:10px 18px;border:1px solid #01301e;border-radius:6px;background:#01301e;color:white;cursor:pointer}footer{border-top:1px solid #ccc;margin-top:24px;padding-top:10px;font-size:9pt} @media print{body{padding:0}button{display:none}}";
- doc.head.replaceChildren(style);
+ doc.head.replaceChildren(style);doc.title="Blinko — prévia autorizada";
  const add=(parent:HTMLElement,tag:string,text:string)=>{const el=doc.createElement(tag);el.textContent=text;parent.append(el);return el;};
  const main=doc.createElement("main");const header=doc.createElement("header");
  add(header,"small","BLINKO OS | AMBIENTE EXPERIMENTAL — DADOS FICTÍCIOS");add(header,"h1",p.company);add(header,"p","Prévia interna de entrega");add(header,"small","Etapa: "+p.stage+" | Prazo: "+(p.due??"Não definido"));main.append(header);
