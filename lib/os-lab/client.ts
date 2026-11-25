@@ -3,6 +3,14 @@ import type { LabOperation } from "./operations";
 export type LabProject={id:string;label:string;method_stage:string;owner_label:string;due_on:string|null};
 export type LabLead={id:string;display_name:string;stage:string;intake_complete:boolean;challenge:string|null;project_id:string|null};
 export type LabEvidence={id:string;pillar:number;kind:"fact"|"report"|"hypothesis";summary:string;reviewed:boolean};
+export type LabScore={pillar:number;value:number;evidence_id:string;eligible:boolean};
+export type LabAction={id:string;title:string;owner_label:string;due_on:string;gravity:number;urgency:number;tendency:number;gut:number;done:boolean;evidence_id:string;eligible:boolean};
+export type LabAppointment={id:string;title:string;kind:string;due_on:string;done:boolean};
+export type LabHypothesis={id:string;pillar:number;cause:string;effect:string;support_id:string|null;challenge_id:string|null;decision:"open"|"supported"|"rejected";rationale:string;stale:boolean};
+export type LabLedger={id:string;label:string;kind:"income"|"expense";cents:string;due_on:string;settled_at:string|null};
+export type LabOperations={scores:LabScore[];actions:LabAction[];appointments:LabAppointment[];hypotheses:LabHypothesis[];finance:null|{entries:LabLedger[];totals:{planned_income:string;planned_expense:string;realized_income:string;realized_expense:string}}};
+export type LabDelivery={draft:null|{synthesis:string;review_note:string|null;client_summary:string;client_next_step:string;show_maturity:boolean;show_actions:boolean;draft_revision:string;review_current:boolean};preview:null|{projectId:string;company:string;stage:string;due:string|null;summary:string;nextStep:string;maturity:null|{value:number;coverage:number};actions:{title:string;due:string;done:boolean}[]}};
+export type LabQuote={id:string;lead_id:string;display_name:string;minutes:number;hourly_cents:number;expense_cents:string;fee_bps:number;margin_bps:number;cost_cents:string;price_cents:string};
 export type LabMutation={id:string}|{changed:boolean};
 export class LabClientError extends Error {
  readonly status:number;
@@ -47,9 +55,9 @@ export function createLabClient(fetcher:Fetcher=fetch){
   projects:(signal?:AbortSignal)=>request<LabProject[]>(endpoint,"GET",undefined,signal),
   leads:(signal?:AbortSignal)=>request<LabLead[]>(endpoint+"?scope=crm","GET",undefined,signal),
   evidence:(id:string,signal?:AbortSignal)=>request<LabEvidence[]>(projectPath(id),"GET",undefined,signal),
-  operations:(id:string,signal?:AbortSignal)=>request<unknown>(projectPath(id,"operations"),"GET",undefined,signal),
-  delivery:(id:string,signal?:AbortSignal)=>request<unknown>(projectPath(id,"delivery"),"GET",undefined,signal),
-  quotes:(signal?:AbortSignal)=>request<unknown>(endpoint+"?scope=quotes","GET",undefined,signal),
+  operations:(id:string,signal?:AbortSignal)=>request<LabOperations>(projectPath(id,"operations"),"GET",undefined,signal),
+  delivery:(id:string,signal?:AbortSignal)=>request<LabDelivery>(projectPath(id,"delivery"),"GET",undefined,signal),
+  quotes:(signal?:AbortSignal)=>request<LabQuote[]>(endpoint+"?scope=quotes","GET",undefined,signal),
   createEvidence:(body:{projectId:string;pillar:number;kind:LabEvidence["kind"];summary:string})=>request<LabEvidence>(endpoint,"POST",body),
   reviewEvidence:(body:{evidenceId:string;reviewed:boolean;reason:string})=>request<{changed:boolean}>(endpoint,"PATCH",body),
   mutate:(body:LabOperation)=>request<LabMutation>(endpoint,"PUT",body)
