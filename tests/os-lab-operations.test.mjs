@@ -98,3 +98,9 @@ test('quote accepts exact integer minutes, cents and basis points without client
  assert.deepEqual(validateOperation(q),q);
  for(const patch of [{minutes:0},{minutes:1.5},{hourlyCents:-1},{expenseCents:0,hourlyCents:0},{feeBps:8000},{marginBps:10000},{priceCents:208334},{approved:true},{orgId:id}])assert.equal(validateOperation({...q,...patch}),null);
 });
+
+test('action revalidation requires explicit reason and forbids overriding completion or revision',()=>{
+ const v={type:'action_revalidate',id:action.id,evidenceId,reason:' New review '};
+ assert.deepEqual(validateOperation(v),{...v,reason:'New review'});
+ for(const patch of [{reason:' '},{reason:'x'.repeat(501)},{evidenceId:'bad'},{done:true},{evidenceRevision:1},{projectId:id}])assert.equal(validateOperation({...v,...patch}),null);
+});
