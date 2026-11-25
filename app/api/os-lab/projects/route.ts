@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LAB_COOKIE } from "../../../../lib/os-lab/session";
-import { LabError, listLabProjects, listLabEvidence, createLabEvidence, reviewLabEvidence, listLabOperations, mutateLabOperation, listLabLeads } from "../../../../lib/os-lab/repository";
+import { LabError, listLabProjects, listLabEvidence, createLabEvidence, reviewLabEvidence, listLabOperations, mutateLabOperation, listLabLeads, getLabDelivery } from "../../../../lib/os-lab/repository";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,10 +43,10 @@ export async function GET(request: NextRequest) {
     const token=request.cookies.get(LAB_COOKIE)?.value;
     const projectId=request.nextUrl.searchParams.get("project");
     const scope=request.nextUrl.searchParams.get("scope");
-    if(scope!==null && scope!=="operations" && scope!=="crm") throw new LabError(400,"invalid_scope");
-    if(scope==="operations" && projectId===null) throw new LabError(400,"invalid_project");
+    if(scope!==null && scope!=="operations" && scope!=="crm" && scope!=="delivery") throw new LabError(400,"invalid_scope");
+    if((scope==="operations" || scope==="delivery") && projectId===null) throw new LabError(400,"invalid_project");
     if(scope==="crm" && projectId!==null) throw new LabError(400,"invalid_scope");
-    const data=scope==="crm"?await listLabLeads(token):scope==="operations" && projectId!==null?await listLabOperations(token,projectId):projectId===null?await listLabProjects(token):await listLabEvidence(token,projectId);
+    const data=scope==="delivery" && projectId!==null?await getLabDelivery(token,projectId):scope==="crm"?await listLabLeads(token):scope==="operations" && projectId!==null?await listLabOperations(token,projectId):projectId===null?await listLabProjects(token):await listLabEvidence(token,projectId);
     return json({ok:true,data});
   } catch(error) { return failure(error); }
 }
