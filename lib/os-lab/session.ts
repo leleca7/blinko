@@ -32,3 +32,11 @@ export function isSandboxConnection(connection: string): boolean {
     return (u.protocol==='postgresql:' || u.protocol==='postgres:') && u.hostname==='ep-old-art-bbztkcnw.c-15.us-east-1.aws.neon.tech' && u.pathname==='/blinko_sandbox' && u.username==='os_lab_runtime' && !!u.password && u.searchParams.get('sslmode')==='require' && !u.hash && (!u.port || u.port==='5432');
   } catch { return false; }
 }
+
+export function validateEvidenceReview(value: unknown): {evidenceId:string;reviewed:boolean;reason:string} | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const p=value as Record<string,unknown>;
+  if (Object.keys(p).some(k=>!['evidenceId','reviewed','reason'].includes(k))) return null;
+  if (!isLabUuid(p.evidenceId) || typeof p.reviewed !== 'boolean' || typeof p.reason !== 'string' || !p.reason.trim() || p.reason.trim().length>500) return null;
+  return {evidenceId:p.evidenceId.toLowerCase(),reviewed:p.reviewed,reason:p.reason.trim()};
+}
