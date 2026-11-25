@@ -41,3 +41,30 @@ test('appointment and ledger status updates accept only id and exact boolean',()
  for(const patch of [{done:'true'},{projectId:id},{id:'invalid'}])assert.equal(validateOperation({...event,...patch}),null);
  for(const patch of [{settled:'false'},{cents:1},{id:'invalid'},{settledAt:'2026-12-10'}])assert.equal(validateOperation({...entry,...patch}),null);
 });
+
+const lead={type:'lead_create',id,submissionId:evidenceId,company:'Empresa fictícia Teste',consent:true};
+test('CRM entry requires synthetic name and explicit consent, disallows supplied organization',()=>{
+ assert.deepEqual(validateOperation(lead),lead);
+ for(const patch of [{company:'Real company'},{consent:false},{submissionId:'invalid'},{orgId:id},{assignedMember:id},{stage:'diagnostico'}])assert.equal(validateOperation({...lead,...patch}),null);
+});
+test('CRM completion and transitions validate shape; database decides allowed transition',()=>{
+ const complete={type:'lead_complete',id,challenge:' Organização comercial '};
+ assert.equal(validateOperation(complete).challenge,'Organização comercial');
+ assert.equal(validateOperation({...complete,challenge:' '}),null);
+ assert.equal(validateOperation({...complete,intakeComplete:true}),null);
+ const move={type:'lead_move',id,expectedStage:'triagem',nextStage:'contato'};
+ assert.deepEqual(validateOperation(move),move);
+ assert.equal(validateOperation({...move,nextStage:'unknown'}),null);
+ assert.equal(validateOperation({...move,expectedStage:undefined}),null);
+});
+test('synthetic contract needs explicit confirmation and project metadata accepts nullable valid deadline',()=>{
+ const contract={type:'lead_contract',id,projectId:evidenceId,confirmed:true};
+ assert.deepEqual(validateOperation(contract),contract);
+ assert.equal(validateOperation({...contract,confirmed:false}),null);
+ assert.equal(validateOperation({...contract,orgId:id}),null);
+ const details={type:'project_details',id,stage:'Investigar',owner:'Pesquisa',due:null};
+ assert.deepEqual(validateOperation(details),details);
+ assert.equal(validateOperation({...details,due:'2026-02-30'}),null);
+ assert.equal(validateOperation({...details,owner:'other'}),null);
+ assert.equal(validateOperation({...details,stage:'other'}),null);
+});
