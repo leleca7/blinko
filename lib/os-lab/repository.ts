@@ -125,6 +125,8 @@ export async function mutateLabOperation(token:string|undefined,body:unknown) {
   ? sql`SELECT os_lab.save_radar_score(${op.projectId}::uuid,${op.pillar}::integer,${op.value}::integer,${op.evidenceId}::uuid) AS changed`
   : op.type==="action"
   ? sql`SELECT os_lab.create_action_item(${op.id}::uuid,${op.projectId}::uuid,${op.evidenceId}::uuid,${op.title},${op.owner},${op.due}::date,${op.gravity}::integer,${op.urgency}::integer,${op.tendency}::integer) AS changed`
+  : op.type==="action_revalidate"
+  ? sql`SELECT os_lab.revalidate_action(${op.id}::uuid,${op.evidenceId}::uuid,${op.reason}) AS changed`
   : op.type==="completion"
   ? sql`SELECT os_lab.set_action_done(${op.id}::uuid,${op.done}) AS changed`
   : op.type==="appointment"
