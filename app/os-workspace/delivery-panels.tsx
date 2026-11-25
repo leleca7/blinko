@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useState} from "react";
 import {createLabClient,labErrorMessage,type LabDelivery,type LabQuote,type LabLead} from "../../lib/os-lab/client";
+import {clientDeliveryText} from "../../lib/os-lab/delivery-export";
 import type {LabOperation} from "../../lib/os-lab/operations";
 import styles from "../os-preview/os-preview.module.css";
 const api=createLabClient();
@@ -33,6 +34,15 @@ export function DeliveryPanel({projectId,revision,mutate}:{projectId:string;revi
  useEffect(()=>{const c=new AbortController();setData(null);setError("");api.delivery(projectId,c.signal).then(x=>{if(!c.signal.aborted){if(!x||typeof x!=="object"||!("draft" in x)||!("preview" in x))throw Error("Invalid delivery");setData(x);}}).catch(e=>{if(!c.signal.aborted)setError(labErrorMessage(e));});return ()=>c.abort();},[projectId,revision]);
  if(!data)return <section className={styles.panel}><h2>Entregas</h2><p role="status">{error||"Consultando relatório e autorizações…"}</p></section>;
  const d=data.draft,p=data.preview;
+ async function exportPreview(){
+  setError("");
+  try{
+   const fresh=await api.delivery(projectId);
+   if(!fresh.preview){setData(fresh);setError("A autorização não está mais vigente. Revise novamente antes de exportar.");return;}
+   const blob=new Blob([clientDeliveryText(fresh.preview)],{type:"text/plain;charset=utf-8"});
+   const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="blinko-previa-"+projectId+".txt";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }catch(e){setError(labErrorMessage(e));}
+ }
  return <section className={styles.panel}><small>10 · DOCUMENTOS E ENTREGA</small><h2>Relatório e revisão humana</h2><p>Rascunho interno. Alterações no projeto invalidam revisões e autorizações anteriores.</p>
  <form onSubmit={e=>{e.preventDefault();mutate({type:"report_save",id:projectId,synthesis:field(new FormData(e.currentTarget),"synthesis")});}}><label>Síntese do diagnóstico<textarea name="synthesis" defaultValue={d?.synthesis??""} maxLength={2000} rows={6} required/></label><button type="submit">Salvar relatório</button></form>
  {d&&<><p>Revisão: {d.review_current?"Vigente":"Pendente ou desatualizada"}.</p>
@@ -44,6 +54,8 @@ export function DeliveryPanel({projectId,revision,mutate}:{projectId:string;revi
  <label><input type="checkbox" name="maturity" defaultChecked={d.show_maturity}/>Incluir indicador de maturidade</label><label><input type="checkbox" name="actions" defaultChecked={d.show_actions}/>Incluir títulos das ações</label><button type="submit">Salvar prévia</button></form>
  <button disabled={!d.review_current||!d.client_summary.trim()||!d.client_next_step.trim()} onClick={()=>mutate({type:"portal_approve",id:projectId,approved:true})}>Autorizar prévia interna</button>
  <button onClick={()=>mutate({type:"portal_approve",id:projectId,approved:false})}>Revogar autorização</button>
+ {error&&<p role="alert">{error}</p>}
+ {p&&<button onClick={()=>void exportPreview()}>Exportar prévia autorizada (.txt)</button>}
  {p?<article className={styles.portalCard}><div className={styles.reportBody}><h3>{p.company}</h3><p>{p.stage} · {p.due??"Sem prazo"}</p><p>{p.summary}</p><h3>Próxima etapa</h3><p>{p.nextStep}</p>{p.maturity&&<p>Maturidade: {p.maturity.value}% · {p.maturity.coverage}/10</p>}{p.actions.map((a,i)=><p key={i}>{a.title} · {a.due} · {a.done?"Concluída":"Em aberto"}</p>)}</div></article>:<p>Prévia bloqueada ou ainda não autorizada.</p>}</>}
  </section>;
 }
