@@ -137,7 +137,7 @@ try{
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'horizontal overflow on mobile');
  await page.screenshot({path:'test-artifacts/mobile.png',fullPage:true});
  mark('isolamento em memória entre projetos e largura mobile');
- for(const path of ['/api/os-lab/projects','/api/triagem','/interno']){
+ for(const path of ['/api/os-lab/projects','/api/triagem','/interno','/os-workspace']){
    const result=await page.request.get(origin+path);
    assert.equal(result.status(),404,path);
  }
