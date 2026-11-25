@@ -4,6 +4,8 @@ import {createLabClient,labErrorMessage,type LabLead,type LabProject,type LabEvi
 import type {LabOperation} from "../../lib/os-lab/operations";
 import styles from "../os-preview/os-preview.module.css";
 import OperationalPanels from "./operational-panels";
+import {QuotePanel,DeliveryPanel} from "./delivery-panels";
+import connected from "./workspace.module.css";
 const api=createLabClient();
 const stages=["triagem","contato","reuniao","proposta","diagnostico"];
 const stageLabels=["Triagem","Contato","Reunião","Proposta","Diagnóstico"];
@@ -61,7 +63,7 @@ export default function ConnectedWorkspace(){
   finally{setRevision(x=>x+1);setBusy(false);lock.current=false;}
  }
  const mutate=(op:LabOperation,success?:()=>void)=>run(()=>api.mutate(op),success);
- return <main className={styles.page}><div className={styles.shell}><aside className={styles.sidebar}><div className={styles.brand}><strong>blinko<span>*</span></strong><small>OS · LABORATÓRIO PROTEGIDO</small></div><div className={styles.sideFoot}>Apenas dados fictícios</div></aside><div className={styles.workspace}>
+ return <main className={styles.page}><div className={styles.shell}><aside className={styles.sidebar}><div className={styles.brand}><strong>blinko<span>*</span></strong><small>OS · LABORATÓRIO PROTEGIDO</small></div><div className={styles.sideFoot}>Apenas dados fictícios</div></aside><div className={styles.workspace+" "+connected.workspace}>
  <header className={styles.top}><strong>Integração · Operação de projetos</strong><button disabled={busy} onClick={()=>{setMessage("");setRevision(x=>x+1);}}>Atualizar registros</button></header>
  <p className={styles.notice}>Interface persistente em desenvolvimento. Não recebe clientes reais. Acesso e gravações dependem da sessão e da autorização do servidor.</p>
  <p role="status">{message||(!loaded?"Consultando registros autorizados…":"Registros consultados.")}</p>
@@ -88,5 +90,7 @@ export default function ConnectedWorkspace(){
  {evidence.map(item=><article key={item.id} className={styles.lead}><strong>{pillars[item.pillar]} · {kinds[item.kind]}</strong><p>{item.summary}</p><p>{item.reviewed?"Revisada":"Pendente"}</p><button disabled={!reason.trim()} onClick={()=>run(()=>api.reviewEvidence({evidenceId:item.id,reviewed:!item.reviewed,reason}),()=>setReason(""))}>{item.reviewed?"Revogar revisão":"Revisar evidência"}</button></article>)}
  </section>}
  {project&&<OperationalPanels key={project.id+":"+revision} projectId={project.id} evidence={evidence} revision={revision} mutate={mutate}/>}
+ {loaded&&<QuotePanel key={"quotes:"+revision} leads={leads} revision={revision} mutate={mutate}/>}
+ {project&&<DeliveryPanel key={project.id+":delivery:"+revision} projectId={project.id} revision={revision} mutate={mutate}/>}
  </fieldset></div></div></main>;
 }
