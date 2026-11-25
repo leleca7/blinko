@@ -3,6 +3,7 @@ import {useEffect,useRef,useState} from "react";
 import {createLabClient,labErrorMessage,type LabLead,type LabProject,type LabEvidence} from "../../lib/os-lab/client";
 import type {LabOperation} from "../../lib/os-lab/operations";
 import styles from "../os-preview/os-preview.module.css";
+import OperationalPanels from "./operational-panels";
 const api=createLabClient();
 const stages=["triagem","contato","reuniao","proposta","diagnostico"];
 const stageLabels=["Triagem","Contato","Reunião","Proposta","Diagnóstico"];
@@ -61,8 +62,8 @@ export default function ConnectedWorkspace(){
  }
  const mutate=(op:LabOperation,success?:()=>void)=>run(()=>api.mutate(op),success);
  return <main className={styles.page}><div className={styles.shell}><aside className={styles.sidebar}><div className={styles.brand}><strong>blinko<span>*</span></strong><small>OS · LABORATÓRIO PROTEGIDO</small></div><div className={styles.sideFoot}>Apenas dados fictícios</div></aside><div className={styles.workspace}>
- <header className={styles.top}><strong>Integração · CRM e evidências</strong><button disabled={busy} onClick={()=>{setMessage("");setRevision(x=>x+1);}}>Atualizar registros</button></header>
- <p className={styles.notice}>Primeira etapa da interface persistente. Não recebe clientes reais. Acesso e gravações dependem da sessão e da autorização do servidor.</p>
+ <header className={styles.top}><strong>Integração · Operação de projetos</strong><button disabled={busy} onClick={()=>{setMessage("");setRevision(x=>x+1);}}>Atualizar registros</button></header>
+ <p className={styles.notice}>Interface persistente em desenvolvimento. Não recebe clientes reais. Acesso e gravações dependem da sessão e da autorização do servidor.</p>
  <p role="status">{message||(!loaded?"Consultando registros autorizados…":"Registros consultados.")}</p>
  <fieldset disabled={busy||!loaded} style={{border:0,padding:0,margin:0,minWidth:0}}>
  <section className={styles.panel}><small>01 · CRM</small><h2>Oportunidades</h2>
@@ -75,7 +76,7 @@ export default function ConnectedWorkspace(){
  {!active.intake_complete&&<form onSubmit={e=>{e.preventDefault();mutate({type:"lead_complete",id:active.id,challenge});}}><label>Desafio identificado<input value={challenge} maxLength={500} onChange={e=>setChallenge(e.target.value)} required/></label><button type="submit">Concluir triagem</button></form>}
  {stages.indexOf(active.stage)>=0&&stages.indexOf(active.stage)<4&&<button onClick={()=>mutate({type:"lead_move",id:active.id,expectedStage:active.stage,nextStage:stages[stages.indexOf(active.stage)+1]})}>Avançar para {stageLabels[stages.indexOf(active.stage)+1]}</button>}
  {active.stage==="diagnostico"&&active.intake_complete&&!active.project_id&&<><label><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>Confirmar contratação fictícia</label><button disabled={!confirmed} onClick={()=>mutate({type:"lead_contract",id:active.id,projectId:crypto.randomUUID(),confirmed:true},()=>setConfirmed(false))}>Criar projeto</button></>}
- {active.project_id&&<button onClick={()=>setSelected(active.project_id??"")}>Abrir projeto vinculado</button>}</>}
+ {active.project_id&&<button onClick={()=>{setSelected(active.project_id??"");setEvidence([]);setReason("");setSummary("");}}>Abrir projeto vinculado</button>}</>}
  </section>
  <section className={styles.panel}><small>02 · PROJETOS</small><h2>Projeto ativo</h2><label>Projeto<select value={selected} onChange={e=>{setSelected(e.target.value);setEvidence([]);setReason("");setSummary("");}}><option value="">Selecionar projeto</option>{projects.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select></label>
  {project&&<><p>{project.method_stage} · {project.owner_label} · {project.due_on||"Sem prazo"}</p><form key={project.id} onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);mutate({type:"project_details",id:project.id,stage:String(f.get("stage")),owner:String(f.get("owner")),due:String(f.get("due")||"")||null});}}>
@@ -86,5 +87,6 @@ export default function ConnectedWorkspace(){
  <label>Justificativa para revisão<input value={reason} maxLength={500} onChange={e=>setReason(e.target.value)}/></label>
  {evidence.map(item=><article key={item.id} className={styles.lead}><strong>{pillars[item.pillar]} · {kinds[item.kind]}</strong><p>{item.summary}</p><p>{item.reviewed?"Revisada":"Pendente"}</p><button disabled={!reason.trim()} onClick={()=>run(()=>api.reviewEvidence({evidenceId:item.id,reviewed:!item.reviewed,reason}),()=>setReason(""))}>{item.reviewed?"Revogar revisão":"Revisar evidência"}</button></article>)}
  </section>}
+ {project&&<OperationalPanels key={project.id+":"+revision} projectId={project.id} evidence={evidence} revision={revision} mutate={mutate}/>}
  </fieldset></div></div></main>;
 }
