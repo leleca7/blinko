@@ -88,7 +88,7 @@ export default function ConnectedWorkspace(){
    document.getElementById("connected-crm")?.scrollIntoView({behavior:"smooth"});
   }else if(item.project_id){
    if(!projects.some(p=>p.id===item.project_id)){setMessage("Projeto fora da lista carregada. Consulte a listagem de projetos.");return;}
-   setSelected(item.project_id);setEvidence([]);setSummary("");setReason("");
+   if(item.project_id!==selected){setSelected(item.project_id);setEvidence([]);setSummary("");setReason("");}
    document.getElementById("connected-project")?.scrollIntoView({behavior:"smooth"});
   }
  }}/>}
@@ -102,7 +102,7 @@ export default function ConnectedWorkspace(){
  {!active.intake_complete&&<form onSubmit={e=>{e.preventDefault();mutate({type:"lead_complete",id:active.id,challenge});}}><label>Desafio identificado<input value={challenge} maxLength={500} onChange={e=>setChallenge(e.target.value)} required/></label><button type="submit">Concluir triagem</button></form>}
  {stages.indexOf(active.stage)>=0&&stages.indexOf(active.stage)<4&&<button onClick={()=>mutate({type:"lead_move",id:active.id,expectedStage:active.stage,nextStage:stages[stages.indexOf(active.stage)+1]})}>Avançar para {stageLabels[stages.indexOf(active.stage)+1]}</button>}
  {active.stage==="diagnostico"&&active.intake_complete&&!active.project_id&&<><label><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>Confirmar contratação fictícia</label><button disabled={!confirmed} onClick={()=>mutate({type:"lead_contract",id:active.id,projectId:crypto.randomUUID(),confirmed:true},()=>setConfirmed(false))}>Criar projeto</button></>}
- {active.project_id&&<button onClick={()=>{setSelected(active.project_id??"");setEvidence([]);setReason("");setSummary("");}}>Abrir projeto vinculado</button>}</>}
+ {active.project_id&&<button onClick={()=>{if(active.project_id!==selected){setSelected(active.project_id??"");setEvidence([]);setReason("");setSummary("");}}}>Abrir projeto vinculado</button>}</>}
  </section>
  <section id="connected-project" className={styles.panel}><small>02 · PROJETOS</small><h2>Projeto ativo</h2><label>Projeto<select value={selected} onChange={e=>{setSelected(e.target.value);setEvidence([]);setReason("");setSummary("");}}><option value="">Selecionar projeto</option>{projects.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select></label>
  {project&&<><p>{project.method_stage} · {project.owner_label} · {project.due_on||"Sem prazo"}</p><form key={project.id} onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);mutate({type:"project_details",id:project.id,stage:String(f.get("stage")),owner:String(f.get("owner")),due:String(f.get("due")||"")||null});}}>
