@@ -141,6 +141,11 @@ try{
    const result=await page.request.get(origin+path);
    assert.equal(result.status(),404,path);
  }
+ for(const method of ['POST','PATCH','PUT','DELETE']){
+   const result=await page.request.fetch(origin+'/api/os-lab/projects',{method,data:{type:'synthetic-disabled-probe'},headers:{origin}});
+   assert.equal(result.status(),404,method+' disabled lab route');
+   assert.match(result.headers()['cache-control']??'',/no-store/);
+ }
  assert.deepEqual(errors,[]);
  // External resources are reported, not silently treated as safe.
  console.log('External requests observed: '+JSON.stringify([...new Set(requests)].map(url=>new URL(url).origin)));
