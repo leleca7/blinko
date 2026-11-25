@@ -6,6 +6,7 @@ import styles from "../os-preview/os-preview.module.css";
 import OperationalPanels from "./operational-panels";
 import {QuotePanel,DeliveryPanel} from "./delivery-panels";
 import connected from "./workspace.module.css";
+import DailyQueue from "./daily-queue";
 const api=createLabClient();
 const stages=["triagem","contato","reuniao","proposta","diagnostico"];
 const stageLabels=["Triagem","Contato","Reunião","Proposta","Diagnóstico"];
@@ -80,7 +81,18 @@ export default function ConnectedWorkspace(){
  <p className={styles.notice}>Interface persistente em desenvolvimento. Não recebe clientes reais. Acesso e gravações dependem da sessão e da autorização do servidor.</p>
  <p role="status">{message||(!loaded?"Consultando registros autorizados…":"Registros consultados.")}</p>
  <fieldset disabled={busy||!loaded} style={{border:0,padding:0,margin:0,minWidth:0}}>
- <section className={styles.panel}><small>01 · CRM</small><h2>Oportunidades</h2>
+ {loaded&&<DailyQueue key={"queue:"+revision} revision={revision} onOpen={item=>{
+  if(item.kind==="lead"){
+   if(!leads.some(l=>l.id===item.id)){setMessage("Oportunidade fora da lista carregada. Consulte o registro pelo CRM.");return;}
+   setLeadId(item.id);setConfirmed(false);setChallenge("Organização comercial");setSelected("");setSummary("");setReason("");
+   document.getElementById("connected-crm")?.scrollIntoView({behavior:"smooth"});
+  }else if(item.project_id){
+   if(!projects.some(p=>p.id===item.project_id)){setMessage("Projeto fora da lista carregada. Consulte a listagem de projetos.");return;}
+   setSelected(item.project_id);setEvidence([]);setSummary("");setReason("");
+   document.getElementById("connected-project")?.scrollIntoView({behavior:"smooth"});
+  }
+ }}/>}
+ <section id="connected-crm" className={styles.panel}><small>01 · CRM</small><h2>Oportunidades</h2>
  <form onSubmit={e=>{e.preventDefault();if(!consent||!company.trim().startsWith("Empresa fictícia "))return;leadKey.current??={id:crypto.randomUUID(),submissionId:crypto.randomUUID()};mutate({type:"lead_create",...leadKey.current,company,consent:true},()=>{setCompany("Empresa fictícia ");setConsent(false);leadKey.current=null;});}}>
  <label>Nome fictício<input value={company} maxLength={120} onChange={e=>{setCompany(e.target.value);leadKey.current=null;}} required/></label>
  <label><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>Consentimento simulado</label>
@@ -92,7 +104,7 @@ export default function ConnectedWorkspace(){
  {active.stage==="diagnostico"&&active.intake_complete&&!active.project_id&&<><label><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>Confirmar contratação fictícia</label><button disabled={!confirmed} onClick={()=>mutate({type:"lead_contract",id:active.id,projectId:crypto.randomUUID(),confirmed:true},()=>setConfirmed(false))}>Criar projeto</button></>}
  {active.project_id&&<button onClick={()=>{setSelected(active.project_id??"");setEvidence([]);setReason("");setSummary("");}}>Abrir projeto vinculado</button>}</>}
  </section>
- <section className={styles.panel}><small>02 · PROJETOS</small><h2>Projeto ativo</h2><label>Projeto<select value={selected} onChange={e=>{setSelected(e.target.value);setEvidence([]);setReason("");setSummary("");}}><option value="">Selecionar projeto</option>{projects.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select></label>
+ <section id="connected-project" className={styles.panel}><small>02 · PROJETOS</small><h2>Projeto ativo</h2><label>Projeto<select value={selected} onChange={e=>{setSelected(e.target.value);setEvidence([]);setReason("");setSummary("");}}><option value="">Selecionar projeto</option>{projects.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select></label>
  {project&&<><p>{project.method_stage} · {project.owner_label} · {project.due_on||"Sem prazo"}</p><form key={project.id} onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);mutate({type:"project_details",id:project.id,stage:String(f.get("stage")),owner:String(f.get("owner")),due:String(f.get("due")||"")||null});}}>
  <label>Etapa<select name="stage" defaultValue={project.method_stage}>{["Escutar","Investigar","Priorizar","Estruturar","Acompanhar"].map(s=><option key={s}>{s}</option>)}</select></label><label>Responsável<select name="owner" defaultValue={project.owner_label}>{["A definir","Atendimento","Pesquisa","Produção","Equipe"].map(s=><option key={s}>{s}</option>)}</select></label><label>Prazo<input name="due" type="date" defaultValue={project.due_on||""}/></label><button type="submit">Salvar detalhes</button></form></>}
  </section>
