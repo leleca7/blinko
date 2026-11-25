@@ -1,0 +1,3 @@
+# Blinko OS — Referências
+
+Branch experimental isolada, sem alteração de produção ou autenticação. Preservar os ativos transparentes existentes: /brand/logo-fundo-verde.svg e /brand/logo-fundo-claro.svg. Referência visual: menu verde, destaque rosa, cartões creme, filtros e abas. Conteúdo estratégico e mensagens privadas não devem ser versionados no repositório público. Fase 1: interface com dados fictícios ou importação local em sessão, sem persistência. Fase 2: Neon e permissões existentes, somente após aceite técnico e aprovação explícita. Não liberar rotas protegidas. Não transformar inspiração em requisito técnico nem hipóteses em decisões aprovadas.
