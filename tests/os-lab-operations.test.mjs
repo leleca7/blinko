@@ -20,3 +20,24 @@ test('completion is boolean and cannot change ownership, project or evidence',()
  assert.equal(validateOperation({...c,done:false}).done,false);
  for(const patch of [{done:'true'},{id:'invalid'},{projectId:id},{evidenceId},{actorId:id}])assert.equal(validateOperation({...c,...patch}),null);
 });
+
+const appointment={type:'appointment',id:action.id,projectId:id,title:' Synthetic meeting ',kind:'Reunião',due:'2026-12-10'};
+const ledger={type:'ledger',id:action.id,projectId:id,label:' Synthetic receipt ',kind:'income',cents:200000,due:'2026-12-10'};
+test('appointments require an allowed type, valid date and no initial completion flag',()=>{
+ assert.deepEqual(validateOperation(appointment),{...appointment,title:'Synthetic meeting'});
+ for(const patch of [{kind:'other'},{due:'2026-02-29'},{title:' '},{done:true},{orgId:id}])assert.equal(validateOperation({...appointment,...patch}),null);
+ assert.equal(validateOperation({...appointment,due:'2028-02-29'}).due,'2028-02-29');
+});
+test('ledger accepts exact positive integer cents, not client settlement or actor fields',()=>{
+ assert.deepEqual(validateOperation(ledger),{...ledger,label:'Synthetic receipt'});
+ assert.equal(validateOperation({...ledger,kind:'expense',cents:1}).cents,1);
+ for(const patch of [{cents:0},{cents:-1},{cents:1.5},{cents:'200000'},{cents:10000000001},{kind:'other'},{settled:true},{settledAt:'2026-12-10'},{actorId:id},{due:'2026-13-01'}])assert.equal(validateOperation({...ledger,...patch}),null);
+});
+test('appointment and ledger status updates accept only id and exact boolean',()=>{
+ const event={type:'appointment_done',id:action.id,done:true};
+ const entry={type:'ledger_settled',id:action.id,settled:false};
+ assert.deepEqual(validateOperation(event),event);
+ assert.deepEqual(validateOperation(entry),entry);
+ for(const patch of [{done:'true'},{projectId:id},{id:'invalid'}])assert.equal(validateOperation({...event,...patch}),null);
+ for(const patch of [{settled:'false'},{cents:1},{id:'invalid'},{settledAt:'2026-12-10'}])assert.equal(validateOperation({...entry,...patch}),null);
+});
