@@ -142,7 +142,7 @@ jobs:
           s=p.read_text()
           anchor=' const origin=process.env.BLINKO_OS_LAB_ORIGIN;'
           assert anchor in s
-          p.write_text(s.replace(anchor,anchor+'\\n console.info("CI origin check", {expected:origin, received:request.headers.get("origin"), actual:request.nextUrl.origin});'))
+          p.write_text(s.replace(anchor,anchor+'\n console.info("CI origin check", {expected:origin, received:request.headers.get("origin"), actual:request.nextUrl.origin});'))
           p=Path('proxy.ts')
           s=p.read_text()
           anchor='  const pathname = request.nextUrl.pathname;'
