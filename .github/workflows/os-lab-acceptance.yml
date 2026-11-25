@@ -65,7 +65,7 @@ jobs:
 
   database-integration:
     runs-on: ubuntu-24.04
-    timeout-minutes: 8
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:18
@@ -102,3 +102,55 @@ jobs:
           done
           psql -X -v ON_ERROR_STOP=1 -f tests/os-lab-integration.sql
           psql -X -v ON_ERROR_STOP=1 -f tests/os-lab-auth-integration.sql
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Authenticated HTTP test in disposable local checkout
+        shell: bash
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: sandbox_owner
+          PGPASSWORD: synthetic-ci-only
+          PGDATABASE: blinko_sandbox
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: |
+          set -euo pipefail
+          TEST_DIR="$(mktemp -d)"
+          trap 'if [ -n "${SERVER_PID:-}" ]; then kill "$SERVER_PID" 2>/dev/null || true; fi; rm -rf "$TEST_DIR"' EXIT
+          git archive HEAD | tar -x -C "$TEST_DIR"
+          cd "$TEST_DIR"
+          export BLINKO_CI_DISPOSABLE=yes
+          export BLINKO_OS_LAB_ENABLED=true
+          export BLINKO_OS_LAB_ORIGIN=https://127.0.0.1:3211
+          export BLINKO_OS_LAB_SESSION_SECRET="$(openssl rand -hex 32)"
+          export BLINKO_OS_LAB_DATABASE_URL='postgresql://os_lab_runtime:synthetic-ci-only@ep-old-art-bbztkcnw.c-15.us-east-1.aws.neon.tech/blinko_sandbox?sslmode=require'
+          export BLINKO_OS_LAB_ISSUER_URL='postgresql://os_lab_issuer:synthetic-ci-only@ep-old-art-bbztkcnw.c-15.us-east-1.aws.neon.tech/blinko_sandbox?sslmode=require'
+          unset VERCEL_ENV
+          # Only the local disposable service receives login-enabled roles.
+          psql -X -v ON_ERROR_STOP=1 -c "ALTER ROLE os_lab_runtime LOGIN PASSWORD 'synthetic-ci-only'; ALTER ROLE os_lab_issuer LOGIN PASSWORD 'synthetic-ci-only';"
+          cp tests/os-lab-ci-pg-adapter.mjs lib/os-lab/ci-pg-adapter.mjs
+          python3 - <<'PY'
+          from pathlib import Path
+          for filename in ['lib/os-lab/auth.ts','lib/os-lab/repository.ts']:
+              p=Path(filename)
+              s=p.read_text()
+              assert '@neondatabase/serverless' in s
+              p.write_text(s.replace('@neondatabase/serverless','./ci-pg-adapter.mjs'))
+          p=Path('proxy.ts')
+          s=p.read_text()
+          anchor='  const pathname = request.nextUrl.pathname;'
+          assert anchor in s
+          p.write_text(s.replace(anchor,anchor+'\n  if (["/os-workspace","/os-workspace/login","/api/os-lab/projects","/api/os-lab/session"].includes(pathname)) return NextResponse.next();'))
+          PY
+          npm install --no-save --package-lock=false playwright@1.56.1 pg@8
+          npx playwright install --with-deps chromium
+          openssl req -x509 -newkey rsa:2048 -nodes -keyout ci-key.pem -out ci-cert.pem -days 1 -subj '/CN=127.0.0.1' -addext 'subjectAltName=IP:127.0.0.1' >/dev/null 2>&1
+          npm run dev -- --hostname 127.0.0.1 --port 3211 --experimental-https --experimental-https-key ci-key.pem --experimental-https-cert ci-cert.pem >ci-next.log 2>&1 &
+          SERVER_PID=$!
+          for i in $(seq 1 60); do
+            if curl -kf --silent --max-time 5 https://127.0.0.1:3211/os-workspace/login >/dev/null; then break; fi
+            sleep 2
+          done
+          curl -kf --silent --max-time 30 https://127.0.0.1:3211/os-workspace/login >/dev/null || { tail -80 ci-next.log; exit 1; }
+          node tests/os-lab-http.mjs || { tail -80 ci-next.log; exit 1; }
