@@ -5,7 +5,9 @@ export type LabLead={id:string;display_name:string;stage:string;intake_complete:
 export type LabEvidence={id:string;pillar:number;kind:"fact"|"report"|"hypothesis";summary:string;reviewed:boolean};
 export type LabMutation={id:string}|{changed:boolean};
 export class LabClientError extends Error {
- constructor(public readonly status:number,public readonly code:string){super(code);}
+ readonly status:number;
+ readonly code:string;
+ constructor(status:number,code:string){super(code);this.status=status;this.code=code;}
 }
 const endpoint="/api/os-lab/projects";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -31,6 +33,14 @@ export function createLabClient(fetcher:Fetcher=fetch){
   const p=parsed as Record<string,unknown>;
   if(!res.ok||p.ok!==true)throw new LabClientError(res.status,typeof p.error==="string"&&/^[a-z_]{1,80}$/.test(p.error)?p.error:"request_failed");
   if(!Object.prototype.hasOwnProperty.call(p,"data"))throw new LabClientError(res.status,"invalid_response");
+  if(method==="PUT"||method==="PATCH") {
+   const d=p.data as Record<string,unknown>|null;
+   if(!d||typeof d!=="object"||Array.isArray(d)||!(typeof d.changed==="boolean"||typeof d.id==="string"&&uuid.test(d.id)))throw new LabClientError(res.status,"invalid_response");
+  }
+  if(method==="POST") {
+   const d=p.data as Record<string,unknown>|null;
+   if(!d||typeof d!=="object"||Array.isArray(d)||typeof d.id!=="string"||!uuid.test(d.id))throw new LabClientError(res.status,"invalid_response");
+  }
   return p.data as T;
  }
  return {
