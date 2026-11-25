@@ -7,7 +7,12 @@ type AppointmentCommand = {type:"appointment";id:string;projectId:string;title:s
 type AppointmentDoneCommand = {type:"appointment_done";id:string;done:boolean};
 type LedgerCommand = {type:"ledger";id:string;projectId:string;label:string;kind:"income"|"expense";cents:number;due:string};
 type LedgerSettledCommand = {type:"ledger_settled";id:string;settled:boolean};
-export type LabOperation = ScoreCommand|ActionCommand|CompletionCommand|AppointmentCommand|AppointmentDoneCommand|LedgerCommand|LedgerSettledCommand;
+type LeadCreate = {type:"lead_create";id:string;submissionId:string;company:string;consent:true};
+type LeadComplete = {type:"lead_complete";id:string;challenge:string};
+type LeadMove = {type:"lead_move";id:string;expectedStage:string;nextStage:string};
+type LeadContract = {type:"lead_contract";id:string;projectId:string;confirmed:true};
+type ProjectDetails = {type:"project_details";id:string;stage:string;owner:string;due:string|null};
+export type LabOperation = ScoreCommand|ActionCommand|CompletionCommand|AppointmentCommand|AppointmentDoneCommand|LedgerCommand|LedgerSettledCommand|LeadCreate|LeadComplete|LeadMove|LeadContract|ProjectDetails;
 const intIn=(value:unknown,min:number,max:number):value is number=>typeof value==="number"&&Number.isInteger(value)&&value>=min&&value<=max;
 const allowed=(p:Record<string,unknown>,keys:string[])=>Object.keys(p).every(k=>keys.includes(k));
 function validDate(v:unknown):v is string {
@@ -45,6 +50,27 @@ export function validateOperation(value:unknown):LabOperation|null {
  if(p.type==="ledger_settled"){
   if(!allowed(p,["type","id","settled"])||!isLabUuid(p.id)||typeof p.settled!=="boolean")return null;
   return {type:"ledger_settled",id:p.id.toLowerCase(),settled:p.settled};
+ }
+ if(p.type==="lead_create"){
+  if(!allowed(p,["type","id","submissionId","company","consent"])||!isLabUuid(p.id)||!isLabUuid(p.submissionId)||p.consent!==true||typeof p.company!=="string"||!p.company.trim().startsWith("Empresa fictícia ")||p.company.trim().length>120)return null;
+  return {type:"lead_create",id:p.id.toLowerCase(),submissionId:p.submissionId.toLowerCase(),company:p.company.trim(),consent:true};
+ }
+ if(p.type==="lead_complete"){
+  if(!allowed(p,["type","id","challenge"])||!isLabUuid(p.id)||typeof p.challenge!=="string"||!p.challenge.trim()||p.challenge.trim().length>500)return null;
+  return {type:"lead_complete",id:p.id.toLowerCase(),challenge:p.challenge.trim()};
+ }
+ if(p.type==="lead_move"){
+  const stages=["triagem","contato","reuniao","proposta","diagnostico"];
+  if(!allowed(p,["type","id","expectedStage","nextStage"])||!isLabUuid(p.id)||typeof p.expectedStage!=="string"||typeof p.nextStage!=="string"||!stages.includes(p.expectedStage)||!stages.includes(p.nextStage))return null;
+  return {type:"lead_move",id:p.id.toLowerCase(),expectedStage:p.expectedStage,nextStage:p.nextStage};
+ }
+ if(p.type==="lead_contract"){
+  if(!allowed(p,["type","id","projectId","confirmed"])||!isLabUuid(p.id)||!isLabUuid(p.projectId)||p.confirmed!==true)return null;
+  return {type:"lead_contract",id:p.id.toLowerCase(),projectId:p.projectId.toLowerCase(),confirmed:true};
+ }
+ if(p.type==="project_details"){
+  if(!allowed(p,["type","id","stage","owner","due"])||!isLabUuid(p.id)||typeof p.stage!=="string"||!["Escutar","Investigar","Priorizar","Estruturar","Acompanhar"].includes(p.stage)||typeof p.owner!=="string"||!["A definir","Atendimento","Pesquisa","Produção","Equipe"].includes(p.owner)||(p.due!==null&&!validDate(p.due)))return null;
+  return {type:"project_details",id:p.id.toLowerCase(),stage:p.stage,owner:p.owner,due:p.due};
  }
  return null;
 }
