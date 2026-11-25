@@ -60,24 +60,30 @@ export function DeliveryPanel({projectId,revision,mutate}:{projectId:string;revi
  <button onClick={()=>mutate({type:"portal_approve",id:projectId,approved:false})}>Revogar autorização</button>
  {error&&<p role="alert">{error}</p>}
  {p&&<><button onClick={()=>void exportPreview("txt")}>Exportar prévia autorizada (.txt)</button><button onClick={()=>void exportPreview("pdf")}>Imprimir / salvar prévia em PDF</button></>}
- {p?<article className={styles.portalCard}><div className={styles.reportBody}><h3>{p.company}</h3><p>{p.stage} · {p.due??"Sem prazo"}</p><p>{p.summary}</p><h3>Próxima etapa</h3><p>{p.nextStep}</p>{p.maturity&&<p>Maturidade: {p.maturity.value}% · {p.maturity.coverage}/10</p>}{p.actions.map((a,i)=><p key={i}>{a.title} · {a.due} · {a.done?"Concluída":"Em aberto"}</p>)}</div></article>:<p>Prévia bloqueada ou ainda não autorizada.</p>}</>}
+ {p?<article className={styles.portalCard}><header className={styles.reportCover}><div><small>PRÉVIA INTERNA · DADOS FICTÍCIOS</small><h2>Entrega do diagnóstico</h2></div><img className={styles.reportLogo} src="/brand/logo-fundo-verde.svg" alt="Blinko Studio"/></header><div className={styles.reportBody}><h3>{p.company}</h3><p>{p.stage} · {p.due??"Sem prazo"}</p><p>{p.summary}</p><h3>Próxima etapa</h3><p>{p.nextStep}</p>{p.maturity&&<p>Maturidade: {p.maturity.value}% · {p.maturity.coverage}/10</p>}{p.actions.map((a,i)=><p key={i}>{a.title} · {a.due} · {a.done?"Concluída":"Em aberto"}</p>)}</div></article>:<p>Prévia bloqueada ou ainda não autorizada.</p>}</>}
  </section>;
 }
 
 function renderPrintPreview(target:Window,p:NonNullable<LabDelivery["preview"]>){
  if(target.closed)return;
  const doc=target.document;
- doc.title="Blinko — prévia autorizada";
  doc.documentElement.lang="pt-BR";
  const style=doc.createElement("style");
- style.textContent="@page{size:A4;margin:18mm}*{box-sizing:border-box}body{font:11pt/1.55 Arial,sans-serif;color:#01301e;background:#fff;margin:0;padding:24px}main{max-width:760px;margin:auto}header{border-bottom:2px solid #01301e;padding-bottom:16px;margin-bottom:24px}h1{font:28pt Georgia,serif;margin:8px 0}h2{font:16pt Georgia,serif;margin:22px 0 8px}p,li{white-space:pre-wrap;overflow-wrap:anywhere}small{color:#52685a}li{margin-bottom:8px;break-inside:avoid}h2{break-after:avoid}button{font:inherit;padding:10px 18px;border:1px solid #01301e;border-radius:6px;background:#01301e;color:white;cursor:pointer}footer{border-top:1px solid #ccc;margin-top:24px;padding-top:10px;font-size:9pt} @media print{body{padding:0}button{display:none}}";
+ style.textContent="@page{size:A4;margin:30mm 20mm 20mm 30mm;@bottom-left{content:'BLINKO STUDIO | DOCUMENTO EXPERIMENTAL';font:8pt Arial;color:#52685a}@bottom-right{content:counter(page) ' / ' counter(pages);font:8pt Arial;color:#52685a}}*{box-sizing:border-box}body{font:12pt/1.5 Arial,sans-serif;color:#18382a;background:#fff;margin:0;padding:28px}main{max-width:760px;margin:auto}header{position:relative;display:flex;align-items:center;gap:16pt;background:#01301e;color:white;border-radius:10px;border-bottom:5px solid #ef3c7f;padding:18pt;margin-bottom:18pt;break-inside:avoid}header div{min-width:0;flex:1}header img{width:30mm;height:auto;flex-shrink:0}h1{font:700 21pt/1.18 Arial,sans-serif;margin:8pt 0;overflow-wrap:anywhere}h2{font:700 13pt/1.3 Arial,sans-serif;margin:0 0 9pt;break-after:avoid;color:#01301e}p,li{white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 9pt}section{border:1px solid #dce2d8;border-radius:9px;padding:13pt;margin:12pt 0}section.highlight{background:#f5f1e9;border-left:4px solid #ef3c7f}header small{color:#f6ece3;font-size:9pt;letter-spacing:.05em}header p{font-size:10pt;margin:5pt 0 0}li{margin-bottom:6pt;break-inside:avoid}ul{padding-left:20pt;margin:0}button{display:block;max-width:760px;margin:0 auto 20px;font:inherit;padding:10px 18px;border:1px solid #01301e;border-radius:6px;background:#01301e;color:white;cursor:pointer}footer{border-top:1px solid #dce2d8;margin-top:18pt;padding-top:10pt;font-size:9pt;color:#52685a;break-inside:avoid}@media print{body{padding:0}button{display:none}main{max-width:none}header,section{print-color-adjust:exact;-webkit-print-color-adjust:exact}}";
  doc.head.replaceChildren(style);doc.title="Blinko — prévia autorizada";
  const add=(parent:HTMLElement,tag:string,text:string)=>{const el=doc.createElement(tag);el.textContent=text;parent.append(el);return el;};
- const main=doc.createElement("main");const header=doc.createElement("header");
- add(header,"small","BLINKO OS | AMBIENTE EXPERIMENTAL — DADOS FICTÍCIOS");add(header,"h1",p.company);add(header,"p","Prévia interna de entrega");add(header,"small","Etapa: "+p.stage+" | Prazo: "+(p.due??"Não definido"));main.append(header);
- add(main,"h2","Síntese");add(main,"p",p.summary);add(main,"h2","Próxima etapa");add(main,"p",p.nextStep);
- if(p.maturity){add(main,"h2","Maturidade");add(main,"p",p.maturity.value+"% · "+p.maturity.coverage+"/10 pilares");}
- if(p.actions.length){add(main,"h2","Plano de ação");const list=doc.createElement("ul");for(const action of p.actions)add(list,"li",action.title+" | "+action.due+" | "+(action.done?"Concluída":"Em aberto"));main.append(list);}
+ const main=doc.createElement("main"),header=doc.createElement("header"),intro=doc.createElement("div");
+ add(intro,"small","DIAGNÓSTICO ORGANIZACIONAL | DADOS FICTÍCIOS");
+ add(intro,"h1",p.company);add(intro,"p","Prévia interna de entrega");add(intro,"p","Etapa: "+p.stage+" | Prazo: "+(p.due??"Não definido"));
+ header.append(intro);
+ const logo=doc.createElement("img");logo.src=new URL("/brand/logo-fundo-verde.svg",window.location.origin).href;logo.alt="Blinko Studio — Criatividade que conecta";header.append(logo);main.append(header);
+ const section=(title:string,highlight=false)=>{const s=doc.createElement("section");if(highlight)s.className="highlight";add(s,"h2",title);main.append(s);return s;};
+ let n=1;
+ const heading=(label:string)=>String(n++).padStart(2,"0")+" | "+label;
+ add(section(heading("Síntese")),"p",p.summary);
+ if(p.maturity)add(section(heading("Maturidade"),true),"p",p.maturity.value+"% · "+p.maturity.coverage+"/10 pilares");
+ if(p.actions.length){const s=section(heading("Plano de ação")),list=doc.createElement("ul");for(const action of p.actions)add(list,"li",action.title+" | "+action.due+" | "+(action.done?"Concluída":"Em aberto"));s.append(list);}
+ add(section(heading("Próxima etapa"),true),"p",p.nextStep);
  add(main,"footer","Prévia autorizada no momento da consulta. Alterações posteriores podem invalidá-la. Não enviar a clientes reais.");
- const print=doc.createElement("button");print.textContent="Imprimir / salvar como PDF";print.addEventListener("click",()=>target.print());doc.body.replaceChildren(print,main);
+ const print=doc.createElement("button");print.textContent="Imprimir / salvar como PDF";print.disabled=true;logo.addEventListener("load",()=>{print.disabled=false;},{once:true});logo.addEventListener("error",()=>{print.textContent="Logo indisponível — reabra a prévia";},{once:true});print.addEventListener("click",()=>target.print());doc.body.replaceChildren(print,main);if(logo.complete&&logo.naturalWidth>0)print.disabled=false;
 }
