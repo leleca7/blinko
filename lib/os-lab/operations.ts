@@ -3,7 +3,11 @@ const isLabUuid=(v:unknown):v is string=>typeof v==="string"&&/^[0-9a-f]{8}-[0-9
 type ScoreCommand = {type:"score";projectId:string;pillar:number;value:number;evidenceId:string};
 type ActionCommand = {type:"action";id:string;projectId:string;evidenceId:string;title:string;owner:string;due:string;gravity:number;urgency:number;tendency:number};
 type CompletionCommand = {type:"completion";id:string;done:boolean};
-export type LabOperation = ScoreCommand|ActionCommand|CompletionCommand;
+type AppointmentCommand = {type:"appointment";id:string;projectId:string;title:string;kind:string;due:string};
+type AppointmentDoneCommand = {type:"appointment_done";id:string;done:boolean};
+type LedgerCommand = {type:"ledger";id:string;projectId:string;label:string;kind:"income"|"expense";cents:number;due:string};
+type LedgerSettledCommand = {type:"ledger_settled";id:string;settled:boolean};
+export type LabOperation = ScoreCommand|ActionCommand|CompletionCommand|AppointmentCommand|AppointmentDoneCommand|LedgerCommand|LedgerSettledCommand;
 const intIn=(value:unknown,min:number,max:number):value is number=>typeof value==="number"&&Number.isInteger(value)&&value>=min&&value<=max;
 const allowed=(p:Record<string,unknown>,keys:string[])=>Object.keys(p).every(k=>keys.includes(k));
 function validDate(v:unknown):v is string {
@@ -25,6 +29,22 @@ export function validateOperation(value:unknown):LabOperation|null {
  if(p.type==="completion"){
   if(!allowed(p,["type","id","done"])||!isLabUuid(p.id)||typeof p.done!=="boolean")return null;
   return {type:"completion",id:p.id.toLowerCase(),done:p.done};
+ }
+ if(p.type==="appointment"){
+  if(!allowed(p,["type","id","projectId","title","kind","due"])||!isLabUuid(p.id)||!isLabUuid(p.projectId)||typeof p.title!=="string"||!p.title.trim()||p.title.trim().length>120||typeof p.kind!=="string"||!["Reunião","Entrevista","Visita","Entrega","Revisão"].includes(p.kind)||!validDate(p.due))return null;
+  return {type:"appointment",id:p.id.toLowerCase(),projectId:p.projectId.toLowerCase(),title:p.title.trim(),kind:p.kind,due:p.due};
+ }
+ if(p.type==="appointment_done"){
+  if(!allowed(p,["type","id","done"])||!isLabUuid(p.id)||typeof p.done!=="boolean")return null;
+  return {type:"appointment_done",id:p.id.toLowerCase(),done:p.done};
+ }
+ if(p.type==="ledger"){
+  if(!allowed(p,["type","id","projectId","label","kind","cents","due"])||!isLabUuid(p.id)||!isLabUuid(p.projectId)||typeof p.label!=="string"||!p.label.trim()||p.label.trim().length>120||(p.kind!=="income"&&p.kind!=="expense")||!intIn(p.cents,1,10000000000)||!validDate(p.due))return null;
+  return {type:"ledger",id:p.id.toLowerCase(),projectId:p.projectId.toLowerCase(),label:p.label.trim(),kind:p.kind,cents:p.cents,due:p.due};
+ }
+ if(p.type==="ledger_settled"){
+  if(!allowed(p,["type","id","settled"])||!isLabUuid(p.id)||typeof p.settled!=="boolean")return null;
+  return {type:"ledger_settled",id:p.id.toLowerCase(),settled:p.settled};
  }
  return null;
 }
