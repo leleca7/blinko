@@ -63,6 +63,9 @@ try{
  await page.waitForURL('**/os-workspace/login');
  const revoked=await request('GET',endpoint,undefined,401,{cookie:cookie.name+'='+cookie.value});
  assert.equal(revoked.body.error,'session_inactive');
+ const revokedPage=await context.request.get(origin+'/os-workspace',{headers:{cookie:cookie.name+'='+cookie.value}});
+ assert.equal(revokedPage.status(),404);
+ console.log('PASS revoked cookie denied at workspace entry');
  console.log('PASS operator login, secure cookie, persistent CRM, project and logout');
  await page.getByLabel('Código de acesso').fill(codes.admin);
  await page.getByRole('button',{name:'Entrar',exact:true}).click();
