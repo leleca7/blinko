@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
 import {randomBytes,createHash,randomUUID} from 'node:crypto';
 import {chromium} from 'playwright';
 import {Pool} from 'pg';
@@ -123,6 +124,19 @@ try{
  await page.getByText('Synthetic cause → Synthetic effect',{exact:true}).waitFor();
  await page.locator('article').getByText('Estimativa R$ 2.083,34',{exact:true}).waitFor();
  await page.locator('article').getByText('Synthetic client summary',{exact:true}).waitFor();
+ const downloadEvent=page.waitForEvent('download');
+ await page.getByRole('button',{name:'Exportar prévia autorizada (.txt)',exact:true}).click();
+ const download=await downloadEvent;
+ const exported=await readFile(await download.path(),'utf8');
+ assert.ok(exported.includes('Synthetic client summary'));
+ assert.ok(exported.includes('Maturidade: 50%'));
+ assert.ok(!exported.includes('Synthetic internal synthesis'));
+ assert.ok(!exported.includes('Synthetic receipt'));
+ const queue=(await request('GET',endpoint+'?scope=queue')).body.data;
+ assert.ok(Array.isArray(queue.items));
+ assert.ok(!queue.items.some(i=>i.id===actionId||i.id===appointmentId));
+ assert.ok(queue.items.every(i=>!Object.hasOwn(i,'cents')));
+
  await request('PUT',endpoint,{type:'report_save',id:projectId,synthesis:'Synthetic revised synthesis'});
  await request('PUT',endpoint,{type:'report_save',id:projectId,synthesis:'Synthetic internal synthesis'});
  delivery=(await request('GET',endpoint+'?scope=delivery&project='+projectId)).body.data;
@@ -130,6 +144,10 @@ try{
  assert.equal(delivery.preview,null);
  await page.getByRole('button',{name:'Atualizar registros'}).click();
  await page.getByText('Prévia bloqueada ou ainda não autorizada.',{exact:true}).waitFor();
+ assert.equal(await page.getByRole('button',{name:'Exportar prévia autorizada (.txt)',exact:true}).count(),0);
+ const pendingQueue=(await request('GET',endpoint+'?scope=queue')).body.data;
+ assert.ok(pendingQueue.items.some(i=>i.kind==='delivery'&&i.project_id===projectId));
+ console.log('PASS daily queue and authorized projection export');
  console.log('PASS remaining authenticated modules, portal projection and revision invalidation');
  // Parallel requests use independent database transactions and independent browser sessions.
  const raceContexts=await Promise.all([browser.newContext({ignoreHTTPSErrors:true}),browser.newContext({ignoreHTTPSErrors:true})]);
