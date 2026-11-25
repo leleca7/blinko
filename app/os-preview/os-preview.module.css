@@ -69,3 +69,9 @@
 .reportBody pre{line-height:1.65}
 @media(max-width:760px){.brand{align-items:center}.brandLogo{width:120px;max-width:45%}.reportLogo{width:96px}}
 @media print{.reportCover{padding:16pt;gap:14pt}.reportCover h2{font-size:21pt}.reportCover small,.reportCover p{font-size:9pt}.reportLogo{width:29mm;max-width:32%}.reportMetrics{padding:12pt;gap:6pt}.reportMetrics>div{padding:8pt}.reportMetrics strong{font-size:18pt}.reportMetrics small{font-size:8pt}.reportBody pre{font:12pt/1.5 Arial,sans-serif}.reportBody{padding:12pt 0}}
+
+.reportSection{padding:16px 18px;margin-bottom:14px;border:1px solid #d6dfd7;border-radius:9px;background:#fff;min-width:0;overflow-wrap:anywhere}
+.reportSection:first-child,.reportSection:last-child{background:#f2eee7;border-left:4px solid #ef3b7f}
+.reportSection h3{font:700 14px/1.4 Arial,sans-serif;color:#01301e;margin:0 0 10px;break-after:avoid}
+.reportSection pre{margin:0;color:#18382a}
+@media print{.reportSection{padding:11pt;margin:0 0 10pt;print-color-adjust:exact;-webkit-print-color-adjust:exact}.reportSection h3{font-size:12pt}.reportSection pre{font:12pt/1.5 Arial,sans-serif;orphans:3;widows:3}}
