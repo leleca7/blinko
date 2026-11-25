@@ -89,7 +89,7 @@ export async function reviewLabEvidence(token: string | undefined, body: unknown
 export async function listLabOperations(token:string|undefined,projectId:string) {
   const {sql,actor,sid}=access(token);
   if(!isLabUuid(projectId)) throw new LabError(400,"invalid_project");
-  const [,status,projects,scores,actions,appointments,financeAccess,ledger,totals]=await sql.transaction([
+  const [,status,projects,scores,actions,appointments,financeAccess,ledger,totals,hypotheses]=await sql.transaction([
     sql`SELECT set_config('os_lab.actor_id', ${actor}, true),set_config('os_lab.session_id', ${sid}, true)`,
     sql`SELECT os_lab.session_is_active(${actor},${sid}) AS active`,
     sql`SELECT id FROM os_lab.projects WHERE id=${projectId}::uuid`,
@@ -106,11 +106,16 @@ export async function listLabOperations(token:string|undefined,projectId:string)
        COALESCE(sum(cents) FILTER(WHERE kind='expense'),0)::text AS planned_expense,
        COALESCE(sum(cents) FILTER(WHERE kind='income' AND settled_at IS NOT NULL),0)::text AS realized_income,
        COALESCE(sum(cents) FILTER(WHERE kind='expense' AND settled_at IS NOT NULL),0)::text AS realized_expense
-       FROM os_lab.ledger_entries WHERE project_id=${projectId}::uuid`
+       FROM os_lab.ledger_entries WHERE project_id=${projectId}::uuid`,
+    sql`SELECT h.id,h.pillar,h.cause,h.effect,h.support_id,h.challenge_id,h.decision,h.rationale,
+      ((h.support_id IS NOT NULL AND (s.reviewed IS DISTINCT FROM true OR s.kind='hypothesis' OR s.review_revision IS DISTINCT FROM h.support_revision))
+       OR (h.challenge_id IS NOT NULL AND (c.reviewed IS DISTINCT FROM true OR c.kind='hypothesis' OR c.review_revision IS DISTINCT FROM h.challenge_revision))) AS stale
+      FROM os_lab.hypotheses h LEFT JOIN os_lab.evidence s ON s.id=h.support_id LEFT JOIN os_lab.evidence c ON c.id=h.challenge_id
+      WHERE h.project_id=${projectId}::uuid ORDER BY h.pillar,h.id LIMIT 100`
   ]);
   if(status[0]?.active!==true)throw new LabError(401,"session_inactive");
   if(!projects.length)throw new LabError(404,"project_unavailable");
-  return {scores,actions,appointments,finance:financeAccess[0]?.allowed===true?{entries:ledger,totals:totals[0]}:null};
+  return {scores,actions,appointments,hypotheses,finance:financeAccess[0]?.allowed===true?{entries:ledger,totals:totals[0]}:null};
 }
 export async function mutateLabOperation(token:string|undefined,body:unknown) {
  const {sql,actor,sid}=access(token);
@@ -146,13 +151,17 @@ export async function mutateLabOperation(token:string|undefined,body:unknown) {
   ? sql`SELECT os_lab.review_report(${op.id}::uuid,${op.reviewed},${op.note}) AS changed`
   : op.type==="portal_save"
   ? sql`SELECT os_lab.save_portal_draft(${op.id}::uuid,${op.summary},${op.nextStep},${op.showMaturity},${op.showActions}) AS changed`
-  : sql`SELECT os_lab.approve_portal(${op.id}::uuid,${op.approved}) AS changed`;
+  : op.type==="portal_approve"
+  ? sql`SELECT os_lab.approve_portal(${op.id}::uuid,${op.approved}) AS changed`
+  : op.type==="hypothesis_save"
+  ? sql`SELECT os_lab.save_hypothesis(${op.id}::uuid,${op.projectId}::uuid,${op.pillar}::integer,${op.cause},${op.effect},${op.supportId}::uuid,${op.challengeId}::uuid,${op.decision},${op.rationale}) AS changed`
+  : sql`SELECT os_lab.create_quote(${op.id}::uuid,${op.leadId}::uuid,${op.minutes}::integer,${op.hourlyCents}::integer,${op.expenseCents}::bigint,${op.feeBps}::integer,${op.marginBps}::integer) AS id`;
  try {
   const [,rows]=await sql.transaction([
    sql`SELECT set_config('os_lab.actor_id',${actor},true),set_config('os_lab.session_id',${sid},true)`,
    command
   ]);
-  if(op.type==="lead_create"||op.type==="lead_contract") {
+  if(op.type==="lead_create"||op.type==="lead_contract"||op.type==="quote_create") {
    if(!isLabUuid(rows[0]?.id))throw new LabError(500,"invalid_operation_result");
    return {id:rows[0].id};
   }
@@ -196,4 +205,16 @@ export async function getLabDelivery(token:string|undefined,projectId:string) {
  if(status[0]?.active!==true)throw new LabError(401,"session_inactive");
  if(!projects.length)throw new LabError(404,"project_unavailable");
  return {draft:deliverables[0]??null,preview:previews[0]?.preview??null};
+}
+
+export async function listLabQuotes(token:string|undefined) {
+ const {sql,actor,sid}=access(token);
+ const [,status,rows]=await sql.transaction([
+  sql`SELECT set_config('os_lab.actor_id',${actor},true),set_config('os_lab.session_id',${sid},true)`,
+  sql`SELECT os_lab.session_is_active(${actor},${sid}) AS active`,
+  sql`SELECT q.id,q.lead_id,l.display_name,q.minutes,q.hourly_cents,q.expense_cents::text AS expense_cents,q.fee_bps,q.margin_bps,q.cost_cents::text AS cost_cents,q.price_cents::text AS price_cents,q.created_at
+       FROM os_lab.quote_estimates q JOIN os_lab.leads l ON l.id=q.lead_id ORDER BY q.created_at DESC,q.id LIMIT 100`
+ ]);
+ if(status[0]?.active!==true)throw new LabError(401,"session_inactive");
+ return rows;
 }
