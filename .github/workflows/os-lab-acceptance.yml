@@ -101,3 +101,4 @@ jobs:
             psql -X -v ON_ERROR_STOP=1 -1 -f "$migration"
           done
           psql -X -v ON_ERROR_STOP=1 -f tests/os-lab-integration.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/os-lab-auth-integration.sql
