@@ -27,6 +27,8 @@ export default function ConnectedWorkspace(){
  const [pillar,setPillar]=useState(0);
  const [kind,setKind]=useState<LabEvidence["kind"]>("fact");
  const [summary,setSummary]=useState("");
+ const [source,setSource]=useState("");
+ const evidenceKey=useRef<{key:string;id:string}|null>(null);
  const [reason,setReason]=useState("");
  const [leadId,setLeadId]=useState("");
  const [revision,setRevision]=useState(0);
@@ -84,11 +86,11 @@ export default function ConnectedWorkspace(){
  {loaded&&<DailyQueue key={"queue:"+revision} revision={revision} onOpen={item=>{
   if(item.kind==="lead"){
    if(!leads.some(l=>l.id===item.id)){setMessage("Oportunidade fora da lista carregada. Consulte o registro pelo CRM.");return;}
-   setLeadId(item.id);setConfirmed(false);setChallenge("Organização comercial");setSelected("");setSummary("");setReason("");
+   setLeadId(item.id);setConfirmed(false);setChallenge("Organização comercial");setSelected("");setSummary("");setSource("");setReason("");
    document.getElementById("connected-crm")?.scrollIntoView({behavior:"smooth"});
   }else if(item.project_id){
    if(!projects.some(p=>p.id===item.project_id)){setMessage("Projeto fora da lista carregada. Consulte a listagem de projetos.");return;}
-   if(item.project_id!==selected){setSelected(item.project_id);setEvidence([]);setSummary("");setReason("");}
+   if(item.project_id!==selected){setSelected(item.project_id);setEvidence([]);setSummary("");setSource("");setReason("");}
    document.getElementById("connected-project")?.scrollIntoView({behavior:"smooth"});
   }
  }}/>}
@@ -102,16 +104,16 @@ export default function ConnectedWorkspace(){
  {!active.intake_complete&&<form onSubmit={e=>{e.preventDefault();mutate({type:"lead_complete",id:active.id,challenge});}}><label>Desafio identificado<input value={challenge} maxLength={500} onChange={e=>setChallenge(e.target.value)} required/></label><button type="submit">Concluir triagem</button></form>}
  {stages.indexOf(active.stage)>=0&&stages.indexOf(active.stage)<4&&<button onClick={()=>mutate({type:"lead_move",id:active.id,expectedStage:active.stage,nextStage:stages[stages.indexOf(active.stage)+1]})}>Avançar para {stageLabels[stages.indexOf(active.stage)+1]}</button>}
  {active.stage==="diagnostico"&&active.intake_complete&&!active.project_id&&<><label><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>Confirmar contratação fictícia</label><button disabled={!confirmed} onClick={()=>mutate({type:"lead_contract",id:active.id,projectId:crypto.randomUUID(),confirmed:true},()=>setConfirmed(false))}>Criar projeto</button></>}
- {active.project_id&&<button onClick={()=>{if(active.project_id!==selected){setSelected(active.project_id??"");setEvidence([]);setReason("");setSummary("");}}}>Abrir projeto vinculado</button>}</>}
+ {active.project_id&&<button onClick={()=>{if(active.project_id!==selected){setSelected(active.project_id??"");setEvidence([]);setReason("");setSummary("");setSource("");}}}>Abrir projeto vinculado</button>}</>}
  </section>
- <section id="connected-project" className={styles.panel}><small>02 · PROJETOS</small><h2>Projeto ativo</h2><label>Projeto<select value={selected} onChange={e=>{setSelected(e.target.value);setEvidence([]);setReason("");setSummary("");}}><option value="">Selecionar projeto</option>{projects.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select></label>
+ <section id="connected-project" className={styles.panel}><small>02 · PROJETOS</small><h2>Projeto ativo</h2><label>Projeto<select value={selected} onChange={e=>{setSelected(e.target.value);setEvidence([]);setReason("");setSummary("");setSource("");}}><option value="">Selecionar projeto</option>{projects.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select></label>
  {project&&<><p>{project.method_stage} · {project.owner_label} · {project.due_on||"Sem prazo"}</p><form key={project.id} onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);mutate({type:"project_details",id:project.id,stage:String(f.get("stage")),owner:String(f.get("owner")),due:String(f.get("due")||"")||null});}}>
  <label>Etapa<select name="stage" defaultValue={project.method_stage}>{["Escutar","Investigar","Priorizar","Estruturar","Acompanhar"].map(s=><option key={s}>{s}</option>)}</select></label><label>Responsável<select name="owner" defaultValue={project.owner_label}>{["A definir","Atendimento","Pesquisa","Produção","Equipe"].map(s=><option key={s}>{s}</option>)}</select></label><label>Prazo<input name="due" type="date" defaultValue={project.due_on||""}/></label><button type="submit">Salvar detalhes</button></form></>}
  </section>
- {project&&<section className={styles.panel}><small>03 · DIAGNÓSTICO</small><h2>Evidências</h2><form onSubmit={e=>{e.preventDefault();run(()=>api.createEvidence({projectId:project.id,pillar,kind,summary}),()=>setSummary(""));}}>
- <label>Pilar<select value={pillar} onChange={e=>setPillar(Number(e.target.value))}>{pillars.map((p,i)=><option key={p} value={i}>{p}</option>)}</select></label><label>Tipo<select value={kind} onChange={e=>setKind(e.target.value as LabEvidence["kind"])}>{Object.entries(kinds).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label><label>Registro<input value={summary} maxLength={500} onChange={e=>setSummary(e.target.value)} required/></label><button type="submit">Registrar evidência</button></form>
+ {project&&<section className={styles.panel}><small>03 · DIAGNÓSTICO</small><h2>Evidências</h2><form onSubmit={e=>{e.preventDefault();const payload={projectId:project.id,pillar,kind,source:source.trim(),summary:summary.trim()};const key=JSON.stringify(payload);if(evidenceKey.current?.key!==key)evidenceKey.current={key,id:crypto.randomUUID()};const id=evidenceKey.current.id;run(()=>api.createEvidence({id,...payload}),()=>{setSummary("");setSource("");evidenceKey.current=null;});}}>
+ <label>Pilar<select value={pillar} onChange={e=>setPillar(Number(e.target.value))}>{pillars.map((p,i)=><option key={p} value={i}>{p}</option>)}</select></label><label>Tipo<select value={kind} onChange={e=>setKind(e.target.value as LabEvidence["kind"])}>{Object.entries(kinds).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label><label>Fonte da evidência<input value={source} maxLength={200} onChange={e=>setSource(e.target.value)} placeholder="Ex.: entrevista fictícia, observação ou documento de teste" required/></label><label>Registro<input value={summary} maxLength={500} onChange={e=>setSummary(e.target.value)} required/></label><button type="submit">Registrar evidência</button></form>
  <label>Justificativa para revisão<input value={reason} maxLength={500} onChange={e=>setReason(e.target.value)}/></label>
- {evidence.map(item=><article key={item.id} className={styles.lead}><strong>{pillars[item.pillar]} · {kinds[item.kind]}</strong><p>{item.summary}</p><p>{item.reviewed?"Revisada":"Pendente"}</p><button disabled={!reason.trim()} onClick={()=>run(()=>api.reviewEvidence({evidenceId:item.id,reviewed:!item.reviewed,reason}),()=>setReason(""))}>{item.reviewed?"Revogar revisão":"Revisar evidência"}</button></article>)}
+ {evidence.map(item=><article key={item.id} className={styles.lead}><strong>{pillars[item.pillar]} · {kinds[item.kind]}</strong><p>{item.summary}</p><p>Fonte: {item.source_label??"Não registrada no acervo anterior"}</p><p>{item.reviewed?"Revisada":"Pendente"}</p><button disabled={!reason.trim()} onClick={()=>run(()=>api.reviewEvidence({evidenceId:item.id,reviewed:!item.reviewed,reason}),()=>setReason(""))}>{item.reviewed?"Revogar revisão":"Revisar evidência"}</button></article>)}
  </section>}
  {project&&<OperationalPanels key={project.id+":"+revision} projectId={project.id} evidence={evidence} revision={revision} mutate={mutate}/>}
  {loaded&&<QuotePanel key={"quotes:"+revision} leads={leads} revision={revision} mutate={mutate}/>}
