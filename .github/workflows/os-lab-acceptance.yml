@@ -58,3 +58,42 @@ jobs:
           path: test-artifacts/
           retention-days: 7
           if-no-files-found: ignore
+
+  database-integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: sandbox_owner
+          POSTGRES_PASSWORD: synthetic-ci-only
+          POSTGRES_DB: blinko_sandbox
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sandbox_owner -d blinko_sandbox"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+      - name: Apply every migration and run synthetic lifecycle
+        shell: bash
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: "5432"
+          PGUSER: sandbox_owner
+          PGPASSWORD: synthetic-ci-only
+          PGDATABASE: blinko_sandbox
+        run: |
+          set -euo pipefail
+          for migration in database/sandbox/[0-9][0-9][0-9]_*.sql; do
+            echo "Applying $migration"
+            psql -X -v ON_ERROR_STOP=1 -1 -f "$migration"
+          done
+          psql -X -v ON_ERROR_STOP=1 -f tests/os-lab-integration.sql
