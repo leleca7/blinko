@@ -6,8 +6,8 @@ import {Pool} from 'pg';
 if(process.env.GITHUB_ACTIONS!=='true'||process.env.BLINKO_CI_DISPOSABLE!=='yes')throw Error('Disposable CI only');
 const origin='https://localhost:3211';
 const owner=new Pool({host:'127.0.0.1',port:5432,database:'blinko_sandbox',user:'sandbox_owner',password:'synthetic-ci-only'});
-const codes={operator:randomBytes(32).toString('hex'),admin:randomBytes(32).toString('hex')};
-const actor={operator:'00000000-0000-4000-8000-000000000011',admin:'00000000-0000-4000-8000-000000000013'};
+const codes={operator:randomBytes(32).toString('hex'),admin:randomBytes(32).toString('hex'),race:randomBytes(32).toString('hex')};
+const actor={operator:'00000000-0000-4000-8000-000000000011',admin:'00000000-0000-4000-8000-000000000013',race:'00000000-0000-4000-8000-000000000011'};
 for(const k of Object.keys(codes))await owner.query("INSERT INTO os_lab.access_codes(code_hash,member_id,expires_at) VALUES($1,$2,now()+interval '10 minutes')",[createHash('sha256').update(codes[k]).digest('hex'),actor[k]]);
 await owner.end();
 const browser=await chromium.launch({headless:true});
@@ -131,5 +131,27 @@ try{
  await page.getByRole('button',{name:'Atualizar registros'}).click();
  await page.getByText('Prévia bloqueada ou ainda não autorizada.',{exact:true}).waitFor();
  console.log('PASS remaining authenticated modules, portal projection and revision invalidation');
+ // Parallel requests use independent database transactions and independent browser sessions.
+ const raceContexts=await Promise.all([browser.newContext({ignoreHTTPSErrors:true}),browser.newContext({ignoreHTTPSErrors:true})]);
+ try{
+  const responses=await Promise.all(raceContexts.map(ctx=>ctx.request.post(session,{headers:{origin},data:{code:codes.race}})));
+  assert.deepEqual(responses.map(r=>r.status()).sort((a,b)=>a-b),[200,401]);
+ }finally{await Promise.all(raceContexts.map(ctx=>ctx.close()));}
+ const duplicateSubmission=randomUUID(),duplicateCompany='Empresa fictícia concorrência '+randomUUID().slice(0,8);
+ const created=await Promise.all([1,2].map(()=>request('PUT',endpoint,{type:'lead_create',id:randomUUID(),submissionId:duplicateSubmission,company:duplicateCompany,consent:true})));
+ assert.equal(created[0].body.data.id,created[1].body.data.id);
+ const duplicateId=created[0].body.data.id;
+ const duplicateLeads=(await request('GET',endpoint+'?scope=crm')).body.data.filter(l=>l.display_name===duplicateCompany);
+ assert.equal(duplicateLeads.length,1);
+ await request('PUT',endpoint,{type:'lead_complete',id:duplicateId,challenge:'Synthetic concurrency'});
+ const moves=await Promise.all([1,2].map(()=>context.request.put(endpoint,{headers:{origin},data:{type:'lead_move',id:duplicateId,expectedStage:'triagem',nextStage:'contato'}})));
+ assert.deepEqual(moves.map(r=>r.status()).sort((a,b)=>a-b),[200,409]);
+ for(let i=1;i<4;i++)await request('PUT',endpoint,{type:'lead_move',id:duplicateId,expectedStage:stages[i],nextStage:stages[i+1]});
+ const contracts=await Promise.all([1,2].map(()=>request('PUT',endpoint,{type:'lead_contract',id:duplicateId,projectId:randomUUID(),confirmed:true})));
+ assert.equal(contracts[0].body.data.id,contracts[1].body.data.id);
+ const projects=(await request('GET',endpoint)).body.data;
+ assert.equal(projects.filter(p=>p.label===duplicateCompany).length,1);
+ console.log('PASS concurrent code redemption, lead deduplication, stage conflict and contract deduplication');
+
 
 }finally{await browser.close();}
