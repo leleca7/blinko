@@ -9,7 +9,7 @@ const owners=["Atendimento","Pesquisa","Produção","Equipe"];
 type Props={projectId:string;evidence:LabEvidence[];revision:number;mutate:(op:LabOperation,success?:()=>void)=>Promise<void>};
 const date=(v:string)=>v?v.slice(0,10).split("-").reverse().join("/"):"Sem prazo";
 const field=(f:FormData,k:string)=>String(f.get(k)??"");
-const amount=(cents:string)=>{if(!/^\d+$/.test(cents))return "Indisponível";const n=BigInt(cents);return "R$ "+(n/100n).toLocaleString("pt-BR")+","+String(n%100n).padStart(2,"0");};
+const amount=(cents:string)=>{if(!/^\d+$/.test(cents))return "Indisponível";const n=BigInt(cents);return "R$ "+(n/BigInt(100)).toLocaleString("pt-BR")+","+String(n%BigInt(100)).padStart(2,"0");};
 export default function OperationalPanels({projectId,evidence,revision,mutate}:Props){
  const [data,setData]=useState<LabOperations|null>(null);
  const [error,setError]=useState("");
@@ -45,7 +45,7 @@ export default function OperationalPanels({projectId,evidence,revision,mutate}:P
  <section className={styles.panel}><small>05 · PLANO DE AÇÃO</small><h2>Prioridades e execução</h2><p>Gravidade × urgência × tendência = {gravity*urgency*tendency}/125.</p>
  <form onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);const form=e.currentTarget;mutate({type:"action",id:crypto.randomUUID(),projectId,evidenceId:field(f,"evidence"),title:field(f,"title"),owner:field(f,"owner"),due:field(f,"due"),gravity,urgency,tendency},()=>form.reset());}}>
  <label>Ação<input name="title" maxLength={160} required/></label><label>Evidência<select name="evidence" required><option value="">Selecione</option>{eligible.map(e=><option key={e.id} value={e.id}>{e.summary}</option>)}</select></label>
- <div className={styles.fields}>{[["Gravidade",gravity,setGravity],["Urgência",urgency,setUrgency],["Tendência",tendency,setTendency]].map(([name,value,set])=><label key={String(name)}>{String(name)} · {Number(value)}<input type="range" min={1} max={5} value={Number(value)} onChange={e=>(set as (v:number)=>void)(Number(e.target.value))}/></label>)}</div>
+ <div className={styles.fields}>{([["Gravidade",gravity,setGravity],["Urgência",urgency,setUrgency],["Tendência",tendency,setTendency]] as const).map(([name,value,set])=><label key={String(name)}>{String(name)} · {Number(value)}<input type="range" min={1} max={5} value={Number(value)} onChange={e=>(set as (v:number)=>void)(Number(e.target.value))}/></label>)}</div>
  <label>Responsável<select name="owner" required><option value="">Selecione</option>{owners.map(o=><option key={o}>{o}</option>)}</select></label><label>Prazo<input name="due" type="date" required/></label><button type="submit" disabled={!eligible.length}>Criar ação</button></form>
  {data.actions.map(a=><article className={styles.lead} key={a.id}><strong>{a.title}</strong><p>{a.owner_label} · {date(a.due_on)} · GUT {a.gut}/125 · {a.done?"Concluída":"Em aberto"}</p>{!a.eligible&&<p>Evidência desatualizada. Revalidação necessária.</p>}<button disabled={!a.eligible&&!a.done} onClick={()=>mutate({type:"completion",id:a.id,done:!a.done})}>{a.done?"Reabrir ação":"Concluir ação"}</button></article>)}
  </section>
