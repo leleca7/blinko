@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LAB_COOKIE } from "../../../../lib/os-lab/session";
-import { LabError, listLabProjects, listLabEvidence, createLabEvidence, reviewLabEvidence } from "../../../../lib/os-lab/repository";
+import { LabError, listLabProjects, listLabEvidence, createLabEvidence, reviewLabEvidence, listLabOperations, mutateLabOperation } from "../../../../lib/os-lab/repository";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,7 +42,10 @@ export async function GET(request: NextRequest) {
   try {
     const token=request.cookies.get(LAB_COOKIE)?.value;
     const projectId=request.nextUrl.searchParams.get("project");
-    const data=projectId===null?await listLabProjects(token):await listLabEvidence(token,projectId);
+    const scope=request.nextUrl.searchParams.get("scope");
+    if(scope!==null && scope!=="operations") throw new LabError(400,"invalid_scope");
+    if(scope==="operations" && projectId===null) throw new LabError(400,"invalid_project");
+    const data=scope==="operations" && projectId!==null?await listLabOperations(token,projectId):projectId===null?await listLabProjects(token):await listLabEvidence(token,projectId);
     return json({ok:true,data});
   } catch(error) { return failure(error); }
 }
@@ -66,6 +69,18 @@ export async function PATCH(request: NextRequest) {
     const token=request.cookies.get(LAB_COOKIE)?.value;
     const body=await readJson(request);
     const data=await reviewLabEvidence(token,body);
+    return json({ok:true,data});
+  } catch(error) { return failure(error); }
+}
+
+export async function PUT(request: NextRequest) {
+  if (!enabled()) return json({ok:false,error:"lab_disabled"},404);
+  const origin=process.env.BLINKO_OS_LAB_ORIGIN;
+  if (!origin || request.headers.get("origin")!==origin || request.nextUrl.origin!==origin) return json({ok:false,error:"origin_not_allowed"},403);
+  try {
+    const token=request.cookies.get(LAB_COOKIE)?.value;
+    const body=await readJson(request);
+    const data=await mutateLabOperation(token,body);
     return json({ok:true,data});
   } catch(error) { return failure(error); }
 }
