@@ -2,7 +2,7 @@
 import type { LabOperation } from "./operations";
 export type LabProject={id:string;label:string;method_stage:string;owner_label:string;due_on:string|null};
 export type LabLead={id:string;display_name:string;stage:string;intake_complete:boolean;challenge:string|null;project_id:string|null};
-export type LabEvidence={id:string;pillar:number;kind:"fact"|"report"|"hypothesis";summary:string;reviewed:boolean};
+export type LabEvidence={id:string;pillar:number;kind:"fact"|"report"|"hypothesis";summary:string;reviewed:boolean;source_label:string|null;recorded_at:string|null};
 export type LabScore={pillar:number;value:number;evidence_id:string;eligible:boolean};
 export type LabAction={id:string;title:string;owner_label:string;due_on:string;gravity:number;urgency:number;tendency:number;gut:number;done:boolean;evidence_id:string;eligible:boolean};
 export type LabAppointment={id:string;title:string;kind:string;due_on:string;done:boolean};
@@ -61,7 +61,7 @@ export function createLabClient(fetcher:Fetcher=fetch){
   operations:(id:string,signal?:AbortSignal)=>request<LabOperations>(projectPath(id,"operations"),"GET",undefined,signal),
   delivery:(id:string,signal?:AbortSignal)=>request<LabDelivery>(projectPath(id,"delivery"),"GET",undefined,signal),
   quotes:(signal?:AbortSignal)=>request<LabQuote[]>(endpoint+"?scope=quotes","GET",undefined,signal),
-  createEvidence:(body:{projectId:string;pillar:number;kind:LabEvidence["kind"];summary:string})=>request<LabEvidence>(endpoint,"POST",body),
+  createEvidence:(body:{id:string;projectId:string;pillar:number;kind:LabEvidence["kind"];source:string;summary:string})=>request<LabEvidence>(endpoint,"POST",body),
   reviewEvidence:(body:{evidenceId:string;reviewed:boolean;reason:string})=>request<{changed:boolean}>(endpoint,"PATCH",body),
   mutate:(body:LabOperation)=>request<LabMutation>(endpoint,"PUT",body)
  };
