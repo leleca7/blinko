@@ -96,12 +96,12 @@ export async function listLabOperations(token:string|undefined,projectId:string)
     sql`SELECT s.pillar,s.value,s.evidence_id,
       (e.reviewed AND e.kind<>'hypothesis' AND e.review_revision=s.evidence_revision) AS eligible
       FROM os_lab.radar_scores s JOIN os_lab.evidence e ON e.id=s.evidence_id WHERE s.project_id=${projectId}::uuid ORDER BY s.pillar`,
-    sql`SELECT a.id,a.title,a.owner_label,a.due_on,a.gravity,a.urgency,a.tendency,a.gut,a.done,a.evidence_id,
+    sql`SELECT a.id,a.title,a.owner_label,a.due_on::text AS due_on,a.gravity,a.urgency,a.tendency,a.gut,a.done,a.evidence_id,
       (e.reviewed AND e.kind<>'hypothesis' AND e.review_revision=a.evidence_revision) AS eligible
       FROM os_lab.action_items a JOIN os_lab.evidence e ON e.id=a.evidence_id WHERE a.project_id=${projectId}::uuid ORDER BY a.due_on,a.id LIMIT 100`,
-    sql`SELECT id,title,kind,due_on,done FROM os_lab.appointments WHERE project_id=${projectId}::uuid ORDER BY due_on,id LIMIT 100`,
+    sql`SELECT id,title,kind,due_on::text AS due_on,done FROM os_lab.appointments WHERE project_id=${projectId}::uuid ORDER BY due_on,id LIMIT 100`,
     sql`SELECT os_lab.can_access_finance(p.id,p.org_id) AS allowed FROM os_lab.projects p WHERE p.id=${projectId}::uuid`,
-    sql`SELECT id,label,kind,cents::text AS cents,due_on,settled_at FROM os_lab.ledger_entries WHERE project_id=${projectId}::uuid ORDER BY due_on,id LIMIT 100`,
+    sql`SELECT id,label,kind,cents::text AS cents,due_on::text AS due_on,settled_at::text AS settled_at FROM os_lab.ledger_entries WHERE project_id=${projectId}::uuid ORDER BY due_on,id LIMIT 100`,
     sql`SELECT COALESCE(sum(cents) FILTER(WHERE kind='income'),0)::text AS planned_income,
        COALESCE(sum(cents) FILTER(WHERE kind='expense'),0)::text AS planned_expense,
        COALESCE(sum(cents) FILTER(WHERE kind='income' AND settled_at IS NOT NULL),0)::text AS realized_income,
