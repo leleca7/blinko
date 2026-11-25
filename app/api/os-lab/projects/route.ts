@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LAB_COOKIE } from "../../../../lib/os-lab/session";
-import { LabError, listLabProjects, listLabEvidence, createLabEvidence } from "../../../../lib/os-lab/repository";
+import { LabError, listLabProjects, listLabEvidence, createLabEvidence, reviewLabEvidence } from "../../../../lib/os-lab/repository";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -55,5 +55,17 @@ export async function POST(request: NextRequest) {
     const body=await readJson(request);
     const data=await createLabEvidence(token,body);
     return json({ok:true,data},201);
+  } catch(error) { return failure(error); }
+}
+
+export async function PATCH(request: NextRequest) {
+  if (!enabled()) return json({ok:false,error:"lab_disabled"},404);
+  const origin=process.env.BLINKO_OS_LAB_ORIGIN;
+  if (!origin || request.headers.get("origin")!==origin || request.nextUrl.origin!==origin) return json({ok:false,error:"origin_not_allowed"},403);
+  try {
+    const token=request.cookies.get(LAB_COOKIE)?.value;
+    const body=await readJson(request);
+    const data=await reviewLabEvidence(token,body);
+    return json({ok:true,data});
   } catch(error) { return failure(error); }
 }
