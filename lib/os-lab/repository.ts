@@ -1,6 +1,5 @@
 import "server-only";
 import { validateOperation } from "./operations";
-import { randomUUID } from "node:crypto";
 import { neon } from "@neondatabase/serverless";
 import { isSandboxConnection, isLabUuid, validateEvidence, validateEvidenceReview, verifyLabSession } from "./session";
 
@@ -36,7 +35,7 @@ export async function listLabEvidence(token: string | undefined, projectId: stri
     sql`SELECT set_config('os_lab.actor_id', ${actor}, true), set_config('os_lab.session_id', ${sid}, true)`,
     sql`SELECT os_lab.session_is_active(${actor}, ${sid}) AS active`,
     sql`SELECT id FROM os_lab.projects WHERE id=${projectId}::uuid`,
-    sql`SELECT id,pillar,kind,summary,reviewed FROM os_lab.evidence WHERE project_id=${projectId}::uuid ORDER BY id LIMIT 100`
+    sql`SELECT id,pillar,kind,summary,reviewed,source_label,recorded_at::text AS recorded_at FROM os_lab.evidence WHERE project_id=${projectId}::uuid ORDER BY id LIMIT 100`
   ]);
   if (status[0]?.active!==true) throw new LabError(401,"session_inactive");
   if (!projects.length) throw new LabError(404,"project_unavailable");
@@ -51,18 +50,19 @@ export async function createLabEvidence(token: string | undefined, body: unknown
     const [,status,rows]=await sql.transaction([
       sql`SELECT set_config('os_lab.actor_id', ${actor}, true), set_config('os_lab.session_id', ${sid}, true)`,
     sql`SELECT os_lab.session_is_active(${actor}, ${sid}) AS active`,
-      sql`INSERT INTO os_lab.evidence(id,project_id,org_id,pillar,kind,summary)
-          SELECT ${randomUUID()}::uuid,p.id,p.org_id,${input.pillar},${input.kind},${input.summary}
-          FROM os_lab.projects p WHERE p.id=${input.projectId}::uuid
-          AND os_lab.can_access_project(p.id,p.org_id,true)
-          RETURNING id,pillar,kind,summary,reviewed`
+      sql`SELECT id,pillar,kind,summary,reviewed,source_label,recorded_at::text AS recorded_at
+       FROM os_lab.record_evidence(${input.id}::uuid,${input.projectId}::uuid,${input.pillar}::integer,${input.kind},${input.source},${input.summary})`
     ]);
     if (status[0]?.active!==true) throw new LabError(401,"session_inactive");
     if (!rows.length) throw new LabError(404,"project_unavailable");
     return rows[0];
   } catch (error) {
     if (error instanceof LabError) throw error;
-    if (typeof error==="object" && error!==null && "code" in error && error.code==="42501") throw new LabError(403,"access_denied");
+    if (typeof error==="object" && error!==null && "code" in error) {
+      if(error.code==="42501")throw new LabError(403,"access_denied");
+      if(error.code==="22023")throw new LabError(400,"invalid_evidence");
+      if(error.code==="23505")throw new LabError(409,"evidence_conflict");
+    }
     throw error;
   }
 }
