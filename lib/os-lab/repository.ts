@@ -1,7 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { neon } from "@neondatabase/serverless";
-import { isSandboxConnection, isLabUuid, validateEvidence, verifyLabSession } from "./session";
+import { isSandboxConnection, isLabUuid, validateEvidence, validateEvidenceReview, verifyLabSession } from "./session";
 
 export class LabError extends Error {
   constructor(public readonly status: number, public readonly code: string) { super(code); }
@@ -62,6 +62,25 @@ export async function createLabEvidence(token: string | undefined, body: unknown
   } catch (error) {
     if (error instanceof LabError) throw error;
     if (typeof error==="object" && error!==null && "code" in error && error.code==="42501") throw new LabError(403,"access_denied");
+    throw error;
+  }
+}
+
+export async function reviewLabEvidence(token: string | undefined, body: unknown) {
+  const {sql,actor,sid}=access(token);
+  const input=validateEvidenceReview(body);
+  if (!input) throw new LabError(400,"invalid_review");
+  try {
+    const [,rows]=await sql.transaction([
+      sql`SELECT set_config('os_lab.actor_id', ${actor}, true), set_config('os_lab.session_id', ${sid}, true)`,
+      sql`SELECT os_lab.review_evidence(${input.evidenceId}::uuid,${input.reviewed},${input.reason}) AS changed`
+    ]);
+    return {changed:rows[0]?.changed===true};
+  } catch(error) {
+    if (typeof error==="object" && error!==null && "code" in error) {
+      if(error.code==="42501") throw new LabError(403,"review_denied");
+      if(error.code==="22023") throw new LabError(400,"invalid_review");
+    }
     throw error;
   }
 }
