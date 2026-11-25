@@ -4,7 +4,7 @@ import {chromium} from 'playwright';
 import {Pool} from 'pg';
 
 if(process.env.GITHUB_ACTIONS!=='true'||process.env.BLINKO_CI_DISPOSABLE!=='yes')throw Error('Disposable CI only');
-const origin='https://127.0.0.1:3211';
+const origin='https://localhost:3211';
 const owner=new Pool({host:'127.0.0.1',port:5432,database:'blinko_sandbox',user:'sandbox_owner',password:'synthetic-ci-only'});
 const codes={operator:randomBytes(32).toString('hex'),admin:randomBytes(32).toString('hex')};
 const actor={operator:'00000000-0000-4000-8000-000000000011',admin:'00000000-0000-4000-8000-000000000013'};
