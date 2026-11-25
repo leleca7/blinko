@@ -218,3 +218,31 @@ export async function listLabQuotes(token:string|undefined) {
  if(status[0]?.active!==true)throw new LabError(401,"session_inactive");
  return rows;
 }
+
+export async function listLabDailyQueue(token:string|undefined) {
+ const {sql,actor,sid}=access(token);
+ const [,status,rows]=await sql.transaction([
+  sql`SELECT set_config('os_lab.actor_id',${actor},true),set_config('os_lab.session_id',${sid},true)`,
+  sql`SELECT os_lab.session_is_active(${actor},${sid}) AS active`,
+  sql`WITH queue AS (
+   SELECT 'lead' AS kind,l.id,NULL::uuid AS project_id,l.display_name AS company,
+      CASE WHEN l.intake_complete THEN 'Acompanhar oportunidade' ELSE 'Concluir triagem' END AS title,NULL::date AS due_on
+   FROM os_lab.leads l WHERE NOT EXISTS(SELECT 1 FROM os_lab.projects p WHERE p.lead_id=l.id)
+   UNION ALL
+   SELECT 'evidence',e.id,p.id,p.label,'Revisar evidência',NULL::date
+   FROM os_lab.evidence e JOIN os_lab.projects p ON p.id=e.project_id WHERE NOT e.reviewed
+   UNION ALL
+   SELECT 'action',a.id,p.id,p.label,a.title,a.due_on FROM os_lab.action_items a JOIN os_lab.projects p ON p.id=a.project_id WHERE NOT a.done
+   UNION ALL
+   SELECT 'appointment',a.id,p.id,p.label,a.title,a.due_on FROM os_lab.appointments a JOIN os_lab.projects p ON p.id=a.project_id WHERE NOT a.done
+   UNION ALL
+   SELECT 'delivery',d.project_id,p.id,p.label,'Revisar relatório',p.due_on
+   FROM os_lab.deliverables d JOIN os_lab.projects p ON p.id=d.project_id
+   WHERE d.reviewed_at IS NULL OR d.review_project_revision IS DISTINCT FROM p.content_revision OR d.review_draft_revision IS DISTINCT FROM d.draft_revision
+  )
+  SELECT kind,id,project_id,company,title,due_on::text AS due_on,count(*) OVER()::text AS total
+  FROM queue ORDER BY queue.due_on NULLS LAST,company,kind,id LIMIT 50`
+ ]);
+ if(status[0]?.active!==true)throw new LabError(401,"session_inactive");
+ return {items:rows.map(({total,...row})=>row),total:rows[0]?.total??"0"};
+}
