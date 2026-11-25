@@ -29,7 +29,7 @@ export function validateEvidence(value: unknown): {projectId:string; pillar:numb
 export function isSandboxConnection(connection: string): boolean {
   try {
     const u = new URL(connection);
-    return (u.protocol==='postgresql:' || u.protocol==='postgres:') && u.hostname==='ep-old-art-bbztkcnw.c-15.us-east-1.aws.neon.tech' && u.pathname==='/blinko_sandbox' && u.username==='os_lab_runtime' && !!u.password && u.searchParams.get('sslmode')==='require' && !u.hash && (!u.port || u.port==='5432');
+    return (u.protocol==='postgresql:' || u.protocol==='postgres:') && u.hostname==='ep-old-art-bbztkcnw.c-15.us-east-1.aws.neon.tech' && u.pathname==='/blinko_sandbox' && u.username==='os_lab_runtime' && !!u.password && u.search==='?sslmode=require' && !u.hash && (!u.port || u.port==='5432');
   } catch { return false; }
 }
 
