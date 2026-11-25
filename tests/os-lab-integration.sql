@@ -8,6 +8,7 @@ INSERT INTO os_lab.sessions(id,member_id,issued_at,expires_at) VALUES
 ('10000000-0000-4000-8000-000000000003','00000000-0000-4000-8000-000000000015',now(),now()+interval '30 minutes');
 SET LOCAL ROLE os_lab_runtime;
 DO $test$
+#variable_conflict use_variable
 DECLARE
  op uuid:='00000000-0000-4000-8000-000000000011';
  adm uuid:='00000000-0000-4000-8000-000000000013';
@@ -57,15 +58,15 @@ BEGIN
  PERFORM os_lab.create_appointment(appointment,project,'Synthetic appointment','Reunião','2026-12-15');
  PERFORM os_lab.set_appointment_done(appointment,true);
  PERFORM os_lab.set_action_done(action,true);
- IF NOT EXISTS(SELECT 1 FROM os_lab.action_items WHERE id=action AND gut=48 AND done) THEN RAISE EXCEPTION 'action status'; END IF;
+ IF NOT EXISTS(SELECT 1 FROM os_lab.action_items WHERE os_lab.action_items.id=action AND gut=48 AND done) THEN RAISE EXCEPTION 'action status'; END IF;
  PERFORM os_lab.save_hypothesis(hyp,project,1,'Synthetic cause','Synthetic effect',ev[2],ev[3],'supported','Synthetic rationale');
  PERFORM os_lab.create_quote(quote,lead,2400,3000,30000,800,2000);
- IF NOT EXISTS(SELECT 1 FROM os_lab.quote_estimates WHERE id=quote AND cost_cents=150000 AND price_cents=208334) THEN RAISE EXCEPTION 'quote arithmetic'; END IF;
+ IF NOT EXISTS(SELECT 1 FROM os_lab.quote_estimates WHERE os_lab.quote_estimates.id=quote AND cost_cents=150000 AND price_cents=208334) THEN RAISE EXCEPTION 'quote arithmetic'; END IF;
  PERFORM os_lab.create_ledger_entry(receipt,project,'Synthetic income','income',200000,'2026-12-15');
  PERFORM os_lab.create_ledger_entry(expense,project,'Synthetic expense','expense',30000,'2026-12-15');
  PERFORM os_lab.set_ledger_settled(receipt,true);
  PERFORM os_lab.set_ledger_settled(expense,true);
- IF (SELECT sum(CASE WHEN kind='income' THEN cents ELSE -cents END) FROM os_lab.ledger_entries WHERE project_id=project AND settled_at IS NOT NULL) IS DISTINCT FROM 170000::numeric THEN RAISE EXCEPTION 'ledger balance'; END IF;
+ IF (SELECT sum(CASE WHEN kind='income' THEN cents ELSE -cents END) FROM os_lab.ledger_entries WHERE os_lab.ledger_entries.project_id=project AND settled_at IS NOT NULL) IS DISTINCT FROM 170000::numeric THEN RAISE EXCEPTION 'ledger balance'; END IF;
  RAISE NOTICE 'PASS radar, GUT, hypothesis, agenda, quote and finance';
  PERFORM os_lab.save_report(project,'Synthetic report');
  PERFORM os_lab.review_report(project,true,'Synthetic review');
@@ -93,7 +94,7 @@ BEGIN
  RAISE NOTICE 'PASS delivery, revision invalidation and explicit revalidation';
  PERFORM set_config('os_lab.actor_id',op::text,true);
  PERFORM set_config('os_lab.session_id','10000000-0000-4000-8000-000000000001',true);
- IF EXISTS(SELECT 1 FROM os_lab.ledger_entries WHERE project_id=project) OR EXISTS(SELECT 1 FROM os_lab.quote_estimates WHERE lead_id=lead) THEN RAISE EXCEPTION 'finance exposed'; END IF;
+ IF EXISTS(SELECT 1 FROM os_lab.ledger_entries WHERE os_lab.ledger_entries.project_id=project) OR EXISTS(SELECT 1 FROM os_lab.quote_estimates WHERE os_lab.quote_estimates.lead_id=lead) THEN RAISE EXCEPTION 'finance exposed'; END IF;
  PERFORM set_config('os_lab.actor_id','00000000-0000-4000-8000-000000000015',true);
  PERFORM set_config('os_lab.session_id','10000000-0000-4000-8000-000000000003',true);
  IF EXISTS(SELECT 1 FROM os_lab.projects WHERE id=project) OR EXISTS(SELECT 1 FROM os_lab.leads WHERE id=lead) OR os_lab.internal_portal_preview(project) IS NOT NULL THEN RAISE EXCEPTION 'project isolation'; END IF;
