@@ -50,7 +50,12 @@ try{
  const projectId=randomUUID();
  const contracted=(await request('PUT',endpoint,{type:'lead_contract',id:lead.id,projectId,confirmed:true})).body.data.id;
  assert.equal(contracted,projectId);
- const e=(await request('POST',endpoint,{projectId,pillar:0,kind:'fact',summary:'Synthetic HTTP evidence'},201)).body.data;
+ const evidenceInput={id:randomUUID(),projectId,pillar:0,kind:'fact',source:'Synthetic observation',summary:'Synthetic HTTP evidence'};
+ const e=(await request('POST',endpoint,evidenceInput,201)).body.data;
+ assert.equal(e.source_label,evidenceInput.source);assert.equal(e.id,evidenceInput.id);assert.ok(e.recorded_at);
+ const repeats=await Promise.all([request('POST',endpoint,evidenceInput,201),request('POST',endpoint,evidenceInput,201)]);assert.ok(repeats.every(r=>r.body.data.id===e.id));
+ await request('POST',endpoint,{...evidenceInput,source:'Changed source'},409);
+ console.log('PASS evidence source and idempotent replay');
  await request('PATCH',endpoint,{evidenceId:e.id,reviewed:true,reason:'Synthetic denied review'},403);
  const op=(await request('GET',endpoint+'?scope=operations&project='+projectId)).body.data;
  assert.equal(op.finance,null);
@@ -84,7 +89,7 @@ try{
  // Extend the same authenticated journey through the remaining persisted modules.
  const ev=[e.id];
  for(let pillar=1;pillar<10;pillar++){
-  const row=(await request('POST',endpoint,{projectId,pillar,kind:'fact',summary:'Synthetic evidence '+pillar},201)).body.data;
+  const row=(await request('POST',endpoint,{id:randomUUID(),projectId,pillar,kind:'fact',source:'Synthetic observation',summary:'Synthetic evidence '+pillar},201)).body.data;
   ev.push(row.id);
   await request('PATCH',endpoint,{evidenceId:row.id,reviewed:true,reason:'Synthetic review'});
   await request('PUT',endpoint,{type:'score',projectId,pillar,value:2,evidenceId:row.id});
