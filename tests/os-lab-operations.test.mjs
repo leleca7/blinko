@@ -86,3 +86,15 @@ test('portal requires explicit options and rejects internal data and client-sele
  assert.equal(validateOperation({...approval,approved:'true'}),null);
  assert.equal(validateOperation({...approval,approvedBy:id}),null);
 });
+
+test('hypothesis requires distinct evidence and rationale for human conclusions',()=>{
+ const h={type:'hypothesis_save',id,projectId:id,pillar:1,cause:' Synthetic cause ',effect:'Synthetic effect',supportId:evidenceId,challengeId:null,decision:'supported',rationale:'Reason'};
+ assert.deepEqual(validateOperation(h),{...h,cause:'Synthetic cause'});
+ assert.equal(validateOperation({...h,supportId:null,decision:'open',rationale:''}).decision,'open');
+ for(const patch of [{supportId:null},{challengeId:evidenceId},{decision:'rejected'},{rationale:' '},{supportRevision:1},{pillar:10},{cause:'x'.repeat(501)}])assert.equal(validateOperation({...h,...patch}),null);
+});
+test('quote accepts exact integer minutes, cents and basis points without client price',()=>{
+ const q={type:'quote_create',id,leadId:evidenceId,minutes:2400,hourlyCents:3000,expenseCents:30000,feeBps:800,marginBps:2000};
+ assert.deepEqual(validateOperation(q),q);
+ for(const patch of [{minutes:0},{minutes:1.5},{hourlyCents:-1},{expenseCents:0,hourlyCents:0},{feeBps:8000},{marginBps:10000},{priceCents:208334},{approved:true},{orgId:id}])assert.equal(validateOperation({...q,...patch}),null);
+});
