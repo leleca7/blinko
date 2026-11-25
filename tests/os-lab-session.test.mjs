@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHmac} from 'node:crypto';
-import {verifyLabSession,validateEvidence,validateEvidenceReview,isSandboxConnection} from '../lib/os-lab/session.ts';
+import {verifyLabSession,validateEvidence,validateEvidenceReview,isSandboxConnection,signLabSession,accessCodeDigest,isIssuerConnection} from '../lib/os-lab/session.ts';
 const key='synthetic-unit-test-key-not-a-credential-123';
 const now=10000;
 const actor='00000000-0000-4000-8000-000000000011';
@@ -25,4 +25,22 @@ test('sandbox connection rejects extra and duplicate connection parameters',()=>
  const base='postgresql://os_lab_runtime:fiction@ep-old-art-bbztkcnw.c-15.us-east-1.aws.neon.tech/blinko_sandbox?sslmode=require';
  assert.equal(isSandboxConnection(base),true);
  for(const suffix of ['&sslmode=disable','&sslmode=require','&host=other.example','&options=test','&port=5433'])assert.equal(isSandboxConnection(base+suffix),false);
+});
+
+test('issuer and runtime URLs are distinct; code digest accepts only canonical high-entropy code shape',()=>{
+ const base='postgresql://os_lab_runtime:fiction@ep-old-art-bbztkcnw.c-15.us-east-1.aws.neon.tech/blinko_sandbox?sslmode=require';
+ const issuer=base.replace('os_lab_runtime','os_lab_issuer');
+ assert.equal(isIssuerConnection(issuer),true);
+ assert.equal(isIssuerConnection(base),false);
+ assert.equal(isSandboxConnection(issuer),false);
+ assert.equal(isIssuerConnection(issuer+'&sslmode=disable'),false);
+ const sample='ab'.repeat(32);
+ assert.match(accessCodeDigest(sample),/^[a-f0-9]{64}$/);
+ assert.notEqual(accessCodeDigest(sample),sample);
+ for(const value of [null,'a'.repeat(63),'z'.repeat(64),'A'.repeat(64),sample+' '])assert.equal(accessCodeDigest(value),null);
+});
+test('session signer accepts only valid bounded registered claims',()=>{
+ const signed=signLabSession(actor,sid,now-1,now+60,key,now);
+ assert.deepEqual(verifyLabSession(signed,key,now),{actorId:actor,sessionId:sid});
+ for(const [a,s,i,e,k] of [['bad',sid,now-1,now+60,key],[actor,'bad',now-1,now+60,key],[actor,sid,now+1,now+60,key],[actor,sid,now-1,now+4000,key],[actor,sid,now-1,now,key],[actor,sid,now-1,now+60,'short']])assert.equal(signLabSession(a,s,i,e,k,now),null);
 });
