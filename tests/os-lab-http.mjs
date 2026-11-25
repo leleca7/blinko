@@ -55,7 +55,8 @@ try{
  assert.equal(op.finance,null);
  await page.getByRole('button',{name:'Sair',exact:true}).click();
  await page.waitForURL('**/os-workspace/login');
- await request('GET',endpoint,undefined,401,{cookie:cookie.name+'='+cookie.value});
+ const revoked=await request('GET',endpoint,undefined,401,{cookie:cookie.name+'='+cookie.value});
+ assert.equal(revoked.body.error,'session_inactive');
  console.log('PASS operator login, secure cookie, persistent CRM, project and logout');
  await page.getByLabel('Código de acesso').fill(codes.admin);
  await page.getByRole('button',{name:'Entrar',exact:true}).click();
