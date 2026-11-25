@@ -63,8 +63,20 @@ export default function ConnectedWorkspace(){
   finally{setRevision(x=>x+1);setBusy(false);lock.current=false;}
  }
  const mutate=(op:LabOperation,success?:()=>void)=>run(()=>api.mutate(op),success);
+ async function logout(){
+  if(lock.current)return;
+  lock.current=true;setBusy(true);setMessage("");
+  try{
+   const response=await fetch("/api/os-lab/session",{method:"DELETE",credentials:"same-origin",cache:"no-store",redirect:"error"});
+   const result=await response.json();
+   if(!response.ok||result?.ok!==true)throw Error("logout unconfirmed");
+   setLoaded(false);setLeads([]);setProjects([]);setEvidence([]);
+   window.location.replace("/os-workspace/login");
+  }catch{setMessage("Não foi possível confirmar o encerramento da sessão. Tente novamente.");}
+  finally{lock.current=false;setBusy(false);}
+ }
  return <main className={styles.page}><div className={styles.shell}><aside className={styles.sidebar}><div className={styles.brand}><strong>blinko<span>*</span></strong><small>OS · LABORATÓRIO PROTEGIDO</small></div><div className={styles.sideFoot}>Apenas dados fictícios</div></aside><div className={styles.workspace+" "+connected.workspace}>
- <header className={styles.top}><strong>Integração · Operação de projetos</strong><button disabled={busy} onClick={()=>{setMessage("");setRevision(x=>x+1);}}>Atualizar registros</button></header>
+ <header className={styles.top}><strong>Integração · Operação de projetos</strong><button disabled={busy} onClick={()=>{setMessage("");setRevision(x=>x+1);}}>Atualizar registros</button><button disabled={busy} onClick={()=>void logout()}>Sair</button></header>
  <p className={styles.notice}>Interface persistente em desenvolvimento. Não recebe clientes reais. Acesso e gravações dependem da sessão e da autorização do servidor.</p>
  <p role="status">{message||(!loaded?"Consultando registros autorizados…":"Registros consultados.")}</p>
  <fieldset disabled={busy||!loaded} style={{border:0,padding:0,margin:0,minWidth:0}}>
