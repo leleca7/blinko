@@ -5,7 +5,7 @@ export const isLabUuid = (value: unknown): value is string => typeof value === '
 export const LAB_COOKIE = 'blinko_os_lab_session';
 const AUDIENCE = 'blinko-os-sandbox';
 const MAX_AGE = 3600;
-export function verifyLabSession(token: string | undefined, secret: string, now = Math.floor(Date.now()/1000)): {actorId:string} | null {
+export function verifyLabSession(token: string | undefined, secret: string, now = Math.floor(Date.now()/1000)): {actorId:string;sessionId:string} | null {
   if (!token || token.length > 2048 || Buffer.byteLength(secret) < 32) return null;
   const parts = token.split('.');
   if (parts.length !== 2 || parts.some(p => !/^[A-Za-z0-9_-]+$/.test(p))) return null;
@@ -15,8 +15,8 @@ export function verifyLabSession(token: string | undefined, secret: string, now 
   if (a.length !== b.length || !timingSafeEqual(a,b)) return null;
   try {
     const p = JSON.parse(Buffer.from(body,'base64url').toString('utf8'));
-    if (!p || p.aud !== AUDIENCE || !isLabUuid(p.sub) || !Number.isSafeInteger(p.iat) || !Number.isSafeInteger(p.exp) || p.iat > now || p.exp <= now || p.exp <= p.iat || p.exp-p.iat > MAX_AGE) return null;
-    return {actorId:p.sub.toLowerCase()};
+    if (!p || p.aud !== AUDIENCE || !isLabUuid(p.sub) || !isLabUuid(p.sid) || !Number.isSafeInteger(p.iat) || !Number.isSafeInteger(p.exp) || p.iat > now || p.exp <= now || p.exp <= p.iat || p.exp-p.iat > MAX_AGE) return null;
+    return {actorId:p.sub.toLowerCase(),sessionId:p.sid.toLowerCase()};
   } catch { return null; }
 }
 export function validateEvidence(value: unknown): {projectId:string; pillar:number; kind:'fact'|'report'|'hypothesis'; summary:string} | null {
