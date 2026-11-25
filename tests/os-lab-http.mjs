@@ -121,8 +121,8 @@ try{
  await page.getByText(/10\/10 pilares avaliados/).waitFor();
  await page.getByText('Synthetic meeting',{exact:true}).waitFor();
  await page.getByText('Synthetic cause → Synthetic effect',{exact:true}).waitFor();
- await page.getByText('Estimativa R$ 2.083,34',{exact:true}).waitFor();
- await page.getByText('Synthetic client summary',{exact:true}).waitFor();
+ await page.locator('article').getByText('Estimativa R$ 2.083,34',{exact:true}).waitFor();
+ await page.locator('article').getByText('Synthetic client summary',{exact:true}).waitFor();
  await request('PUT',endpoint,{type:'report_save',id:projectId,synthesis:'Synthetic revised synthesis'});
  await request('PUT',endpoint,{type:'report_save',id:projectId,synthesis:'Synthetic internal synthesis'});
  delivery=(await request('GET',endpoint+'?scope=delivery&project='+projectId)).body.data;
