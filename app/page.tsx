@@ -236,12 +236,12 @@ export default function Home() {
             <article className={[styles.scene, styles.sceneOne].join(" ")}>
               <span className={styles.kicker}>01 / O sinal</span>
               <h2><span className={styles.sceneWord}>“Precisamos</span>{" "}<em><span className={styles.sceneWord}>postar</span>{" "}<span className={styles.sceneWord}>mais.”</span></em></h2>
-              <p>Talvez. Mas a dificuldade está na comunicação ou em outro momento da jornada do cliente?</p>
+              <p>Publicar mais pode ajudar, mas não resolve, por si só, dificuldades na oferta, no atendimento ou na jornada do cliente. Antes de agir, é preciso entender onde está o problema.</p>
             </article>
             <article className={[styles.scene, styles.sceneTwo].join(" ")}>
               <span className={styles.kicker}>02 / A investigação</span>
               <h2><span className={styles.sceneWord}>E</span>{" "}<span className={styles.sceneWord}>se</span>{" "}<span className={styles.sceneWord}>a</span>{" "}<span className={styles.sceneWord}>causa</span>{" "}<span className={styles.sceneWord}>estiver</span>{" "}<em><span className={styles.sceneWord}>mais</span>{" "}<span className={styles.sceneWord}>fundo?</span></em></h2>
-              <p>Escutamos as pessoas envolvidas, analisamos processos e reunimos evidências para compreender as possíveis causas do problema.</p>
+              <p>Escutamos as pessoas envolvidas, analisamos processos e cruzamos informações para identificar onde estão os gargalos e quais causas são sustentadas por evidências.</p>
             </article>
             <article className={[styles.scene, styles.sceneThree].join(" ")}>
               <span className={styles.kicker}>03 / A direção · as raízes</span>
@@ -276,7 +276,7 @@ export default function Home() {
         <div className={styles.editorialCopy}>
           <span className={styles.kicker}>O que muda quando investigamos</span>
           <h2 id="investigacao-title">Uma ideia vira <em>hipótese.</em> Uma hipótese pede <em>evidência.</em></h2>
-          <p>O diagnóstico organiza informações dispersas e permite uma leitura mais clara do negócio, diferenciando percepções de causas sustentadas por evidências.</p>
+          <p>O diagnóstico organiza informações dispersas e permite uma leitura mais clara do seu negócio, diferenciando percepções de causas sustentadas por evidências.</p>
           <span className={styles.editorialUnderline} aria-hidden="true" />
         </div>
         <figure className={styles.editorialCollage}>
@@ -294,10 +294,10 @@ export default function Home() {
           <p>Nosso foco inicial são pequenos negócios em operação, especialmente e-commerces, que querem organizar e desenvolver a empresa com decisões fundamentadas.</p>
         </div>
         <div className={styles.audienceList}>
-          <div><span>01</span><p>“Tudo depende de mim.”</p></div>
-          <div><span>02</span><p>“Não sei onde estamos perdendo clientes.”</p></div>
-          <div><span>03</span><p>“Minha empresa cresceu, mas a organização não acompanhou.”</p></div>
-          <div><span>04</span><p>“Temos várias ideias, mas não sabemos o que priorizar.”</p></div>
+          <div><p>“Tudo depende de mim.”</p></div>
+          <div><p>“Não sei onde estamos perdendo clientes.”</p></div>
+          <div><p>“Minha empresa cresceu, mas a organização não acompanhou.”</p></div>
+          <div><p>“Temos várias ideias, mas não sabemos o que priorizar.”</p></div>
           <p className={styles.audienceNote}>Reconheceu algum desses sinais? A investigação ajuda a compreender o que está por trás deles.</p>
         </div>
       </section>
@@ -332,12 +332,12 @@ export default function Home() {
           <a className={[styles.path, styles.pathStrategic, styles.diagnosticPath].join(" ")}
             href="#triagem" aria-label="Começar a triagem gratuita para conversar sobre o Diagnóstico Blinko">
             <div className={styles.pathTop}>
-              <span>Diagnóstico Blinko · nosso serviço principal</span>
+              <span>Diagnóstico Blinko · nossa especialidade</span>
               <b aria-hidden="true">↗︎</b>
             </div>
             <div className={styles.pathBody}>
               <h3>Não sabe por onde começar?</h3>
-              <p>Conte-nos um pouco sobre o seu negócio. Vamos conhecer seu contexto e apresentar o processo de contratação do diagnóstico.</p>
+              <p>Conte-nos brevemente o que está acontecendo no seu negócio. Vamos entender seu contexto e explicar como funciona a contratação do diagnóstico.</p>
             </div>
             <span className={styles.pathCta}>Começar triagem gratuita <i aria-hidden="true">↗︎</i></span>
           </a>

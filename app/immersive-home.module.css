@@ -1014,7 +1014,7 @@
 .editorialCollage{perspective:1200px;margin-left:-5vw;z-index:2}
 .reportVisual,.handsVisual{transition:none;will-change:transform}
 .audienceList{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;perspective:1100px}
-.audienceList>div{display:flex;flex-direction:column;justify-content:space-between;min-height:200px;padding:24px;border:1px solid #d8e0d338;border-radius:10px;background:#1c4d37;transform:rotate(-3deg);box-shadow:0 12px 32px #001e1360;transition:transform .3s ease}
+.audienceList>div{display:flex;flex-direction:column;justify-content:center;min-height:200px;padding:24px;border:1px solid #d8e0d338;border-radius:10px;background:#1c4d37;transform:rotate(-3deg);box-shadow:0 12px 32px #001e1360;transition:transform .3s ease}
 .audienceList>div:nth-child(2n){transform:translateY(24px) rotate(3deg);background:#244d3a}
 .audienceList>div p{font-size:clamp(24px,2.4vw,37px)}
 .audienceList>div:hover{transform:translateY(-6px) rotateX(5deg) rotateY(-6deg);border-color:#efbad5}

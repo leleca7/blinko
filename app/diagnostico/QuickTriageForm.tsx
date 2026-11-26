@@ -111,7 +111,7 @@ export default function QuickTriageForm({ demo = false }: { demo?: boolean }) {
     <section className={styles.success} aria-live="polite">
       <span className={styles.kicker}>DEMONSTRAÇÃO CONCLUÍDA</span>
       <h2>Obrigado pelo seu interesse!</h2>
-      <p>Você chegou ao fim da experiência de triagem. Nenhuma informação foi enviada ou salva.</p>
+      <p>Na versão definitiva, a mensagem de confirmação informará o prazo de retorno (exemplo: até 24 horas úteis). Nesta demonstração, nenhuma informação foi enviada ou salva.</p>
       <button type="button" className={styles.primary} onClick={() => { setName(""); setWhatsapp(""); setCompanyName(""); setEmail(""); setConsent(false); setKind(""); setChallenge(""); setTimeframe(""); setChannel("whatsapp"); setStage("contact"); }}>Recomeçar demonstração ↗︎</button>
     </section>
   );
@@ -120,8 +120,8 @@ export default function QuickTriageForm({ demo = false }: { demo?: boolean }) {
     return (
       <section className={styles.success} aria-live="polite">
         <span className={styles.kicker}>TRIAGEM REGISTRADA</span>
-        <h2>Agora podemos conversar.</h2>
-        <p>Recebemos sua triagem inicial. Nossa equipe poderá explicar o escopo e a contratação do Diagnóstico Blinko, nosso serviço principal. Esta triagem não é um diagnóstico técnico.</p>
+        <h2>Obrigado pelo seu interesse!</h2>
+        <p>Recebemos sua triagem inicial. Nossa equipe entrará em contato pelo canal escolhido para entender seu contexto e explicar os próximos passos do Diagnóstico Blinko. Esta triagem não é um diagnóstico técnico.</p>
         <p className={styles.reference}>Referência: <strong>{reference}</strong></p>
         {contactUrl ? (
           <>
