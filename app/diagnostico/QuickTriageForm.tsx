@@ -110,9 +110,9 @@ export default function QuickTriageForm({ demo = false }: { demo?: boolean }) {
   if (demo && stage === "success") return (
     <section className={styles.success} aria-live="polite">
       <span className={styles.kicker}>DEMONSTRAÇÃO CONCLUÍDA</span>
-      <h2>Agora podemos conversar.</h2>
+      <h2>Obrigado pelo seu interesse!</h2>
       <p>Você chegou ao fim da experiência de triagem. Nenhuma informação foi enviada ou salva.</p>
-      <button type="button" className={styles.primary} onClick={() => { setName(""); setWhatsapp(""); setCompanyName(""); setEmail(""); setConsent(false); setKind(""); setChallenge(""); setTimeframe(""); setChannel("whatsapp"); setStage("contact"); }}>Recomeçar demonstração ↗</button>
+      <button type="button" className={styles.primary} onClick={() => { setName(""); setWhatsapp(""); setCompanyName(""); setEmail(""); setConsent(false); setKind(""); setChallenge(""); setTimeframe(""); setChannel("whatsapp"); setStage("contact"); }}>Recomeçar demonstração ↗︎</button>
     </section>
   );
 
@@ -126,13 +126,13 @@ export default function QuickTriageForm({ demo = false }: { demo?: boolean }) {
         {contactUrl ? (
           <>
             <a className={styles.primary} target="_blank" rel="noopener noreferrer" href={contactUrl} onClick={recordWhatsAppOpening}>
-              Abrir conversa no WhatsApp <span aria-hidden="true">↗</span>
+              Abrir conversa no WhatsApp <span aria-hidden="true">↗︎</span>
             </a>
             <p className={styles.note}>O WhatsApp abrirá com uma mensagem pronta. Você precisa tocar em enviar para iniciar a conversa. Seu pedido já está registrado mesmo se não enviar.</p>
           </>
         ) : (
           <>
-            <a className={styles.primary} target="_blank" rel="noopener noreferrer" href={INSTAGRAM}>Conversar pelo Instagram ↗</a>
+            <a className={styles.primary} target="_blank" rel="noopener noreferrer" href={INSTAGRAM}>Conversar pelo Instagram ↗︎</a>
             <p className={styles.note}>O WhatsApp comercial ainda não foi configurado nesta versão de teste. Seu pedido fica registrado na base quando a integração estiver habilitada.</p>
           </>
         )}
@@ -203,13 +203,13 @@ export default function QuickTriageForm({ demo = false }: { demo?: boolean }) {
               </label>
             ))}
           </div>
-          <label className={styles.bigLabel}>Quer contar mais alguma coisa? (opcional)
-            <textarea maxLength={650} rows={3} value={challenge} onChange={e=>setChallenge(e.target.value)} placeholder="Ex.: não sei por que as vendas caíram; ou preciso reformular meu cardápio." />
-          </label>
+          {!demo && <label className={styles.bigLabel}>Conte um pouco mais sobre o seu negócio (opcional)
+            <textarea maxLength={650} rows={3} value={challenge} onChange={e=>setChallenge(e.target.value)} placeholder="Ex.: as vendas diminuíram e não sabemos por quê." />
+          </label>}
           <div className={styles.grid}>
             <label>Quando gostaria de começar? <span>opcional</span>
               <select value={timeframe} onChange={e=>setTimeframe(e.target.value)}>
-                <option value="">Ainda não sei</option><option value="now">O quanto antes</option><option value="this_month">Neste mês</option><option value="next_months">Nos próximos meses</option><option value="just_looking">Estou pesquisando</option>
+                <option value="">Selecione (opcional)</option><option value="now">Assim que possível</option><option value="this_month">Neste mês</option><option value="next_months">Nos próximos meses</option><option value="just_looking">Estou pesquisando</option>
               </select>
             </label>
             <label>Prefere nosso retorno por
