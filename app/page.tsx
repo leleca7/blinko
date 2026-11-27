@@ -172,14 +172,14 @@ export default function Home() {
       <div aria-hidden="true" className={styles.cursorRing} />
 
       <header className={styles.header}>
-        <a className={styles.logo} href="#inicio" aria-label="Blinko — voltar ao início">
-          <img src="/brand/logo-fundo-verde.svg" alt="Blinko Studio — Criatividade que conecta" loading="lazy" />
+        <a className={styles.logo} href="#inicio" aria-label="Blinko, voltar ao início">
+          <img src="/brand/logo-fundo-verde.svg" alt="Blinko" loading="lazy" />
         </a>
         <nav className={styles.nav} aria-label="Navegação">
           <a href="#sobre">A Blinko</a>
           <a href="#metodo">Nosso olhar</a>
           <a href="#perguntas">Dúvidas</a>
-          <a href="#comecar" className={styles.navCta}>Começar <span aria-hidden="true">↗︎</span></a>
+          <a href="#comecar" className={styles.navCta}>Começar <span aria-hidden="true">↗</span></a>
         </nav>
       </header>
 
@@ -187,12 +187,12 @@ export default function Home() {
         <div className={styles.ambientTint} aria-hidden="true" />
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>Pesquisa, estratégia e criação</p>
-          <h1 id="hero-title"><span className={styles.heroBehind}>O problema</span>{" "}<em>nem sempre</em>{" "}<span className={styles.heroFront}>está onde parece.</span></h1>
+          <h1 id="hero-title"><span className={styles.heroBehind}>Entendemos</span>{" "}<em>seu negócio</em>{" "}<span className={styles.heroFront}>para transformá-lo.</span></h1>
           <p className={styles.heroLead}>
-            Somos a Blinko, uma agência de pesquisa, estratégia e criação. Investigamos os desafios do seu negócio, organizamos prioridades e desenvolvemos caminhos para solucioná-los.
+            Investigamos os desafios da sua empresa, identificamos oportunidades de melhoria e desenvolvemos soluções para fortalecer sua marca, melhorar sua comunicação e organizar seus processos.
           </p>
           <div className={styles.actions}>
-            <a className={styles.pill} href="#triagem">Iniciar triagem gratuita <span className={styles.arrow} aria-hidden="true">↗︎</span></a>
+            <a className={styles.pill} href="#triagem">Conte-nos sobre sua empresa <span className={styles.arrow} aria-hidden="true">↗</span></a>
             <a className={styles.textAction} href="#metodo">Conheça nosso olhar <span aria-hidden="true">↓</span></a>
           </div>
         </div>
@@ -202,16 +202,17 @@ export default function Home() {
           <img className={styles.botanicalHero} src="/brand/monograma-b-rosa.svg" alt="" decoding="async" />
         </div>
 
-        <span className={styles.heroSide} aria-hidden="true">clareza · estrutura · movimento</span>
+        <a className={styles.scrollCue} href="#sobre">Role para descobrir <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 4v15m-6-6 6 6 6-6" /></svg></a>
         
       </section>
 
       
+      <div className={styles.marquee} aria-label="Pesquisa, marca, comunicação, relacionamento e desenvolvimento"><div className={styles.marqueeTrack} aria-hidden="true">{[0,1].map(copy => <div className={styles.marqueeGroup} key={copy}>{["Pesquisa","Marca","Comunicação","Relacionamento","Desenvolvimento"].map(word => <span key={word}>{word}<i className={styles.marqueeDot}/></span>)}</div>)}</div></div>
       <section className={styles.bridge} id="sobre" aria-labelledby="sobre-title">
         <span className={styles.kicker}>Quem é a Blinko</span>
-        <h2 id="sobre-title">Uma visão <em>360°</em> do seu negócio.</h2>
+        <h2 id="sobre-title">Entender sua empresa <em>por inteiro.</em></h2>
         <p>
-          Somos uma agência de pesquisa e comunicação estratégica, com foco inicial em e-commerces e pequenos negócios em operação. Investigamos desafios, analisamos o contexto e identificamos oportunidades para recomendar soluções adequadas à realidade de cada empresa.
+          Somos uma empresa especializada em compreender negócios e desenvolver soluções que fortaleçam suas marcas, melhorem sua comunicação, aprimorem seus processos e construam melhores relações com seus públicos. Nosso foco inicial são pequenos negócios em operação, especialmente lojas online. Estudamos como a empresa se relaciona com clientes, colaboradores e outros públicos para orientar decisões mais conscientes.
         </p>
         <div className={styles.aboutTagline} aria-label="Nossa forma de atuação">
           <span>Pesquisa e escuta</span><span>Visão integrada</span><span>Decisões fundamentadas</span>
@@ -234,17 +235,17 @@ export default function Home() {
           </div>
           <div className={styles.storyText}>
             <article className={[styles.scene, styles.sceneOne].join(" ")}>
-              <span className={styles.kicker}>01 / O sinal</span>
+              <span className={styles.kicker}>Superfície · O que você percebe</span>
               <h2><span className={styles.sceneWord}>“Precisamos</span>{" "}<em><span className={styles.sceneWord}>postar</span>{" "}<span className={styles.sceneWord}>mais.”</span></em></h2>
               <p>Publicar mais pode ajudar, mas não resolve, por si só, dificuldades na oferta, no atendimento ou na jornada do cliente. Antes de agir, é preciso entender onde está o problema.</p>
             </article>
             <article className={[styles.scene, styles.sceneTwo].join(" ")}>
-              <span className={styles.kicker}>02 / A investigação</span>
+              <span className={styles.kicker}>Solo · O que investigamos</span>
               <h2><span className={styles.sceneWord}>E</span>{" "}<span className={styles.sceneWord}>se</span>{" "}<span className={styles.sceneWord}>a</span>{" "}<span className={styles.sceneWord}>causa</span>{" "}<span className={styles.sceneWord}>estiver</span>{" "}<em><span className={styles.sceneWord}>mais</span>{" "}<span className={styles.sceneWord}>fundo?</span></em></h2>
               <p>Escutamos as pessoas envolvidas, analisamos processos e cruzamos informações para identificar onde estão os gargalos e quais causas são sustentadas por evidências.</p>
             </article>
             <article className={[styles.scene, styles.sceneThree].join(" ")}>
-              <span className={styles.kicker}>03 / A direção · as raízes</span>
+              <span className={styles.kicker}>Raiz · O que precisamos compreender</span>
               <h2><span className={styles.sceneWord}>Clareza</span>{" "}<span className={styles.sceneWord}>para</span>{" "}<span className={styles.sceneWord}>escolher</span>{" "}<em><span className={styles.sceneWord}>o</span>{" "}<span className={styles.sceneWord}>que</span>{" "}<span className={styles.sceneWord}>fazer.</span></em></h2>
               <p>A partir da investigação, identificamos prioridades e recomendamos caminhos de ação adequados ao seu negócio.</p>
             </article>
@@ -256,8 +257,8 @@ export default function Home() {
       <section className={styles.method} id="como-trabalhamos" aria-labelledby="processo-title">
         <div>
           <span className={styles.kicker}>O método Blinko</span>
-          <h2 id="processo-title">Menos achismo. Mais direção.</h2>
-          <p className={styles.methodSmall}>Pesquisa e comunicação estratégica ajudam a compreender o negócio de forma integrada. Nosso primeiro passo é o diagnóstico; a partir dele, avaliamos as soluções adequadas.</p>
+          <h2 id="processo-title"><span>Menos achismos.</span>{" "}<span>Mais direção.</span></h2>
+          <p className={styles.methodSmall}>O primeiro serviço é uma investigação do seu negócio, chamada Diagnóstico Blinko. Escutamos as pessoas, analisamos informações e identificamos o que precisa melhorar antes de recomendar uma solução.</p>
         </div>
         <div className={styles.methodVisual}>
           <div className={styles.methodOrb} aria-hidden="true" />
@@ -265,7 +266,7 @@ export default function Home() {
           {journey.map(([number, name, detail]) => (
             <div className={styles.methodLine} key={number} title={detail}>
               <strong>{name}</strong>
-              <span>Passo {number} / 05</span>
+              <span>{detail}</span>
             </div>
           ))}
           </div>
@@ -275,8 +276,8 @@ export default function Home() {
       <section className={styles.editorialShowcase} aria-labelledby="investigacao-title">
         <div className={styles.editorialCopy}>
           <span className={styles.kicker}>O que muda quando investigamos</span>
-          <h2 id="investigacao-title">Uma ideia vira <em>hipótese.</em> Uma hipótese pede <em>evidência.</em></h2>
-          <p>O diagnóstico organiza informações dispersas e permite uma leitura mais clara do seu negócio, diferenciando percepções de causas sustentadas por evidências.</p>
+          <h2 id="investigacao-title">Antes de recomendar, <em>investigamos.</em></h2>
+          <p>Reunimos informações, ouvimos as pessoas e analisamos o que acontece na prática para distinguir impressões de problemas comprovados.</p>
           <span className={styles.editorialUnderline} aria-hidden="true" />
         </div>
         <figure className={styles.editorialCollage}>
@@ -290,7 +291,7 @@ export default function Home() {
       <section className={styles.audience} id="para-quem" aria-labelledby="audience-title">
         <div className={styles.audienceIntro}>
           <span className={styles.kicker}>Para quem existimos</span>
-          <h2 id="audience-title">Seu negócio já deu esses <em>sinais?</em></h2>
+          <h2 id="audience-title">Você reconhece algum destes <em>desafios?</em></h2>
           <p>Nosso foco inicial são pequenos negócios em operação, especialmente e-commerces, que querem organizar e desenvolver a empresa com decisões fundamentadas.</p>
         </div>
         <div className={styles.audienceList}>
@@ -298,7 +299,7 @@ export default function Home() {
           <div><p>“Não sei onde estamos perdendo clientes.”</p></div>
           <div><p>“Minha empresa cresceu, mas a organização não acompanhou.”</p></div>
           <div><p>“Temos várias ideias, mas não sabemos o que priorizar.”</p></div>
-          <p className={styles.audienceNote}>Reconheceu algum desses sinais? A investigação ajuda a compreender o que está por trás deles.</p>
+          <p className={styles.audienceNote}>Reconheceu algum desses desafios? A investigação ajuda a compreender o que está por trás deles.</p>
         </div>
       </section>
 
@@ -306,9 +307,9 @@ export default function Home() {
         <p className={styles.kicker}>O que o diagnóstico entrega</p>
         <h2>Da investigação à <em>direção.</em></h2>
         <div className={styles.outcomeItems}>
-          <div><span>01</span><strong>Relatório de diagnóstico</strong><p>Uma análise dos desafios, pontos fortes e oportunidades, sustentada pelas informações investigadas.</p></div>
-          <div><span>02</span><strong>Prioridades de ação</strong><p>Identificação do que merece atenção primeiro e dos motivos para essa escolha.</p></div>
-          <div><span>03</span><strong>Plano de ação</strong><p>Recomendações, encaminhamentos e próximos passos de acordo com o escopo contratado.</p></div>
+          <div><strong>Relatório de diagnóstico</strong><p>Uma análise dos desafios, pontos fortes e oportunidades, sustentada pelas informações investigadas.</p></div>
+          <div><strong>Prioridades de ação</strong><p>Identificação do que merece atenção primeiro e dos motivos para essa escolha.</p></div>
+          <div><strong>Plano de ação</strong><p>Recomendações, encaminhamentos e próximos passos de acordo com o escopo contratado.</p></div>
         </div>
       </section>
 
@@ -324,22 +325,22 @@ export default function Home() {
           </p>
         </div>
         <div className={styles.diagnosticSteps} aria-label="Como começa um projeto na Blinko">
-          <div><span>01</span><strong>Triagem gratuita</strong><p>Uma conversa inicial para conhecer seu negócio e entender suas necessidades.</p></div>
-          <div><span>02</span><strong>Diagnóstico contratado</strong><p>Investigação, evidências e prioridades em um escopo definido.</p></div>
-          <div><span>03</span><strong>Soluções complementares</strong><p>Quando necessário, apresentamos uma proposta específica ou indicamos especialistas.</p></div>
+          <div><strong>Triagem gratuita</strong><p>Uma conversa inicial para conhecer seu negócio e entender suas necessidades.</p></div>
+          <div><strong>Diagnóstico contratado</strong><p>Investigação, evidências e prioridades em um escopo definido.</p></div>
+          <div><strong>Soluções complementares</strong><p>Quando necessário, apresentamos uma proposta específica ou indicamos especialistas.</p></div>
         </div>
         <div className={styles.entryGrid}>
           <a className={[styles.path, styles.pathStrategic, styles.diagnosticPath].join(" ")}
             href="#triagem" aria-label="Começar a triagem gratuita para conversar sobre o Diagnóstico Blinko">
             <div className={styles.pathTop}>
               <span>Diagnóstico Blinko · nossa especialidade</span>
-              <b aria-hidden="true">↗︎</b>
+              <b aria-hidden="true">↗</b>
             </div>
             <div className={styles.pathBody}>
               <h3>Não sabe por onde começar?</h3>
               <p>Conte-nos brevemente o que está acontecendo no seu negócio. Vamos entender seu contexto e explicar como funciona a contratação do diagnóstico.</p>
             </div>
-            <span className={styles.pathCta}>Começar triagem gratuita <i aria-hidden="true">↗︎</i></span>
+            <span className={styles.pathCta}>Começar triagem gratuita <i aria-hidden="true">↗</i></span>
           </a>
         </div>
         <p className={styles.pathNote}>
@@ -380,14 +381,14 @@ export default function Home() {
             <summary>Quanto tempo leva o diagnóstico?<span aria-hidden="true">+</span></summary>
             <p>Depende do tamanho do desafio, das informações disponíveis e do escopo da pesquisa. Etapas, prazo e entregas serão combinados na proposta, antes da contratação.</p>
           </details>
-          <a className={styles.faqLink} href="#triagem">Comece pela triagem gratuita <span aria-hidden="true">↗︎</span></a>
+          <a className={styles.faqLink} href="#triagem">Comece pela triagem gratuita <span aria-hidden="true">↗</span></a>
         </div>
       </section>
 
       <section className={styles.final} id="triagem" aria-labelledby="final-title">
         <div className={styles.finalBackdrop} aria-hidden="true" />
         <div className={styles.finalCopy}>
-          <span className={styles.kicker}>Blinko Studio — clareza para evoluir</span>
+          <span className={styles.kicker}>Blinko · Compreender antes de transformar.</span>
           <h2 id="final-title">Todo avanço começa com <em>uma boa pergunta.</em></h2>
           <p>Antes de propor uma solução, queremos conhecer a realidade do seu negócio.</p>
           <img className={styles.closingMark} src="/brand/monograma-b-rosa.svg" alt="" aria-hidden="true" loading="lazy" />
@@ -398,7 +399,7 @@ export default function Home() {
       </section>
 
       <footer className={styles.footer}>
-        <img src={BLINKO_LOGO_DARK_DATA_URI} alt="Blinko Studio" />
+        <img src={BLINKO_LOGO_DARK_DATA_URI} alt="Blinko" />
         <span>Pesquisa · estratégia · criação</span>
         <nav className={styles.footerLegal} aria-label="Privacidade e termos">
           <a href="/privacidade">Privacidade</a>

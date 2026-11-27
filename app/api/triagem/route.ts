@@ -72,7 +72,7 @@ export async function POST(request: Request) {
       const challenge = str(body.challenge, 650);
       const timeframe = str(body.timeframe, 32);
       const channel = str(body.channel, 32) as TriageChannel;
-      if (!kinds.includes(kind) ||
+      if (!kinds.includes(kind) || !challenge ||
           !timeframes.includes(timeframe as (typeof timeframes)[number]) ||
           !channels.includes(channel)) {
         return NextResponse.json({ ok: false, error: "invalid_details" }, { status: 400 });

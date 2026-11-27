@@ -1121,3 +1121,43 @@
  .cursorRing{display:none!important}
  .audienceList>div:hover{transform:none}
 }
+
+/* Revisao de comunicacao e mobile 27/11/2026 */
+.scrollCue{display:inline-flex;align-items:center;gap:8px;text-decoration:none;max-width:100%;white-space:normal}
+.scrollCue:before,.scrollCue:after,.storyHint:before,.storyHint:after{content:none!important;display:none!important}
+.scrollCue svg{flex:none}
+.marquee{max-width:100%;overflow:hidden;background:#DDB5DA;color:#01301E}
+.marqueeTrack{display:flex;width:max-content;gap:0;animation:blinkoMarquee 32s linear infinite}
+.marqueeGroup{display:flex;align-items:center;gap:0;flex:none}
+.marqueeGroup>span{display:flex;align-items:center;gap:24px;padding-inline:24px;white-space:nowrap}
+.marqueeDot{display:block;flex:none;width:7px;height:7px;border-radius:50%;background:#EF3B7F}
+.story .root3DContainer,.story .rootSculpture,.story .root3DFallback,.story .root3DFallbackHidden{display:none!important}
+.storySticky{background:none}
+.method h2>span{display:block}
+.methodLine span{line-height:1.45;letter-spacing:0;text-transform:none;max-width:24ch}
+@media(max-width:760px){
+ .scrollCue{position:static;margin-top:24px;min-height:44px;font-size:11px;color:#F3F0EB}
+ .marqueeTrack{animation:blinkoMarquee 32s linear infinite}
+ .marqueeGroup>span{gap:16px;padding-inline:16px}
+ .hero h1{font-size:clamp(44px,11vw,80px);max-width:13ch}
+ .hero{padding-bottom:42px}
+ .bridge{padding-block:60px!important}
+ .storySticky{padding-block:36px!important}
+ .storyText{width:100%;min-width:0}
+ .story .scene{padding-block:28px!important}
+ .method{padding:58px 22px;gap:24px}
+ .method h2{font-size:clamp(43px,11vw,78px);line-height:1.02;max-width:none}
+ .method h2>span{display:block;white-space:normal}
+ .methodVisual{margin-top:22px}
+ .method:not([data-motion="on"]) .methodLine{gap:6px;flex-direction:column;align-items:flex-start;padding:14px 0}
+ .methodLine span{font-size:13px;max-width:none}
+ .audienceList{gap:8px}
+ .audienceList>div{padding:15px}
+ .outcomeItems,.diagnosticSteps{gap:8px;margin-top:18px}
+ .final{gap:24px;padding-block:56px}
+}
+@media(prefers-reduced-motion:reduce){
+ .marqueeTrack{animation:none!important;width:100%;white-space:normal}
+ .marqueeGroup{flex-wrap:wrap;justify-content:center}
+ .marqueeGroup+ .marqueeGroup{display:none}
+}

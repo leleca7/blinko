@@ -80,6 +80,7 @@ export default function QuickTriageForm({ demo = false }: { demo?: boolean }) {
   async function complete(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    if (!kind || !challenge.trim()) { setError("Conte um pouco mais sobre o seu negócio para continuar."); return; }
     if (demo) { setStage("success"); return; }
     setLoading(true);
     try {
@@ -110,9 +111,10 @@ export default function QuickTriageForm({ demo = false }: { demo?: boolean }) {
   if (demo && stage === "success") return (
     <section className={styles.success} aria-live="polite">
       <span className={styles.kicker}>DEMONSTRAÇÃO CONCLUÍDA</span>
-      <h2>Obrigado pelo seu interesse!</h2>
-      <p>Na versão definitiva, a mensagem de confirmação informará o prazo de retorno (exemplo: até 24 horas úteis). Nesta demonstração, nenhuma informação foi enviada ou salva.</p>
-      <button type="button" className={styles.primary} onClick={() => { setName(""); setWhatsapp(""); setCompanyName(""); setEmail(""); setConsent(false); setKind(""); setChallenge(""); setTimeframe(""); setChannel("whatsapp"); setStage("contact"); }}>Recomeçar demonstração ↗︎</button>
+      <h2>Obrigado por compartilhar sua história com a Blinko.</h2>
+      <p>Na versão definitiva, nossa equipe entrará em contato em até 72 horas para conversar sobre seu negócio e os próximos passos.</p>
+      <p>Nesta demonstração, nenhuma informação foi enviada ou salva e não haverá contato real.</p>
+      <button type="button" className={styles.primary} onClick={() => { setName(""); setWhatsapp(""); setCompanyName(""); setEmail(""); setConsent(false); setKind(""); setChallenge(""); setTimeframe(""); setChannel("whatsapp"); setStage("contact"); }}>Recomeçar demonstração ↗</button>
     </section>
   );
 
@@ -120,19 +122,19 @@ export default function QuickTriageForm({ demo = false }: { demo?: boolean }) {
     return (
       <section className={styles.success} aria-live="polite">
         <span className={styles.kicker}>TRIAGEM REGISTRADA</span>
-        <h2>Obrigado pelo seu interesse!</h2>
-        <p>Recebemos sua triagem inicial. Nossa equipe entrará em contato pelo canal escolhido para entender seu contexto e explicar os próximos passos do Diagnóstico Blinko. Esta triagem não é um diagnóstico técnico.</p>
+        <h2>Obrigado por compartilhar sua história com a Blinko.</h2>
+        <p>Recebemos suas informações. Nossa equipe entrará em contato em até 72 horas pelo canal escolhido para conversar sobre seu negócio e os próximos passos. Esta triagem não é um diagnóstico técnico.</p>
         <p className={styles.reference}>Referência: <strong>{reference}</strong></p>
         {contactUrl ? (
           <>
             <a className={styles.primary} target="_blank" rel="noopener noreferrer" href={contactUrl} onClick={recordWhatsAppOpening}>
-              Abrir conversa no WhatsApp <span aria-hidden="true">↗︎</span>
+              Abrir conversa no WhatsApp <span aria-hidden="true">↗</span>
             </a>
             <p className={styles.note}>O WhatsApp abrirá com uma mensagem pronta. Você precisa tocar em enviar para iniciar a conversa. Seu pedido já está registrado mesmo se não enviar.</p>
           </>
         ) : (
           <>
-            <a className={styles.primary} target="_blank" rel="noopener noreferrer" href={INSTAGRAM}>Conversar pelo Instagram ↗︎</a>
+            <a className={styles.primary} target="_blank" rel="noopener noreferrer" href={INSTAGRAM}>Conversar pelo Instagram ↗</a>
             <p className={styles.note}>O WhatsApp comercial ainda não foi configurado nesta versão de teste. Seu pedido fica registrado na base quando a integração estiver habilitada.</p>
           </>
         )}
@@ -203,9 +205,9 @@ export default function QuickTriageForm({ demo = false }: { demo?: boolean }) {
               </label>
             ))}
           </div>
-          {!demo && <label className={styles.bigLabel}>Conte um pouco mais sobre o seu negócio (opcional)
-            <textarea maxLength={650} rows={3} value={challenge} onChange={e=>setChallenge(e.target.value)} placeholder="Ex.: as vendas diminuíram e não sabemos por quê." />
-          </label>}
+          <label className={styles.bigLabel}>O que mais precisamos saber sobre o seu negócio? (obrigatório)
+            <textarea required maxLength={650} rows={3} value={challenge} onChange={e=>setChallenge(e.target.value)} placeholder="Conte um pouco mais sobre sua empresa, seus desafios, objetivos ou o que motivou você a procurar a Blinko." />
+          </label>
           <div className={styles.grid}>
             <label>Quando gostaria de começar? <span>opcional</span>
               <select value={timeframe} onChange={e=>setTimeframe(e.target.value)}>
@@ -223,7 +225,7 @@ export default function QuickTriageForm({ demo = false }: { demo?: boolean }) {
           {error && <p role="alert" className={styles.error}>{error}</p>}
           <div className={styles.actions}>
             <button type="button" className={styles.back} onClick={()=>setStage("contact")} disabled={loading}>← Voltar</button>
-            <button type="submit" className={styles.primary} disabled={loading || !kind}>{loading ? "Registrando..." : demo ? "Concluir demonstração →" : "Enviar triagem →"}</button>
+            <button type="submit" className={styles.primary} disabled={loading || !kind || !challenge.trim()}>{loading ? "Registrando..." : demo ? "Concluir demonstração →" : "Enviar triagem →"}</button>
           </div>
         </form>
       )}
